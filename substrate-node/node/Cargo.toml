@@ -24,16 +24,20 @@ structopt = '0.3.8'
 
 # local dependencies
 node-template-runtime = { path = '../runtime', version = '2.0.1' }
+sha3pow = { path = '../consensus/sha3pow', version = '2.0.0' }
 
 # Substrate dependencies
 frame-benchmarking = '2.0.1'
 frame-benchmarking-cli = '2.0.1'
+log = { version = "0.4", features = ["std", "serde"] }
 pallet-transaction-payment-rpc = '2.0.1'
+parking_lot = { version = "0.10.0" }
 sc-basic-authorship = '0.8.1'
 sc-cli = { features = ['wasmtime'], version = '0.8.1' }
 sc-client-api = '2.0.1'
 sc-consensus = '0.8.1'
 sc-consensus-aura = '0.8.1'
+sc-consensus-pow = '0.8.1'
 sc-executor = { features = ['wasmtime'], version = '0.8.1' }
 sc-finality-grandpa = '0.8.1'
 sc-rpc = '2.0.1'
