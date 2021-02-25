@@ -1,11 +1,12 @@
 [package]
-authors = ['Substrate DevHub <https://github.com/substrate-developer-hub>']
+authors = ['Troy Honegger', 'Sam Bove', 'Caleb Smith', 'Adrian Teigen', 'Troy Gayman']
 edition = '2018'
-homepage = 'https://substrate.dev'
 license = 'Unlicense'
-name = 'node-template-runtime'
-repository = 'https://github.com/substrate-developer-hub/substrate-node-template/'
-version = '2.0.1'
+name = 'siip-node-runtime'
+repository = 'https://github.com/troyhonegger/siip'
+version = '0.0.1'
+keywords = ['siip', 'substrate', 'blockchain', 'dns', 'https']
+
 
 [package.metadata.docs.rs]
 targets = ['x86_64-unknown-linux-gnu']

@@ -4,7 +4,7 @@ use std::sync::Arc;
 use std::time::Duration;
 use std::thread;
 use sc_client_api::{ExecutorProvider, RemoteBackend};
-use node_template_runtime::{self, opaque::Block, RuntimeApi};
+use siip_node_runtime::{self, opaque::Block, RuntimeApi};
 use sc_service::{error::Error as ServiceError, Configuration, TaskManager};
 use sc_executor::native_executor_instance;
 pub use sc_executor::NativeExecutor;
@@ -16,8 +16,8 @@ use sha3pow::MinimalSha3Algorithm;
 // Our native executor instance.
 native_executor_instance!(
 	pub Executor,
-	node_template_runtime::api::dispatch,
-	node_template_runtime::native_version,
+	siip_node_runtime::api::dispatch,
+	siip_node_runtime::native_version,
 	frame_benchmarking::benchmarking::HostFunctions,
 );
 
