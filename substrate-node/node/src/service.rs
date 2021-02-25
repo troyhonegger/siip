@@ -3,7 +3,7 @@
 use std::sync::Arc;
 use std::time::Duration;
 use std::thread;
-use sc_client_api::{ExecutorProvider, RemoteBackend};
+use sc_client_api::ExecutorProvider;
 use siip_node_runtime::{self, opaque::Block, RuntimeApi};
 use sc_service::{error::Error as ServiceError, Configuration, TaskManager};
 use sc_executor::native_executor_instance;
@@ -32,7 +32,7 @@ pub fn new_partial(config: &Configuration) -> Result<sc_service::PartialComponen
 	(
 		sc_consensus_pow::PowBlockImport<
 			Block,
-			Arc<FullClient>, //TODO this may cause problems
+			Arc<FullClient>,
 			FullClient,
 			FullSelectChain,
 			MinimalSha3Algorithm,
@@ -144,6 +144,15 @@ pub fn new_full(config: Configuration) -> Result<TaskManager, ServiceError> {
 		backend, network_status_sinks, system_rpc_tx, config,
 	})?;
 
+	// Note: this was included in the node template configuration.
+	// We don't need it currently, but we might soon, so the node can sign transactions.
+	// It might also end up going in the preruntime digest
+	let _keystore = if role.is_authority() {
+		Some(keystore as sp_core::traits::BareCryptoStorePtr)
+	} else {
+		None
+	};
+
 	if role.is_authority() {
 		let proposer = sc_basic_authorship::ProposerFactory::new(
 			client.clone(),
@@ -165,7 +174,7 @@ pub fn new_full(config: Configuration) -> Result<TaskManager, ServiceError> {
 			MinimalSha3Algorithm,
 			proposer,
 			network.clone(),
-			None, // no preruntime digests (TODO may need this to encode authorship)
+			None, // no preruntime digests at present - TODO this should contain the ID of the node
 			inherent_data_providers,
 			// time to wait for a new block before starting to mine a new one
 			Duration::from_secs(10),
@@ -180,15 +189,6 @@ pub fn new_full(config: Configuration) -> Result<TaskManager, ServiceError> {
 		task_manager.spawn_essential_handle().spawn_blocking("pow", worker_task);
 	}
 
-	//TODO I don't currently need this. But it's useful knowledge to shelve
-	// if the node isn't actively participating in consensus then it doesn't
-	// need a keystore, regardless of which protocol we use below.
-	let keystore = if role.is_authority() {
-		Some(keystore as sp_core::traits::BareCryptoStorePtr)
-	} else {
-		None
-	};
-
 	network_starter.start_network();
 	Ok(task_manager)
 }
@@ -199,7 +199,11 @@ pub fn new_full(config: Configuration) -> Result<TaskManager, ServiceError> {
 
 /// Builds a new service for a light client.
 pub fn new_light(config: Configuration) -> Result<TaskManager, ServiceError> {
-	Err(ServiceError::Other("Light clients are not (yet) implemented".to_string())) //Massive TODO here
+	Err(ServiceError::Other("Light clients are not yet implemented (TODO)".to_string()))
+
+	// This block comment is the node-template implementation.
+	// To support light clients, it must be reworked to use POW instead of Aura/Grandpa
+
 	/*let (client, backend, keystore, mut task_manager, on_demand) =
 		sc_service::new_light_parts::<Block, RuntimeApi, Executor>(&config)?;
 

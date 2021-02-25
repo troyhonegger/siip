@@ -178,9 +178,9 @@ pub trait SiipPowAlgorithm<B> : PowAlgorithm<B>
 {
 	fn mine(
 		&self,
-		_parent: &BlockId<B>, //TODO - the parent's block hash is not included with the block hash which I think is a CRITICAL SECURITY FLAW. Fix this (here and in verify)
+		_parent: &BlockId<B>, // parent block hash is included in block header which is used to compute pre_hash, so we don't need it here
 		pre_hash: &<B as BlockT>::Hash,
-		_pre_digest: Option<&[u8]>, //TODO this should definitely not be ignored
+		_pre_digest: Option<&[u8]>, //TODO need to use this to compute the seal as well, so it can encode the block author
 		difficulty: <Self as PowAlgorithm<B>>::Difficulty,
 		round: u32 // The number of nonces to try during this call
 	) -> Result<Option<RawSeal>, Error<B>> {
@@ -215,7 +215,8 @@ pub trait SiipPowAlgorithm<B> : PowAlgorithm<B>
 
 impl<B: BlockT<Hash=H256>> SiipPowAlgorithm<B> for MinimalSha3Algorithm {}
 
-// TODO eventually we'll want to make Sha3Algorithm implement SiipPowAlgorithm as well,
-// so it can be configured in services.rs, allowing for dynamic difficulty selection.
+// TODO Sha3Algorithm should implement SiipPowAlgorithm as well, so it can be configured in services.rs
+// as a drop-in replacement for MinimalSha3Algorithm, allowing for dynamic difficulty selection.
 // This line of code doesn't quite compile, but it's close
+
 //impl<B: BlockT<Hash=H256>, C: ProvideRuntimeApi<B>> SiipPowAlgorithm<B> for Sha3Algorithm<C> {}
