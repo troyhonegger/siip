@@ -6,11 +6,8 @@ use std::thread;
 use sc_client_api::{ExecutorProvider, RemoteBackend};
 use node_template_runtime::{self, opaque::Block, RuntimeApi};
 use sc_service::{error::Error as ServiceError, Configuration, TaskManager};
-use sp_inherents::InherentDataProviders;
 use sc_executor::native_executor_instance;
 pub use sc_executor::NativeExecutor;
-use sp_consensus_aura::sr25519::{AuthorityPair as AuraPair};
-use sc_finality_grandpa::{FinalityProofProvider as GrandpaFinalityProofProvider};
 
 mod miner;
 
@@ -196,9 +193,14 @@ pub fn new_full(config: Configuration) -> Result<TaskManager, ServiceError> {
 	Ok(task_manager)
 }
 
+//use sp_inherents::InherentDataProviders;
+//use sp_consensus_aura::sr25519::{AuthorityPair as AuraPair};
+//use sc_finality_grandpa::{FinalityProofProvider as GrandpaFinalityProofProvider};
+
 /// Builds a new service for a light client.
 pub fn new_light(config: Configuration) -> Result<TaskManager, ServiceError> {
-	let (client, backend, keystore, mut task_manager, on_demand) =
+	Err(ServiceError::Other("Light clients are not (yet) implemented".to_string())) //Massive TODO here
+	/*let (client, backend, keystore, mut task_manager, on_demand) =
 		sc_service::new_light_parts::<Block, RuntimeApi, Executor>(&config)?;
 
 	let transaction_pool = Arc::new(sc_transaction_pool::BasicPool::new_light(
@@ -269,5 +271,5 @@ pub fn new_light(config: Configuration) -> Result<TaskManager, ServiceError> {
 
 	network_starter.start_network();
 
-	Ok(task_manager)
+	Ok(task_manager)*/
 }
