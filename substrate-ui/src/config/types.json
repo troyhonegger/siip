@@ -1,4 +1,10 @@
 {
 "Address": "MultiAddress",
-"LookupSource": "MultiAddress"
+"LookupSource": "MultiAddress",
+"Certificate": {
+    "domain_name": "String",
+    "owner_public_key": "AccountId",
+    "website_public_key": "String",
+    "ip_addr": "String"
+}
 }
