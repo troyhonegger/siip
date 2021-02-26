@@ -1,11 +1,12 @@
 [package]
-authors = ['Substrate DevHub <https://github.com/substrate-developer-hub>']
+authors = ['Troy Honegger', 'Sam Bove', 'Caleb Smith', 'Adrian Teigen', 'Troy Gayman']
 edition = '2018'
-homepage = 'https://substrate.dev'
 license = 'Unlicense'
-name = 'node-template-runtime'
-repository = 'https://github.com/substrate-developer-hub/substrate-node-template/'
-version = '2.0.1'
+name = 'siip-node-runtime'
+repository = 'https://github.com/troyhonegger/siip'
+version = '0.0.1'
+keywords = ['siip', 'substrate', 'blockchain', 'dns', 'https']
+
 
 [package.metadata.docs.rs]
 targets = ['x86_64-unknown-linux-gnu']
@@ -25,7 +26,7 @@ hex-literal = { optional = true, version = '0.3.1' }
 serde = { features = ['derive'], optional = true, version = '1.0.119' }
 
 # local dependencies
-pallet-template = { path = '../pallets/template', default-features = false, version = '2.0.1' }
+pallet-siip = { path = '../pallets/siip', default-features = false, version = '0.0.1' }
 
 # Substrate dependencies
 frame-benchmarking = { default-features = false, optional = true, version = '2.0.1' }
@@ -34,9 +35,7 @@ frame-support = { default-features = false, version = '2.0.1' }
 frame-system = { default-features = false, version = '2.0.1' }
 frame-system-benchmarking = { default-features = false, optional = true, version = '2.0.1' }
 frame-system-rpc-runtime-api = { default-features = false, version = '2.0.1' }
-pallet-aura = { default-features = false, version = '2.0.1' }
 pallet-balances = { default-features = false, version = '2.0.1' }
-pallet-grandpa = { default-features = false, version = '2.0.1' }
 pallet-randomness-collective-flip = { default-features = false, version = '2.0.1' }
 pallet-sudo = { default-features = false, version = '2.0.1' }
 pallet-timestamp = { default-features = false, version = '2.0.1' }
@@ -44,7 +43,6 @@ pallet-transaction-payment = { default-features = false, version = '2.0.1' }
 pallet-transaction-payment-rpc-runtime-api = { default-features = false, version = '2.0.1' }
 sp-api = { default-features = false, version = '2.0.1' }
 sp-block-builder = { default-features = false, version = '2.0.1' }
-sp-consensus-aura = { default-features = false, version = '0.8.1' }
 sp-core = { default-features = false, version = '2.0.1' }
 sp-inherents = { default-features = false, version = '2.0.1' }
 sp-offchain = { default-features = false, version = '2.0.1' }
@@ -73,18 +71,15 @@ std = [
     'frame-support/std',
     'frame-system/std',
     'frame-system-rpc-runtime-api/std',
-    'pallet-aura/std',
     'pallet-balances/std',
-    'pallet-grandpa/std',
     'pallet-randomness-collective-flip/std',
     'pallet-sudo/std',
-    'pallet-template/std',
+    'pallet-siip/std',
     'pallet-timestamp/std',
     'pallet-transaction-payment/std',
     'pallet-transaction-payment-rpc-runtime-api/std',
     'sp-api/std',
     'sp-block-builder/std',
-    'sp-consensus-aura/std',
     'sp-core/std',
     'sp-inherents/std',
     'sp-offchain/std',
