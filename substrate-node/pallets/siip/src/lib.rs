@@ -4,8 +4,10 @@
 /// Learn more about FRAME and the core library of Substrate FRAME pallets:
 /// https://substrate.dev/docs/en/knowledgebase/runtime/frame
 
-use frame_support::{decl_module, decl_storage, decl_event, decl_error, dispatch, traits::Get};
+use frame_support::{decl_module, decl_storage, decl_event, decl_error, ensure, dispatch, traits::Get};
+use frame_support::codec::{Encode, Decode};
 use frame_system::ensure_signed;
+use sp_std::prelude::*;
 
 #[cfg(test)]
 mod mock;
@@ -19,6 +21,16 @@ pub trait Trait: frame_system::Trait {
 	type Event: From<Event<Self>> + Into<<Self as frame_system::Trait>::Event>;
 }
 
+type String = Vec<u8>;
+
+#[derive(Encode, Decode, Default, Clone, PartialEq, Eq, Debug)]
+pub struct Certificate<AccountIdT> {
+	domain_name: String,
+	owner_public_key: AccountIdT,
+	website_public_key: String,
+	ip_addr: String	
+}
+
 // The pallet's runtime storage items.
 // https://substrate.dev/docs/en/knowledgebase/runtime/storage
 decl_storage! {
@@ -29,6 +41,7 @@ decl_storage! {
 		// Learn more about declaring storage items:
 		// https://substrate.dev/docs/en/knowledgebase/runtime/storage#declaring-storage-items
 		Something get(fn something): Option<u32>;
+		pub CertificateMap get(fn certificate_map): map hasher(blake2_128_concat) String => Certificate<T::AccountId>;
 	}
 }
 
@@ -39,6 +52,9 @@ decl_event!(
 		/// Event documentation should end with an array that provides descriptive names for event
 		/// parameters. [something, who]
 		SomethingStored(u32, AccountId),
+
+		/// This is some documentation I guess. [certificate, person]
+		DomainRegistered(Certificate<AccountId>, AccountId),
 	}
 );
 
@@ -49,6 +65,7 @@ decl_error! {
 		NoneValue,
 		/// Errors should have helpful documentation associated with them.
 		StorageOverflow,
+		DomainAlreadyTaken
 	}
 }
 
@@ -78,6 +95,25 @@ decl_module! {
 			// Emit an event.
 			Self::deposit_event(RawEvent::SomethingStored(something, who));
 			// Return a successful DispatchResult
+			Ok(())
+		}
+
+		#[weight = 1]
+		pub fn register_domain(origin, domain_name: String, website_public_key: String, ip_addr: String) -> dispatch::DispatchResult {
+			let sender = ensure_signed(origin)?;
+
+			
+			ensure!(!CertificateMap::<T>::contains_key(&domain_name), Error::<T>::DomainAlreadyTaken);
+
+			let cert = Certificate{
+				domain_name: domain_name.clone(),
+				owner_public_key: sender.clone(),
+				website_public_key,
+				ip_addr
+			};
+			CertificateMap::<T>::insert(&domain_name, cert.clone());
+
+			Self::deposit_event(RawEvent::DomainRegistered(cert, sender));
 			Ok(())
 		}
 
