@@ -8,6 +8,7 @@ use frame_support::{decl_module, decl_storage, decl_event, decl_error, ensure, d
 use frame_support::codec::{Encode, Decode};
 use frame_system::ensure_signed;
 use sp_std::prelude::*;
+use core::str::from_utf8;
 
 #[cfg(test)]
 mod mock;
@@ -22,13 +23,17 @@ pub trait Trait: frame_system::Trait {
 }
 
 type String = Vec<u8>;
+const CERTIFICATE_VERSION: i32 = 1;
 
 #[derive(Encode, Decode, Default, Clone, PartialEq, Eq, Debug)]
 pub struct Certificate<AccountIdT> {
+	version_number: i32,
+	owner_id: AccountIdT,
+	valid_until: u64,
+	owner_name: String,
+	public_key: String,
+	ip_addr: String,
 	domain_name: String,
-	owner_public_key: AccountIdT,
-	website_public_key: String,
-	ip_addr: String	
 }
 
 // The pallet's runtime storage items.
@@ -65,7 +70,9 @@ decl_error! {
 		NoneValue,
 		/// Errors should have helpful documentation associated with them.
 		StorageOverflow,
-		DomainAlreadyTaken
+		DomainAlreadyTaken,
+		InvalidDomain,
+		InvalidOwnerString,
 	}
 }
 
@@ -99,18 +106,48 @@ decl_module! {
 		}
 
 		#[weight = 1]
-		pub fn register_domain(origin, domain_name: String, website_public_key: String, ip_addr: String) -> dispatch::DispatchResult {
+		pub fn register_domain(
+			origin,
+			owner_name: String,
+			domain_name: String,
+			ip_addr: String,
+			public_key: String,
+			valid_until: u64
+		) -> dispatch::DispatchResult{
+
 			let sender = ensure_signed(origin)?;
 
-			
+			//Ensures that the domain is available
 			ensure!(!CertificateMap::<T>::contains_key(&domain_name), Error::<T>::DomainAlreadyTaken);
 
-			let cert = Certificate{
+			//Ensures that the owner_name and domain name are valid UTF-8 string
+			ensure!(from_utf8(&owner_name).is_ok(), Error::<T>::InvalidOwnerString);
+			ensure!(from_utf8(&domain_name).is_ok(), Error::<T>::InvalidDomain);
+
+			//Ensures that the domain name is valid
+			const DOMAIN_MAX_CHARS: usize = 64;
+			ensure!(from_utf8(&domain_name).unwrap().chars().count() < DOMAIN_MAX_CHARS,
+					Error::<T>::InvalidDomain);
+
+			let invalid_chars = vec!['-', ' ', '!', '@', '#', '$', '^', '&', '*', '(', ')'];
+			for char in invalid_chars {
+				ensure!(from_utf8(&domain_name).unwrap().matches(char).count() == 0, Error::<T>::InvalidDomain);
+			}
+
+			//const LONGEST_TLD: i32 = 3;
+			//ensure!(from_utf8(&domain_name).unwrap().split('.'))....
+
+
+			let cert = Certificate {
+				version_number: CERTIFICATE_VERSION,
+				owner_id: sender.clone(),
+				valid_until,
+				owner_name: owner_name.clone(),
+				public_key: public_key.clone(),
+				ip_addr: ip_addr.clone(),
 				domain_name: domain_name.clone(),
-				owner_public_key: sender.clone(),
-				website_public_key,
-				ip_addr
 			};
+
 			CertificateMap::<T>::insert(&domain_name, cert.clone());
 
 			Self::deposit_event(RawEvent::DomainRegistered(cert, sender));
