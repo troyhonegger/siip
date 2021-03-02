@@ -45,7 +45,6 @@ decl_storage! {
 	trait Store for Module<T: Trait> as SiipModule {
 		// Learn more about declaring storage items:
 		// https://substrate.dev/docs/en/knowledgebase/runtime/storage#declaring-storage-items
-		Something get(fn something): Option<u32>;
 		pub CertificateMap get(fn get_certificate): map hasher(blake2_128_concat) String => Certificate<T::AccountId>;
 	}
 }
@@ -54,12 +53,8 @@ decl_storage! {
 // https://substrate.dev/docs/en/knowledgebase/runtime/events
 decl_event!(
 	pub enum Event<T> where AccountId = <T as frame_system::Trait>::AccountId {
-		/// Event documentation should end with an array that provides descriptive names for event
-		/// parameters. [something, who]
-		SomethingStored(u32, AccountId),
-
 		/// This is some documentation I guess. [certificate, person]
-		DomainRegistered(Certificate<AccountId>, AccountId),
+		CertificateRegistered(Certificate<AccountId>, AccountId),
 	}
 );
 
@@ -83,24 +78,6 @@ decl_module! {
 		// Events must be initialized if they are used by the pallet.
 		fn deposit_event() = default;
 
-		/// An example dispatchable that takes a singles value as a parameter, writes the value to
-		/// storage and emits an event. This function must be dispatched by a signed extrinsic.
-		#[weight = 10_000 + T::DbWeight::get().writes(1)]
-		pub fn do_something(origin, something: u32) -> dispatch::DispatchResult {
-			// Check that the extrinsic was signed and get the signer.
-			// This function will return an error if the extrinsic is not signed.
-			// https://substrate.dev/docs/en/knowledgebase/runtime/origin
-			let who = ensure_signed(origin)?;
-
-			// Update storage.
-			Something::put(something);
-
-			// Emit an event.
-			Self::deposit_event(RawEvent::SomethingStored(something, who));
-			// Return a successful DispatchResult
-			Ok(())
-		}
-
 		#[weight = 100_000 + T::DbWeight::get().writes(1) + T::DbWeight::get().reads(1)]
 		pub fn register_certificate(
 			origin,
@@ -112,9 +89,6 @@ decl_module! {
 		) -> dispatch::DispatchResult{
 
 			let sender = ensure_signed(origin)?;
-
-			//Ensures that the domain is available
-			ensure!(!CertificateMap::<T>::contains_key(&domain_name), Error::<T>::DomainAlreadyTaken);
 
 			//Ensures that the owner_name and domain name are valid UTF-8 string
 			ensure!(from_utf8(&owner_name).is_ok(), Error::<T>::InvalidOwnerString);
@@ -133,6 +107,9 @@ decl_module! {
 			//Replace uppercase letters with lowercase ones
 			let domain_name = from_utf8(&domain_name).unwrap().to_lowercase().as_bytes().to_vec();
 
+			//Ensures that the domain is available
+			ensure!(!CertificateMap::<T>::contains_key(&domain_name), Error::<T>::DomainAlreadyTaken);
+
 			let cert = Certificate {
 				version_number: CERTIFICATE_VERSION,
 				owner_id: sender.clone(),
@@ -145,7 +122,7 @@ decl_module! {
 
 			CertificateMap::<T>::insert(&domain_name, cert.clone());
 
-			Self::deposit_event(RawEvent::DomainRegistered(cert, sender));
+			Self::deposit_event(RawEvent::CertificateRegistered(cert, sender));
 			Ok(())
 		}
 	}

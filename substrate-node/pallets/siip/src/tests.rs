@@ -77,18 +77,7 @@ fn register_certificate_already_taken() {
 			public_key.clone()
 		));
 
-		//Register the second certificate
-		// let response = SiipModule::register_certificate(
-		// 	Origin::signed(1),
-		// 	name.clone(),
-		// 	domain.clone(),
-		// 	ip_addr.clone(),
-		// 	public_key_info.clone(),
-		// 	public_key.clone()
-		// );
-
-		//Ensure that the it returned an error
-		//assert!(response.is_err());
+		//Ensure that the second one returns an error
 		assert_noop!(SiipModule::register_certificate(
 			Origin::signed(1),
 			name.clone(),
