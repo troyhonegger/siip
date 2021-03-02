@@ -30,6 +30,7 @@ pub struct Certificate<AccountIdT> {
 	version_number: i32,
 	owner_id: AccountIdT,
 	owner_name: String,
+	public_key_info: String,
 	public_key: String,
 	ip_addr: String,
 	domain_name: String,
@@ -44,8 +45,7 @@ decl_storage! {
 	trait Store for Module<T: Trait> as SiipModule {
 		// Learn more about declaring storage items:
 		// https://substrate.dev/docs/en/knowledgebase/runtime/storage#declaring-storage-items
-		Something get(fn something): Option<u32>;
-		pub CertificateMap get(fn certificate_map): map hasher(blake2_128_concat) String => Certificate<T::AccountId>;
+		pub CertificateMap get(fn get_certificate): map hasher(blake2_128_concat) String => Certificate<T::AccountId>;
 	}
 }
 
@@ -53,10 +53,6 @@ decl_storage! {
 // https://substrate.dev/docs/en/knowledgebase/runtime/events
 decl_event!(
 	pub enum Event<T> where AccountId = <T as frame_system::Trait>::AccountId {
-		/// Event documentation should end with an array that provides descriptive names for event
-		/// parameters. [something, who]
-		SomethingStored(u32, AccountId),
-
 		/// This is some documentation I guess. [certificate, person]
 		DomainRegistered(Certificate<AccountId>, AccountId),
 	}
@@ -65,19 +61,15 @@ decl_event!(
 // Errors inform users that something went wrong.
 decl_error! {
 	pub enum Error for Module<T: Trait> {
-		/// Error names should be descriptive.
-		NoneValue,
-		/// Errors should have helpful documentation associated with them.
-		StorageOverflow,
 		DomainAlreadyTaken,
-		InvalidDomain,
 		InvalidOwnerString,
+		InvalidDomain,
 	}
 }
 
 // Dispatchable functions allows users to interact with the pallet and invoke state changes.
 // These functions materialize as "extrinsics", which are often compared to transactions.
-// Dispatchable functions must be annotated with a weight and must return a DispatchResult.
+// Dispatchable functions must be an notated with a weight and must return a DispatchResult.
 decl_module! {
 	pub struct Module<T: Trait> for enum Call where origin: T::Origin {
 		// Errors must be initialized if they are used by the pallet.
@@ -86,30 +78,13 @@ decl_module! {
 		// Events must be initialized if they are used by the pallet.
 		fn deposit_event() = default;
 
-		/// An example dispatchable that takes a singles value as a parameter, writes the value to
-		/// storage and emits an event. This function must be dispatched by a signed extrinsic.
-		#[weight = 10_000 + T::DbWeight::get().writes(1)]
-		pub fn do_something(origin, something: u32) -> dispatch::DispatchResult {
-			// Check that the extrinsic was signed and get the signer.
-			// This function will return an error if the extrinsic is not signed.
-			// https://substrate.dev/docs/en/knowledgebase/runtime/origin
-			let who = ensure_signed(origin)?;
-
-			// Update storage.
-			Something::put(something);
-
-			// Emit an event.
-			Self::deposit_event(RawEvent::SomethingStored(something, who));
-			// Return a successful DispatchResult
-			Ok(())
-		}
-
-		#[weight = 1]
-		pub fn register_domain(
+		#[weight = 100_000 + T::DbWeight::get().writes(1) + T::DbWeight::get().reads(1)]
+		pub fn register_certificate(
 			origin,
 			owner_name: String,
 			domain_name: String,
 			ip_addr: String,
+			public_key_info: String,
 			public_key: String
 		) -> dispatch::DispatchResult{
 
@@ -132,10 +107,14 @@ decl_module! {
 				ensure!(from_utf8(&domain_name).unwrap().matches(char).count() == 0, Error::<T>::InvalidDomain);
 			}
 
+			//Replace uppercase letters with lowercase ones
+			let domain_name = from_utf8(&domain_name).unwrap().to_lowercase().as_bytes().to_vec();
+
 			let cert = Certificate {
 				version_number: CERTIFICATE_VERSION,
 				owner_id: sender.clone(),
 				owner_name: owner_name.clone(),
+				public_key_info: public_key_info.clone(),
 				public_key: public_key.clone(),
 				ip_addr: ip_addr.clone(),
 				domain_name: domain_name.clone(),
@@ -145,25 +124,6 @@ decl_module! {
 
 			Self::deposit_event(RawEvent::DomainRegistered(cert, sender));
 			Ok(())
-		}
-
-		/// An example dispatchable that may throw a custom error.
-		#[weight = 10_000 + T::DbWeight::get().reads_writes(1,1)]
-		pub fn cause_error(origin) -> dispatch::DispatchResult {
-			let _who = ensure_signed(origin)?;
-
-			// Read a value from storage.
-			match Something::get() {
-				// Return an error if the value has not been set.
-				None => Err(Error::<T>::NoneValue)?,
-				Some(old) => {
-					// Increment the value read from storage; will error in the event of overflow.
-					let new = old.checked_add(1).ok_or(Error::<T>::StorageOverflow)?;
-					// Update the value in storage with the incremented result.
-					Something::put(new);
-					Ok(())
-				},
-			}
 		}
 	}
 }
