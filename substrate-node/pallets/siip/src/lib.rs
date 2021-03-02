@@ -23,13 +23,12 @@ pub trait Trait: frame_system::Trait {
 }
 
 type String = Vec<u8>;
-const CERTIFICATE_VERSION: i32 = 1;
+pub const CERTIFICATE_VERSION: i32 = 1;
 
 #[derive(Encode, Decode, Default, Clone, PartialEq, Eq, Debug)]
 pub struct Certificate<AccountIdT> {
 	version_number: i32,
 	owner_id: AccountIdT,
-	valid_until: u64,
 	owner_name: String,
 	public_key: String,
 	ip_addr: String,
@@ -41,7 +40,7 @@ pub struct Certificate<AccountIdT> {
 decl_storage! {
 	// A unique name is used to ensure that the pallet's storage items are isolated.
 	// This name may be updated, but each pallet in the runtime must use a unique name.
-	// ---------------------------------vvvvvvvvvvvvvv
+	// ---------------------------------
 	trait Store for Module<T: Trait> as SiipModule {
 		// Learn more about declaring storage items:
 		// https://substrate.dev/docs/en/knowledgebase/runtime/storage#declaring-storage-items
@@ -111,8 +110,7 @@ decl_module! {
 			owner_name: String,
 			domain_name: String,
 			ip_addr: String,
-			public_key: String,
-			valid_until: u64
+			public_key: String
 		) -> dispatch::DispatchResult{
 
 			let sender = ensure_signed(origin)?;
@@ -134,14 +132,9 @@ decl_module! {
 				ensure!(from_utf8(&domain_name).unwrap().matches(char).count() == 0, Error::<T>::InvalidDomain);
 			}
 
-			//const LONGEST_TLD: i32 = 3;
-			//ensure!(from_utf8(&domain_name).unwrap().split('.'))....
-
-
 			let cert = Certificate {
 				version_number: CERTIFICATE_VERSION,
 				owner_id: sender.clone(),
-				valid_until,
 				owner_name: owner_name.clone(),
 				public_key: public_key.clone(),
 				ip_addr: ip_addr.clone(),
