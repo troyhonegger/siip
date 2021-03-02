@@ -112,7 +112,7 @@ pub fn new_full(config: Configuration) -> Result<TaskManager, ServiceError> {
 	}
 
 	let role = config.role.clone();
-	let name = config.network.node_name.clone();
+	let _name = config.network.node_name.clone();
 	let prometheus_registry = config.prometheus_registry().cloned();
 	let telemetry_connection_sinks = sc_service::TelemetryConnectionSinks::default();
 
@@ -198,7 +198,7 @@ pub fn new_full(config: Configuration) -> Result<TaskManager, ServiceError> {
 //use sc_finality_grandpa::{FinalityProofProvider as GrandpaFinalityProofProvider};
 
 /// Builds a new service for a light client.
-pub fn new_light(config: Configuration) -> Result<TaskManager, ServiceError> {
+pub fn new_light(_config: Configuration) -> Result<TaskManager, ServiceError> {
 	Err(ServiceError::Other("Light clients are not yet implemented (TODO)".to_string()))
 
 	// This block comment is the node-template implementation.
