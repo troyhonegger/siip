@@ -53,8 +53,12 @@ decl_storage! {
 // https://substrate.dev/docs/en/knowledgebase/runtime/events
 decl_event!(
 	pub enum Event<T> where AccountId = <T as frame_system::Trait>::AccountId {
-		/// This is some documentation I guess. [certificate, person]
+		/// A certificate was added to the blockchain. Returns: [certificate, person]
 		CertificateRegistered(Certificate<AccountId>, AccountId),
+		/// A certificate in the blockchain was modified. Returns: [certificate, certificate, person]
+		CertificateModified(Certificate<AccountId>, Certificate<AccountId>, AccountId),
+		/// A certificate in the blockchain was removed. Returns (deleted): [certificate, person]
+		CertificateRemoved(Certificate<AccountId>, AccountId),
 	}
 );
 
@@ -64,6 +68,9 @@ decl_error! {
 		DomainAlreadyTaken,
 		InvalidOwnerString,
 		InvalidDomain,
+		NonexistentDomain,
+		DifferentOwner,
+		NoModifications
 	}
 }
 
@@ -78,7 +85,7 @@ decl_module! {
 		// Events must be initialized if they are used by the pallet.
 		fn deposit_event() = default;
 
-		#[weight = 100_000 + T::DbWeight::get().writes(1) + T::DbWeight::get().reads(1)]
+		#[weight = 1]
 		pub fn register_certificate(
 			origin,
 			owner_name: String,
@@ -123,6 +130,89 @@ decl_module! {
 			CertificateMap::<T>::insert(&domain_name, cert.clone());
 
 			Self::deposit_event(RawEvent::CertificateRegistered(cert, sender));
+			Ok(())
+		}
+
+		#[weight = 1]
+		pub fn modify_certificate(
+			origin,
+			owner_name: String,
+			domain_name: String,
+			ip_addr: String,
+			public_key_info: String,
+			public_key: String
+		) -> dispatch::DispatchResult{
+
+			let sender = ensure_signed(origin)?;
+
+			//Ensures that the owner_name and domain name are valid UTF-8 string
+			ensure!(from_utf8(&owner_name).is_ok(), Error::<T>::InvalidOwnerString);
+			ensure!(from_utf8(&domain_name).is_ok(), Error::<T>::InvalidDomain);
+
+			//Ensures that the domain name is valid
+			const DOMAIN_MAX_CHARS: usize = 64;
+			ensure!(from_utf8(&domain_name).unwrap().chars().count() < DOMAIN_MAX_CHARS,
+					Error::<T>::InvalidDomain);
+
+			let invalid_chars = vec!['-', ' ', '!', '@', '#', '$', '^', '&', '*', '(', ')'];
+			for char in invalid_chars {
+				ensure!(from_utf8(&domain_name).unwrap().matches(char).count() == 0, Error::<T>::InvalidDomain);
+			}
+
+			//Replace uppercase letters with lowercase ones
+			let domain_name = from_utf8(&domain_name).unwrap().to_lowercase().as_bytes().to_vec();
+
+			//Ensures that the domain already exists
+			ensure!(CertificateMap::<T>::contains_key(&domain_name), Error::<T>::NonexistentDomain);
+
+			let cert = Certificate {
+				version_number: CERTIFICATE_VERSION,
+				owner_id: sender.clone(),
+				owner_name: owner_name.clone(),
+				public_key_info: public_key_info.clone(),
+				public_key: public_key.clone(),
+				ip_addr: ip_addr.clone(),
+				domain_name: domain_name.clone(),
+			};
+
+			//Ensures that the owner of the domain is the sender
+			let old_cert = CertificateMap::<T>::get(&domain_name);
+			ensure!(sender == old_cert.owner_id, Error::<T>::DifferentOwner);
+
+			//Ensures that there is some modification
+			ensure!(cert != old_cert, Error::<T>::NoModifications);
+
+			CertificateMap::<T>::take(&domain_name);
+			CertificateMap::<T>::insert(&domain_name, cert.clone());
+
+			Self::deposit_event(RawEvent::CertificateModified(cert, old_cert, sender));
+			Ok(())
+		}
+
+		#[weight = 1]
+		pub fn remove_certificate(
+			origin,
+			domain_name: String,
+		) -> dispatch::DispatchResult{
+
+			let sender = ensure_signed(origin)?;
+
+			//Ensures that the owner_name and domain name are valid UTF-8 string
+			ensure!(from_utf8(&domain_name).is_ok(), Error::<T>::InvalidDomain);
+
+			//Replace uppercase letters with lowercase ones
+			let domain_name = from_utf8(&domain_name).unwrap().to_lowercase().as_bytes().to_vec();
+
+			//Ensures that the domain already exists
+			ensure!(CertificateMap::<T>::contains_key(&domain_name), Error::<T>::NonexistentDomain);
+
+			//Ensures that the owner of the domain is the sender
+			let old_cert = CertificateMap::<T>::get(&domain_name);
+			ensure!(sender == old_cert.owner_id, Error::<T>::DifferentOwner);
+
+			CertificateMap::<T>::take(&domain_name);
+
+			Self::deposit_event(RawEvent::CertificateRemoved(old_cert, sender));
 			Ok(())
 		}
 	}
