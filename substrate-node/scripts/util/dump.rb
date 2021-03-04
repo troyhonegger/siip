@@ -65,7 +65,7 @@ certs = entries.map do |entry|
   ipaddr, data = parse_field(data)
   domain, data = parse_field(data)
 
+  puts "#{domain} #{ipaddr} #{pubkey} #{name} #{info}"
+
   { name: name, info: info, pubkey: pubkey, ipaddr: ipaddr, domain: domain }
 end
-
-puts certs.to_json
