@@ -14,6 +14,10 @@ use sp_block_builder::BlockBuilder;
 pub use sc_rpc_api::DenyUnsafe;
 use sp_transaction_pool::TransactionPool;
 
+use jsonrpc_derive::rpc;
+//use futures::{future::BoxFuture, compat::Compat};
+//use self::error::Result as SystemResult;
+use sc_rpc_api::system::error::Result as SystemResult;
 
 /// Full client dependencies.
 pub struct FullDeps<C, P> {
@@ -61,4 +65,18 @@ pub fn create_full<C, P>(
 	// `io.extend_with(YourRpcTrait::to_delegate(YourRpcStruct::new(ReferenceToClient, ...)));`
 
 	io
+}
+
+#[rpc]
+pub trait SiipRpcTrait {
+    #[rpc(name = "add_cert", returns = "String")]
+    fn add_cert(&self) -> SystemResult<String>;
+}
+
+pub struct SiipRpcStruct;
+
+impl SiipRpcTrait for SiipRpcStruct {
+    fn add_cert(&self) -> SystemResult<String> {
+        Ok("Test".to_string())
+    }
 }

@@ -5919,6 +5919,8 @@ dependencies = [
  "frame-benchmarking",
  "frame-benchmarking-cli",
  "jsonrpc-core",
+ "jsonrpc-core-client",
+ "jsonrpc-derive",
  "log",
  "pallet-transaction-payment-rpc",
  "parking_lot 0.10.2",
