@@ -15,9 +15,31 @@ pub use sc_rpc_api::DenyUnsafe;
 use sp_transaction_pool::TransactionPool;
 
 use jsonrpc_derive::rpc;
-//use futures::{future::BoxFuture, compat::Compat};
-//use self::error::Result as SystemResult;
 use sc_rpc_api::system::error::Result as SystemResult;
+
+#[rpc]
+pub trait SiipRpcTrait {
+    #[rpc(name = "add_cert", returns = "String")]
+    fn add_cert(&self) -> SystemResult<String>;
+}
+
+pub struct SiipRpcStruct<C> {
+    client: Arc<C>
+}
+
+impl<C> SiipRpcStruct<C> {
+    pub fn new(client: Arc<C>) -> Self {
+        SiipRpcStruct {
+            client
+        }
+    }
+}
+
+impl<C> SiipRpcTrait for SiipRpcStruct<C> where C: Send + Sync + 'static {
+    fn add_cert(&self) -> SystemResult<String> {
+        Ok("Test".to_string())
+    }
+}
 
 /// Full client dependencies.
 pub struct FullDeps<C, P> {
@@ -59,24 +81,14 @@ pub fn create_full<C, P>(
 		TransactionPaymentApi::to_delegate(TransactionPayment::new(client.clone()))
 	);
 
+    io.extend_with(
+        SiipRpcTrait::to_delegate(SiipRpcStruct::new(client.clone()))
+    );
+
 	// Extend this RPC with a custom API by using the following syntax.
 	// `YourRpcStruct` should have a reference to a client, which is needed
 	// to call into the runtime.
 	// `io.extend_with(YourRpcTrait::to_delegate(YourRpcStruct::new(ReferenceToClient, ...)));`
 
 	io
-}
-
-#[rpc]
-pub trait SiipRpcTrait {
-    #[rpc(name = "add_cert", returns = "String")]
-    fn add_cert(&self) -> SystemResult<String>;
-}
-
-pub struct SiipRpcStruct;
-
-impl SiipRpcTrait for SiipRpcStruct {
-    fn add_cert(&self) -> SystemResult<String> {
-        Ok("Test".to_string())
-    }
 }
