@@ -26,6 +26,7 @@ sp-std = { default-features = false, version = '2.0.1' }
 sp-core = { default-features = false, version = '2.0.1' }
 sp-io = { default-features = false, version = '2.0.1' }
 sp-runtime = { default-features = false, version = '2.0.1' }
+pallet-balances = { default-features = false, version = '2.0.1' }
 
 [features]
 default = ['std']

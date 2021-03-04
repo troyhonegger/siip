@@ -28,6 +28,7 @@ const PUBLIC_KEY: &str =
 fn register_certificate() {
 	new_test_ext().execute_with(|| {
 		//Registers a certificate
+		println!(BalancesModule::free_balance());
 		assert_ok!(SiipModule::register_certificate(
 			Origin::signed(1),
 			NAME.into(),
