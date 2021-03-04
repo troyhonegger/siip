@@ -20,7 +20,7 @@ use sc_rpc_api::system::error::Result as SystemResult;
 #[rpc]
 pub trait SiipRpcTrait {
     #[rpc(name = "add_cert", returns = "String")]
-    fn add_cert(&self) -> SystemResult<String>;
+    fn add_cert(&self, name: String) -> SystemResult<String>;
 }
 
 pub struct SiipRpcStruct<C> {
@@ -36,8 +36,10 @@ impl<C> SiipRpcStruct<C> {
 }
 
 impl<C> SiipRpcTrait for SiipRpcStruct<C> where C: Send + Sync + 'static {
-    fn add_cert(&self) -> SystemResult<String> {
-        Ok("Test".to_string())
+    fn add_cert(&self, name: String) -> SystemResult<String> {
+        let mut output: String = "...".to_string();
+        output.push_str(&name);
+        Ok(output)
     }
 }
 
