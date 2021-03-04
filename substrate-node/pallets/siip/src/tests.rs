@@ -12,17 +12,15 @@ pub const EMPTY_CERTIFICATE: i32 = 0;
 const NAME: &str = "Adrian Teigen";
 const DOMAIN: &str = "adrianteigen.com";
 const IP_ADDR: &str = "13.49.70.106";
-const PUBLIC_KEY_INFO: &str = "Algorithm: RSA, Key Size: 2048, Exponent: 65537";
-const PUBLIC_KEY: &str =
-			"B4:02:EE:13:C2:98:6F:B9:33:51:2A:CC:95:C2:B6:D5:06:C9:59:33:CD:62:E6:DD:B3:5B:8F:68:\
-			64:BC:C9:AC:FA:BB:41:3E:D7:AF:23:DC:3B:40:B7:C4:3C:64:31:6F:8C:B6:C5:D5:D6:DD:A4:2F:5C:\
-			7D:C5:F7:11:B7:42:A6:B7:DB:AC:0F:71:67:10:34:01:9D:41:5B:5C:C5:1C:16:08:24:55:61:1E:F9:\
-			9A:8A:70:75:8C:DA:55:E5:E5:AE:36:08:65:13:1C:55:BC:24:2A:64:17:96:94:2E:6B:DC:AC:63:9D:\
-			EA:88:98:D6:F3:E6:40:FE:94:76:AC:7F:A1:DA:5C:4C:D6:4E:CE:81:50:F3:A3:33:E0:97:20:3D:51:\
-			90:15:51:A0:79:7E:10:78:5D:08:AA:A2:D5:18:34:BA:87:11:5F:D6:F9:A8:42:6C:81:AC:6A:04:2D:\
-			14:82:D5:BC:96:90:F7:3D:72:FC:67:B5:68:4F:4A:12:38:2F:93:05:02:92:70:93:E5:78:FB:72:12:\
-			C0:2E:DD:7B:28:50:A1:ED:5E:2D:6B:0B:C5:18:91:7E:8A:98:8A:2E:63:92:C9:8D:59:54:9D:2E:70:\
-			6E:80:49:9D:07:C9:C1:AC:4A:F9:24:4E:85:44:D0:C1:4F:75:F7:65:B8:B9:32:12:0F";
+const INFO: &str =
+"{
+  \"Algorithm\": \"RSA\",
+  \"Key Size\": \"32\",
+  \"Exponent\": \"65537\"
+}";
+
+const KEY: &str =
+			"B4:02:EE:13";
 
 #[test]
 fn register_certificate() {
@@ -33,8 +31,8 @@ fn register_certificate() {
 			NAME.into(),
 			DOMAIN.into(),
 			IP_ADDR.into(),
-			PUBLIC_KEY_INFO.into(),
-			PUBLIC_KEY.into()
+			INFO.into(),
+			KEY.into()
 		));
 
 		//Ensures that it was saved correctly
@@ -42,11 +40,11 @@ fn register_certificate() {
 		let expected = Certificate {
 			version_number: CERTIFICATE_VERSION,
 			owner_id: ensure_signed(Origin::signed(1)).unwrap(),
-			owner_name: NAME.into(),
-			public_key: PUBLIC_KEY.into(),
-			public_key_info: PUBLIC_KEY_INFO.into(),
+			name: NAME.into(),
+			key: KEY.into(),
+			info: INFO.into(),
 			ip_addr: IP_ADDR.into(),
-			domain_name: DOMAIN.into(),
+			domain: DOMAIN.into(),
 		};
 		assert_eq!(expected, response);
 	});
@@ -61,8 +59,8 @@ fn register_certificate_already_taken() {
 			NAME.into(),
 			DOMAIN.into(),
 			IP_ADDR.into(),
-			PUBLIC_KEY_INFO.into(),
-			PUBLIC_KEY.into()
+			INFO.into(),
+			KEY.into()
 		));
 
 		//Ensure that the second one returns an error
@@ -71,8 +69,8 @@ fn register_certificate_already_taken() {
 			NAME.into(),
 			DOMAIN.into(),
 			IP_ADDR.into(),
-			PUBLIC_KEY_INFO.into(),
-			PUBLIC_KEY.into()
+			INFO.into(),
+			KEY.into()
 		), Error::<Test>::DomainAlreadyTaken);
 	});
 }
@@ -89,8 +87,8 @@ fn register_certificate_invalid_domain() {
 			NAME.into(),
 			new_domain.into(),
 			IP_ADDR.into(),
-			PUBLIC_KEY_INFO.into(),
-			PUBLIC_KEY.into()
+			INFO.into(),
+			KEY.into()
 		), Error::<Test>::InvalidDomain);
 
 		//Domain contains an invalid symbol
@@ -100,8 +98,8 @@ fn register_certificate_invalid_domain() {
 			NAME.into(),
 			new_domain.into(),
 			IP_ADDR.into(),
-			PUBLIC_KEY_INFO.into(),
-			PUBLIC_KEY.into()
+			INFO.into(),
+			KEY.into()
 		), Error::<Test>::InvalidDomain);
 	});
 }
@@ -115,8 +113,8 @@ fn register_certificate_invalid_signature() {
 			NAME.into(),
 			DOMAIN.into(),
 			IP_ADDR.into(),
-			PUBLIC_KEY_INFO.into(),
-			PUBLIC_KEY.into()
+			INFO.into(),
+			KEY.into()
 		).is_err());
 	});
 }
@@ -131,8 +129,8 @@ fn register_certificate_uppercase_domain() {
 			NAME.into(),
 			new_domain.into(),
 			IP_ADDR.into(),
-			PUBLIC_KEY_INFO.into(),
-			PUBLIC_KEY.into()
+			INFO.into(),
+			KEY.into()
 		));
 
 		//Ensure that the saved domain is undercase
@@ -140,11 +138,11 @@ fn register_certificate_uppercase_domain() {
 		let expected = Certificate {
 			version_number: 1,
 			owner_id: ensure_signed(Origin::signed(1)).unwrap(),
-			owner_name: NAME.into(),
-			public_key_info: PUBLIC_KEY_INFO.into(),
-			public_key: PUBLIC_KEY.into(),
+			name: NAME.into(),
+			info: INFO.into(),
+			key: KEY.into(),
 			ip_addr: IP_ADDR.into(),
-			domain_name: DOMAIN.into(),
+			domain: DOMAIN.into(),
 		};
 		assert_eq!(expected, response);
 	});
@@ -158,17 +156,17 @@ fn modify_certificate_key() {
 			NAME.into(),
 			DOMAIN.into(),
 			IP_ADDR.into(),
-			PUBLIC_KEY_INFO.into(),
-			PUBLIC_KEY.into()
+			INFO.into(),
+			KEY.into()
 		));
 
-		let other_public_key: String = "long".into();
+		let other_public_key: String = "01:23:45:67:89:AB:CD:EF".into();
 		assert_ok!(SiipModule::modify_certificate(
 			Origin::signed(1),
 			NAME.into(),
 			DOMAIN.into(),
 			IP_ADDR.into(),
-			PUBLIC_KEY_INFO.into(),
+			INFO.into(),
 			other_public_key.clone(),
 		));
 
@@ -176,11 +174,11 @@ fn modify_certificate_key() {
 		let expected = Certificate {
 			version_number: CERTIFICATE_VERSION,
 			owner_id: ensure_signed(Origin::signed(1)).unwrap(),
-			owner_name: NAME.into(),
-			public_key_info: PUBLIC_KEY_INFO.into(),
-			public_key: other_public_key.clone(),
+			name: NAME.into(),
+			info: INFO.into(),
+			key: other_public_key.clone(),
 			ip_addr: IP_ADDR.into(),
-			domain_name: DOMAIN.into(),
+			domain: DOMAIN.into(),
 		};
 		assert_eq!(expected, response);
 	})
@@ -194,8 +192,8 @@ fn modify_certificate_domain() {
 			NAME.into(),
 			DOMAIN.into(),
 			IP_ADDR.into(),
-			PUBLIC_KEY_INFO.into(),
-			PUBLIC_KEY.into()
+			INFO.into(),
+			KEY.into()
 		));
 
 		assert_noop!(SiipModule::modify_certificate(
@@ -203,8 +201,8 @@ fn modify_certificate_domain() {
 			NAME.into(),
 			"A_different_domain".into(),
 			IP_ADDR.into(),
-			PUBLIC_KEY_INFO.into(),
-			PUBLIC_KEY.into()
+			INFO.into(),
+			KEY.into()
 		), Error::<Test>::NonexistentDomain);
 	})
 }
@@ -217,8 +215,8 @@ fn modify_certificate_uppercase_domain() {
 			NAME.into(),
 			DOMAIN.into(),
 			IP_ADDR.into(),
-			PUBLIC_KEY_INFO.into(),
-			PUBLIC_KEY.into()
+			INFO.into(),
+			KEY.into()
 		));
 
 		assert_noop!(SiipModule::modify_certificate(
@@ -226,8 +224,8 @@ fn modify_certificate_uppercase_domain() {
 			NAME.into(),
 			"AdrianTeigen.com".into(),
 			IP_ADDR.into(),
-			PUBLIC_KEY_INFO.into(),
-			PUBLIC_KEY.into()
+			INFO.into(),
+			KEY.into()
 		), Error::<Test>::NoModifications);
 	})
 }
@@ -240,8 +238,8 @@ fn modify_certificate_invalid_signature() {
 			NAME.into(),
 			DOMAIN.into(),
 			IP_ADDR.into(),
-			PUBLIC_KEY_INFO.into(),
-			PUBLIC_KEY.into()
+			INFO.into(),
+			KEY.into()
 		));
 
 		//Transaction is not signed
@@ -250,7 +248,7 @@ fn modify_certificate_invalid_signature() {
 			NAME.into(),
 			DOMAIN.into(),
 			IP_ADDR.into(),
-			PUBLIC_KEY_INFO.into(),
+			INFO.into(),
 			"A new public key that I don't feel like typing.".into()
 		).is_err());
 	})
@@ -264,8 +262,8 @@ fn delete_certificate() {
 			NAME.into(),
 			DOMAIN.into(),
 			IP_ADDR.into(),
-			PUBLIC_KEY_INFO.into(),
-			PUBLIC_KEY.into()
+			INFO.into(),
+			KEY.into()
 		));
 
 		assert_ok!(SiipModule::remove_certificate(Origin::signed(1), DOMAIN.into()));
@@ -290,8 +288,8 @@ fn delete_certificate_invalid_signature() {
 			NAME.into(),
 			DOMAIN.into(),
 			IP_ADDR.into(),
-			PUBLIC_KEY_INFO.into(),
-			PUBLIC_KEY.into()
+			INFO.into(),
+			KEY.into()
 		));
 
 		assert!(SiipModule::remove_certificate(Origin::none(), DOMAIN.into()).is_err());
