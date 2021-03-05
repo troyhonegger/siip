@@ -22,6 +22,10 @@ substrate-build-script-utils = '2.0.1'
 jsonrpc-core = '15.0.0'
 structopt = '0.3.8'
 
+# RPC Stuff
+jsonrpc-core-client = "15.0"
+jsonrpc-derive = "15.0"
+
 # local dependencies
 siip-node-runtime = { path = '../runtime', version = '0.0.1' }
 sha3pow = { path = '../consensus/sha3pow', version = '2.0.0' }

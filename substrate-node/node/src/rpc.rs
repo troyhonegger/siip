@@ -14,6 +14,51 @@ use sp_block_builder::BlockBuilder;
 pub use sc_rpc_api::DenyUnsafe;
 use sp_transaction_pool::TransactionPool;
 
+use jsonrpc_derive::rpc;
+use sc_rpc_api::system::error::Result as SystemResult;
+use siip_node_runtime::Runtime;
+use siip_node_runtime::pallet_siip::Module as SiipModule;
+use sp_core::sr25519;
+
+#[rpc]
+pub trait SiipRpcTrait {
+    #[rpc(name = "add_cert", returns = "String")]
+    fn add_cert(&self, name: String, ip: String, pubkey: String) -> SystemResult<String>;
+}
+
+pub struct SiipRpcStruct<C> {
+    client: Arc<C>
+}
+
+impl<C> SiipRpcStruct<C> {
+    pub fn new(client: Arc<C>) -> Self {
+        SiipRpcStruct {
+            client
+        }
+    }
+}
+
+impl<C> SiipRpcTrait for SiipRpcStruct<C> where C: Send + Sync + 'static {
+    fn add_cert(&self, domain: String, ip: String, pubkey: String) -> SystemResult<String> {
+        let res = SiipModule::<Runtime>::register_certificate(
+            siip_node_runtime::Origin::signed(
+                crate::chain_spec::get_account_id_from_seed::<sr25519::Public>("Alice")
+            ),
+            "Genesis".as_bytes().to_vec(),
+            domain.as_bytes().to_vec(),
+            ip.as_bytes().to_vec(),
+            "Genesis".as_bytes().to_vec(),
+            pubkey.as_bytes().to_vec()
+        );
+
+        let msg = match res {
+            Ok(()) => domain,
+            Err(dispatch) => "uh oh".to_string(),
+        };
+
+        Ok(msg)
+    }
+}
 
 /// Full client dependencies.
 pub struct FullDeps<C, P> {
@@ -54,6 +99,10 @@ pub fn create_full<C, P>(
 	io.extend_with(
 		TransactionPaymentApi::to_delegate(TransactionPayment::new(client.clone()))
 	);
+
+    io.extend_with(
+        SiipRpcTrait::to_delegate(SiipRpcStruct::new(client.clone()))
+    );
 
 	// Extend this RPC with a custom API by using the following syntax.
 	// `YourRpcStruct` should have a reference to a client, which is needed
