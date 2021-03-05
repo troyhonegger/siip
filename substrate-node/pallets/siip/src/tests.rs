@@ -192,7 +192,7 @@ fn modify_nonexistant() {
 		assert_noop!(SiipModule::modify_certificate(
 			Origin::signed(1),
 			NAME.into(),
-			"A_different_domain".into(),
+			"aDifferentDomain.com".into(),
 			IP_ADDR.into(),
 			INFO.into(),
 			KEY.into()
