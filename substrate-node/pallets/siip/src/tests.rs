@@ -12,15 +12,8 @@ pub const EMPTY_CERTIFICATE: i32 = 0;
 const NAME: &str = "Adrian Teigen";
 const DOMAIN: &str = "adrianteigen.com";
 const IP_ADDR: &str = "13.49.70.106";
-const INFO: &str =
-"{
-  \"Algorithm\": \"RSA\",
-  \"Key Size\": \"32\",
-  \"Exponent\": \"65537\"
-}";
-
-const KEY: &str =
-			"B4:02:EE:13";
+const INFO: &str ="{ \"Algorithm\": \"RSA\",   \"Key Size\": \"32\",   \"Exponent\": \"65537\" }";
+const KEY: &str = "B4:02:EE:13";
 
 #[test]
 fn register_certificate() {
