@@ -180,7 +180,7 @@ pub trait SiipPowAlgorithm<B> : PowAlgorithm<B>
 		&self,
 		_parent: &BlockId<B>, // parent block hash is included in block header which is used to compute pre_hash, so we don't need it here
 		pre_hash: &<B as BlockT>::Hash,
-		_pre_digest: Option<&[u8]>, //TODO need to use this to compute the seal as well, so it can encode the block author
+		_pre_digest: Option<&[u8]>, // pre runtime digests are included in block header which is used to compute pre_hash, so we shouldn't need it here
 		difficulty: <Self as PowAlgorithm<B>>::Difficulty,
 		round: u32 // The number of nonces to try during this call
 	) -> Result<Option<RawSeal>, Error<B>> {

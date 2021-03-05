@@ -38,13 +38,13 @@ frame-system-rpc-runtime-api = { default-features = false, version = '2.0.1' }
 pallet-balances = { default-features = false, version = '2.0.1' }
 pallet-randomness-collective-flip = { default-features = false, version = '2.0.1' }
 pallet-sudo = { default-features = false, version = '2.0.1' }
-pallet-timestamp = { default-features = false, version = '2.0.1' }
 pallet-transaction-payment = { default-features = false, version = '2.0.1' }
 pallet-transaction-payment-rpc-runtime-api = { default-features = false, version = '2.0.1' }
 smallvec = { default-features = false, version = '1.6.1' }
 sp-api = { default-features = false, version = '2.0.1' }
 sp-block-builder = { default-features = false, version = '2.0.1' }
 sp-core = { default-features = false, version = '2.0.1' }
+sp-consensus-pow = { default_features = false, version = '0.8.1' }
 sp-inherents = { default-features = false, version = '2.0.1' }
 sp-offchain = { default-features = false, version = '2.0.1' }
 sp-runtime = { default-features = false, version = '2.0.1' }
@@ -62,7 +62,6 @@ runtime-benchmarks = [
     'frame-system-benchmarking',
     'frame-system/runtime-benchmarks',
     'pallet-balances/runtime-benchmarks',
-    'pallet-timestamp/runtime-benchmarks',
     'sp-runtime/runtime-benchmarks',
 ]
 std = [
@@ -76,11 +75,11 @@ std = [
     'pallet-randomness-collective-flip/std',
     'pallet-sudo/std',
     'pallet-siip/std',
-    'pallet-timestamp/std',
     'pallet-transaction-payment/std',
     'pallet-transaction-payment-rpc-runtime-api/std',
     'sp-api/std',
     'sp-block-builder/std',
+    'sp-consensus-pow/std',
     'sp-core/std',
     'sp-inherents/std',
     'sp-offchain/std',

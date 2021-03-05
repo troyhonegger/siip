@@ -8,6 +8,9 @@ use siip_node_runtime::{self, opaque::Block, RuntimeApi};
 use sc_service::{error::Error as ServiceError, Configuration, TaskManager};
 use sc_executor::native_executor_instance;
 pub use sc_executor::NativeExecutor;
+use sp_core::sr25519;
+
+use crate::chain_spec;
 
 mod miner;
 
@@ -112,7 +115,7 @@ pub fn new_full(config: Configuration) -> Result<TaskManager, ServiceError> {
 	}
 
 	let role = config.role.clone();
-	let _name = config.network.node_name.clone();
+	let name = config.network.node_name.clone();
 	let prometheus_registry = config.prometheus_registry().cloned();
 	let telemetry_connection_sinks = sc_service::TelemetryConnectionSinks::default();
 
@@ -144,15 +147,6 @@ pub fn new_full(config: Configuration) -> Result<TaskManager, ServiceError> {
 		backend, network_status_sinks, system_rpc_tx, config,
 	})?;
 
-	// Note: this was included in the node template configuration.
-	// We don't need it currently, but we might soon, so the node can sign transactions.
-	// It might also end up going in the preruntime digest
-	let _keystore = if role.is_authority() {
-		Some(keystore as sp_core::traits::BareCryptoStorePtr)
-	} else {
-		None
-	};
-
 	if role.is_authority() {
 		let proposer = sc_basic_authorship::ProposerFactory::new(
 			client.clone(),
@@ -162,6 +156,13 @@ pub fn new_full(config: Configuration) -> Result<TaskManager, ServiceError> {
 
 		let can_author_with =
 			sp_consensus::CanAuthorWithNativeVersion::new(client.executor().clone());
+
+		//TODO this generates a key matching one of the development keys in the genesis config ('//Alice', '//Bob', etc).
+		// In production, this must be replaced with a random key - something like so:
+		//let key_pair = keystore.write().generate_by_type::<sr25519::Pair>(sp_core::crypto::key_types::ACCOUNT)
+			//.map_err(|e| ServiceError::Keystore(e))?;
+		let public_key = chain_spec::get_from_seed::<sr25519::Public>(&name[..]);
+			//^^^ TODO this should technically be an AccountId, but by happy coincidence that's usually the same as Public. Trouble is, AccountId doesn't have a way to convert to an array
 
 		// NOTE: the returned worker does NOT actually do the mining (contrary to what
 		// the name may imply). It just watches the transaction pool and combines
@@ -174,7 +175,7 @@ pub fn new_full(config: Configuration) -> Result<TaskManager, ServiceError> {
 			MinimalSha3Algorithm,
 			proposer,
 			network.clone(),
-			None, // no preruntime digests at present - TODO this should contain the ID of the node
+			Some(public_key.to_vec()),
 			inherent_data_providers,
 			// time to wait for a new block before starting to mine a new one
 			Duration::from_secs(10),

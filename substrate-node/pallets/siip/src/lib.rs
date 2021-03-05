@@ -233,7 +233,7 @@ decl_module! {
 		// Events must be initialized if they are used by the pallet.
 		fn deposit_event() = default;
 
-		#[weight = 1]
+		#[weight = 1_000_000]
 		pub fn register_certificate(
 			origin,
 			name: Vec<u8>,
@@ -269,7 +269,7 @@ decl_module! {
 			Ok(())
 		}
 
-		#[weight = 1]
+		#[weight = 1_000_000]
 		pub fn modify_certificate(
 			origin,
 			name: Vec<u8>,
@@ -313,7 +313,7 @@ decl_module! {
 			Ok(())
 		}
 
-		#[weight = 1]
+		#[weight = 1_000_000]
 		pub fn remove_certificate(
 			origin,
 			domain: Vec<u8>,
