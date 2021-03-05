@@ -58,7 +58,7 @@ fn check_domain(domain: Vec<u8>) -> Option<Vec<u8>> {
 	}
 
 	//Must not contain these symbols
-	let invalid_chars = vec!['-', ' ', '!', '@', '#', '$', '^', '&', '*', '(', ')'];
+	let invalid_chars = vec!['_', ' ', '!', '@', '#', '$', '^', '&', '*', '(', ')'];
 	for char in invalid_chars {
 		if domain.matches(char).count() != 0 {
 			return None
