@@ -51,7 +51,7 @@ fn register_certificate() {
 }
 
 #[test]
-fn register_certificate_already_taken() {
+fn already_taken() {
 	new_test_ext().execute_with(|| {
 		//Register the first certificate
 		assert_ok!(SiipModule::register_certificate(
@@ -76,7 +76,7 @@ fn register_certificate_already_taken() {
 }
 
 #[test]
-fn register_certificate_invalid_domain() {
+fn invalid_domain() {
 	new_test_ext().execute_with(|| {
 		let new_domain: String =
 			"Donaudampfschifffahrtselektrizitätenhauptbetriebswerkbauunterbeamtengesellschaft.de".into();
@@ -105,7 +105,7 @@ fn register_certificate_invalid_domain() {
 }
 
 #[test]
-fn register_certificate_invalid_signature() {
+fn invalid_signature() {
 	new_test_ext().execute_with(|| {
 		//Does not provide a signature
 		assert!(SiipModule::register_certificate(
@@ -120,7 +120,7 @@ fn register_certificate_invalid_signature() {
 }
 
 #[test]
-fn register_certificate_uppercase_domain() {
+fn uppercase_domain() {
 	new_test_ext().execute_with(|| {
 		//A domain with a domain containing uppercase characters
 		let new_domain: String = "AdrianTeigen.com".into();
@@ -149,7 +149,7 @@ fn register_certificate_uppercase_domain() {
 }
 
 #[test]
-fn modify_certificate_key() {
+fn modify_certificate() {
 	new_test_ext().execute_with(|| {
 		assert_ok!(SiipModule::register_certificate(
 			Origin::signed(1),
@@ -185,7 +185,7 @@ fn modify_certificate_key() {
 }
 
 #[test]
-fn modify_certificate_domain() {
+fn modify_nonexistant() {
 	new_test_ext().execute_with(|| {
 		assert_ok!(SiipModule::register_certificate(
 			Origin::signed(1),
@@ -208,7 +208,7 @@ fn modify_certificate_domain() {
 }
 
 #[test]
-fn modify_certificate_uppercase_domain() {
+fn modify_uppercase_domain() {
 	new_test_ext().execute_with(|| {
 		assert_ok!(SiipModule::register_certificate(
 			Origin::signed(1),
@@ -231,7 +231,7 @@ fn modify_certificate_uppercase_domain() {
 }
 
 #[test]
-fn modify_certificate_invalid_signature() {
+fn modify_invalid_signature() {
 	new_test_ext().execute_with(|| {
 		assert_ok!(SiipModule::register_certificate(
 			Origin::signed(1),
@@ -274,14 +274,14 @@ fn delete_certificate() {
 }
 
 #[test]
-fn delete_nonexistant_certificate() {
+fn delete_nonexistent() {
 	new_test_ext().execute_with(|| {
 		assert_noop!(SiipModule::remove_certificate(Origin::signed(1), DOMAIN.into()), Error::<Test>::NonexistentDomain);
 	})
 }
 
 #[test]
-fn delete_certificate_invalid_signature() {
+fn delete_invalid_signature() {
 	new_test_ext().execute_with(|| {
 		assert_ok!(SiipModule::register_certificate(
 			Origin::signed(1),
@@ -293,5 +293,91 @@ fn delete_certificate_invalid_signature() {
 		));
 
 		assert!(SiipModule::remove_certificate(Origin::none(), DOMAIN.into()).is_err());
+	})
+}
+
+#[test]
+fn invalid_json() {
+	new_test_ext().execute_with(|| {
+		assert_noop!(SiipModule::register_certificate(
+			Origin::signed(1),
+			NAME.into(),
+			DOMAIN.into(),
+			IP_ADDR.into(),
+			"This }{{ is not valid json formatting.".into(),
+			KEY.into()
+		), Error::<Test>::InvalidInfo);
+	})
+}
+
+#[test]
+fn invalid_ip() {
+	new_test_ext().execute_with(|| {
+		let new_ip: String = "2001:0db8:85a3:0000:0000:8a2e:0370:7334".into();
+
+		assert_noop!(SiipModule::register_certificate(
+				Origin::signed(1),
+				NAME.into(),
+				DOMAIN.into(),
+				new_ip.into(),
+				INFO.into(),
+				KEY.into()
+			), Error::<Test>::InvalidIP);
+
+		let new_ip: String = "256.256.256.256".into();
+		assert_noop!(SiipModule::register_certificate(
+				Origin::signed(1),
+				NAME.into(),
+				DOMAIN.into(),
+				new_ip.into(),
+				INFO.into(),
+				KEY.into()
+			), Error::<Test>::InvalidIP);
+
+		let new_ip: String = "-1.-1.-1.-1".into();
+		assert_noop!(SiipModule::register_certificate(
+				Origin::signed(1),
+				NAME.into(),
+				DOMAIN.into(),
+				new_ip.into(),
+				INFO.into(),
+				KEY.into()
+			), Error::<Test>::InvalidIP);
+	})
+}
+
+#[test]
+fn invalid_key() {
+	new_test_ext().execute_with(|| {
+		let new_key: String = "G".into();
+		assert_noop!(SiipModule::register_certificate(
+				Origin::signed(1),
+				NAME.into(),
+				DOMAIN.into(),
+				IP_ADDR.into(),
+				INFO.into(),
+				new_key.into()
+			), Error::<Test>::InvalidKey);
+
+		let new_key: String = "01/02/56".into();
+		assert_noop!(SiipModule::register_certificate(
+				Origin::signed(1),
+				NAME.into(),
+				DOMAIN.into(),
+				IP_ADDR.into(),
+				INFO.into(),
+				new_key.into()
+			), Error::<Test>::InvalidKey);
+
+		let new_key: String = ":::::".into();
+		assert_noop!(SiipModule::register_certificate(
+				Origin::signed(1),
+				NAME.into(),
+				DOMAIN.into(),
+				IP_ADDR.into(),
+				INFO.into(),
+				new_key.into()
+			), Error::<Test>::InvalidKey);
+
 	})
 }

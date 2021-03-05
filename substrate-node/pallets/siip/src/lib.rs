@@ -10,7 +10,6 @@ use frame_system::ensure_signed;
 use sp_std::prelude::*;
 use core::str::from_utf8;
 use serde_json;
-use hex;
 
 #[cfg(test)]
 mod mock;
@@ -39,13 +38,13 @@ pub struct Certificate<AccountIdT> {
 
 fn check_name(name: Vec<u8>) -> Option<Vec<u8>> {
 	//Must be a valid UTF-8 String
-	let name: &str = from_utf8(&name).ok()?;
+	from_utf8(&name).ok()?;
 
 	//I'm not willing to make further assumptions about people's names.
 	//Read this link for more info:
 	//https://www.kalzumeus.com/2010/06/17/falsehoods-programmers-believe-about-names/
 
-	Some(name.as_bytes().to_vec())
+	Some(name)
 }
 
 fn check_domain(domain: Vec<u8>) -> Option<Vec<u8>> {
@@ -103,45 +102,81 @@ fn check_ip(ip: Vec<u8>) -> Option<Vec<u8>> {
 
 //The info field must be formatted with json
 fn check_info(info: Vec<u8>) -> Option<Vec<u8>> {
-	let info: &str = from_utf8(&info).ok()?;
+	let info = from_utf8(&info).ok()?;
 
 	//Only checks for a valid json
 	//Source: https://users.rust-lang.org/t/serde-json-checking-syntax-of-json-file/16265/3
-	let _: serde_json::Value = serde_json::from_str(info).ok()?;
+	let _: serde_json::Value = serde_json::from_str(&info).ok()?;
 
 	return Some(info.as_bytes().to_vec());
 }
 
 //Key must be in hexadecimal notation, converts it to uppercase
 fn check_key(key: Vec<u8>) -> Option<Vec<u8>> {
-	let mut key: String = from_utf8(&key).ok()?.to_string();
+	let key = from_utf8(&key).ok()?;
 
-	//Remove all instances of ':' and '-' from the key string
-	key = key.replace(":", "");
-	key = key.replace("-", "");
+	//A vector containing the string (as bytes) without the ':' and '-' characters
+	let mut new_key: Vec<u8> = Vec::new();
 
-	//Ensure that every remaining character is a hexadecimal
-	hex::decode(&key).ok()?;
+	//4 bytes is the max length of a UTF-8 character
+	let mut buffer: [u8; 4] = [0; 4];
 
-	//Convert to lower case
-	key = key.to_uppercase();
-
-
-	//Add a colon after every 2 hexadecimal characters
-	let chars: Vec<char> = key.chars().collect();
-	let mut key = "".to_string();
-
-	for i in 0..(chars.len() / 2) {
-		if i != 0 {
-			key.push(':');
-		}
-		key.push(chars[2 * i]);
-		key.push(chars[2 * i + 1]);
+	//Parses the string and adds the non-{':', '-'} characters
+	for char in key.chars() {
+		match char {
+			':' => (),
+			'-' => (),
+			_ => {
+				new_key.extend_from_slice(char.encode_utf8(&mut buffer).as_bytes())
+			}
+		};
 	}
 
-	println!("{}", key);
+	//Converts to upper case
+	let key = from_utf8(&new_key).ok()?.to_uppercase().as_bytes().to_vec();
 
-	Some(key.into_bytes().to_vec())
+	//Ensure that the remaining key is hexadecimal
+	for i in key.iter() {
+		match i {
+			b'0' => (),
+			b'1' => (),
+			b'2' => (),
+			b'3' => (),
+			b'4' => (),
+			b'5' => (),
+			b'6' => (),
+			b'7' => (),
+			b'8' => (),
+			b'9' => (),
+			b'A' => (),
+			b'B' => (),
+			b'C' => (),
+			b'D' => (),
+			b'E' => (),
+			b'F' => (),
+			_ => return None,
+		};
+	}
+
+	//I won't get into what the minimum key size should be, but I will require a key
+	if key.len() < 1 {
+		return None;
+	}
+
+	//We know know that the key only consists of these characters.
+	//So, each character occupies at most 1 character
+
+	//Adds a colon after every 2 hexadecimal characters for readability
+	let mut new_key: Vec<u8> = Vec::new();
+	for i in 0..(key.len() / 2) {
+		if i != 0 {
+			new_key.push(':' as u8);
+		}
+		new_key.push(key[2 * i] as u8);
+		new_key.push(key[2 * i + 1] as u8);
+	}
+
+	Some(new_key)
 }
 
 
