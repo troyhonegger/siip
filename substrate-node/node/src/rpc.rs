@@ -44,11 +44,10 @@ impl<C> SiipRpcTrait for SiipRpcStruct<C> where C: Send + Sync + 'static {
             siip_node_runtime::Origin::signed(
                 crate::chain_spec::get_account_id_from_seed::<sr25519::Public>("Alice")
             ),
-            "Caleb".as_bytes().to_vec(),
-            //domain.as_bytes().to_vec(),
-            "test.org".as_bytes().to_vec(),
+            "Genesis".as_bytes().to_vec(),
+            domain.as_bytes().to_vec(),
             ip.as_bytes().to_vec(),
-            "Info".as_bytes().to_vec(),
+            "Genesis".as_bytes().to_vec(),
             pubkey.as_bytes().to_vec()
         );
 
