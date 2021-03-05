@@ -15,7 +15,11 @@ def rpc(method, args)
       "params": #{args.to_json}
     }'
   }
-  JSON.parse(curl)['result']
+  unless curl == ''
+    JSON.parse(curl)['result']
+  else
+    []
+  end
 end
 
 # "14" => 5
