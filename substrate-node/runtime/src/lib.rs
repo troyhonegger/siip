@@ -15,6 +15,7 @@ use sp_runtime::{
 use sp_runtime::traits::{
 	BlakeTwo256, Block as BlockT, Verify, IdentifyAccount, Saturating,
 };
+use smallvec::{smallvec};
 use sp_api::impl_runtime_apis;
 use sp_version::RuntimeVersion;
 #[cfg(feature = "std")]
@@ -31,7 +32,7 @@ pub use frame_support::{
 	traits::{KeyOwnerProofSystem, Randomness},
 	weights::{
 		Weight, IdentityFee,
-		constants::{BlockExecutionWeight, ExtrinsicBaseWeight, RocksDbWeight, WEIGHT_PER_SECOND},
+		constants::{BlockExecutionWeight, RocksDbWeight, WEIGHT_PER_SECOND},
 	},
 };
 
@@ -127,6 +128,11 @@ parameter_types! {
 	pub const Version: RuntimeVersion = VERSION;
 }
 
+// the base weight will get ignored by ConstFee
+parameter_types! {
+	pub const ExtrinsicBaseWeight: Weight = 0;
+}
+
 // Configure FRAME pallets to include in runtime.
 
 impl frame_system::Trait for Runtime {
@@ -218,14 +224,27 @@ impl pallet_balances::Trait for Runtime {
 }
 
 parameter_types! {
-	pub const TransactionByteFee: Balance = 1;
+	pub const TransactionByteFee: Balance = 0;
+}
+
+pub struct ConstFee;
+impl frame_support::weights::WeightToFeePolynomial for ConstFee {
+	type Balance = Balance;
+	fn polynomial() -> frame_support::weights::WeightToFeeCoefficients<Self::Balance> {
+		smallvec!(frame_support::weights::WeightToFeeCoefficient {
+			coeff_integer: 1_000_000_000_000u64.into(),
+			coeff_frac: Perbill::zero(),
+			negative: false,
+			degree: 0,
+		})
+	}
 }
 
 impl pallet_transaction_payment::Trait for Runtime {
 	type Currency = Balances;
 	type OnTransactionPayment = ();
 	type TransactionByteFee = TransactionByteFee;
-	type WeightToFee = IdentityFee<Balance>;
+	type WeightToFee = ConstFee;
 	type FeeMultiplierUpdate = ();
 }
 
