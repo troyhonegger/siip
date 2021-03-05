@@ -3696,25 +3696,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "pallet-timestamp"
-version = "2.0.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e206c754d6cd6d8e6e79ba2ea1a55f72af68be106e7d725d367c11c52c96da32"
-dependencies = [
- "frame-benchmarking",
- "frame-support",
- "frame-system",
- "impl-trait-for-tuples",
- "parity-scale-codec",
- "serde",
- "sp-inherents",
- "sp-io",
- "sp-runtime",
- "sp-std",
- "sp-timestamp",
-]
-
-[[package]]
 name = "pallet-transaction-payment"
 version = "2.0.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -5981,7 +5962,6 @@ dependencies = [
  "pallet-randomness-collective-flip",
  "pallet-siip",
  "pallet-sudo",
- "pallet-timestamp",
  "pallet-transaction-payment",
  "pallet-transaction-payment-rpc-runtime-api",
  "parity-scale-codec",
