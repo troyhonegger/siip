@@ -5969,6 +5969,7 @@ dependencies = [
  "smallvec 1.6.1",
  "sp-api",
  "sp-block-builder",
+ "sp-consensus-pow",
  "sp-core",
  "sp-inherents",
  "sp-offchain",

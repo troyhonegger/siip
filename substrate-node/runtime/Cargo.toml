@@ -44,6 +44,7 @@ smallvec = { default-features = false, version = '1.6.1' }
 sp-api = { default-features = false, version = '2.0.1' }
 sp-block-builder = { default-features = false, version = '2.0.1' }
 sp-core = { default-features = false, version = '2.0.1' }
+sp-consensus-pow = { default_features = false, version = '0.8.1' }
 sp-inherents = { default-features = false, version = '2.0.1' }
 sp-offchain = { default-features = false, version = '2.0.1' }
 sp-runtime = { default-features = false, version = '2.0.1' }
@@ -78,6 +79,7 @@ std = [
     'pallet-transaction-payment-rpc-runtime-api/std',
     'sp-api/std',
     'sp-block-builder/std',
+    'sp-consensus-pow/std',
     'sp-core/std',
     'sp-inherents/std',
     'sp-offchain/std',
