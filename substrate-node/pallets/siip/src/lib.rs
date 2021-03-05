@@ -159,7 +159,7 @@ fn check_key(key: Vec<u8>) -> Option<Vec<u8>> {
 	}
 
 	//I won't get into what the minimum key size should be, but I will require a key
-	if key.len() < 1 {
+	if key.len() < 2 {
 		return None;
 	}
 
