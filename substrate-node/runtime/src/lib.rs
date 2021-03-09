@@ -432,3 +432,22 @@ impl_runtime_apis! {
 		}
 	}
 }
+
+#[cfg(test)]
+pub fn test_construct_block(
+	number: BlockNumber,
+	parent_hash: Hash,
+	extrinsics: Vec<CheckedExtrinsic>
+) -> Block {
+
+	let extrinsics_root = sp_trie::Layout::<BlakeTwo256>::ordered_trie_root(extrinsics.iter().map(codec::Encode::encode)).to_fixed_bytes().into();
+
+
+	let header = Header {
+		parent_hash,
+		number,
+		state_root: Default::default(),
+		extrinsics_root,
+		digest
+	};
+}

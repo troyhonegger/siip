@@ -8,7 +8,7 @@ check:
 
 .PHONY: test
 test:
-	SKIP_WASM_BUILD=1 cargo test --release --all -- --show-output
+	cargo test --release --all -- --show-output
 
 .PHONY: run
 run:

@@ -3,8 +3,11 @@ use siip_node_runtime::{
 	AccountId, BalancesConfig, GenesisConfig,
 	SudoConfig, SystemConfig, WASM_BINARY, Signature
 };
-use sp_runtime::traits::{Verify, IdentifyAccount};
+use sp_runtime::traits::{BlakeTwo256, IdentifyAccount, Verify};
 use sc_service::ChainType;
+
+#[cfg(test)]
+use frame_support::{assert_err};
 
 // The URL for the telemetry server.
 // const STAGING_TELEMETRY_URL: &str = "wss://telemetry.polkadot.io/submit/";
@@ -128,4 +131,98 @@ fn testnet_genesis(
 			key: root_key,
 		}),
 	}
+}
+
+
+#[cfg(test)]
+use siip_node_runtime::BuildStorage;
+#[cfg(test)]
+use sp_block_builder::runtime_decl_for_BlockBuilder::BlockBuilder;
+use sp_api::{Encode, runtime_decl_for_Core::Core};
+use sp_trie::TrieConfiguration;
+#[cfg(test)]
+fn new_test_ext() -> sp_io::TestExternalities {
+	let wasm_binary = WASM_BINARY.unwrap();
+
+	let gen = testnet_genesis(
+		wasm_binary,
+		// Sudo account
+		get_account_id_from_seed::<sr25519::Public>("Alice"),
+		// Pre-funded accounts
+		vec![
+			get_account_id_from_seed::<sr25519::Public>("Alice"),
+			get_account_id_from_seed::<sr25519::Public>("Bob"),
+			get_account_id_from_seed::<sr25519::Public>("Charlie"),
+			get_account_id_from_seed::<sr25519::Public>("Dave"),
+			get_account_id_from_seed::<sr25519::Public>("Eve"),
+			get_account_id_from_seed::<sr25519::Public>("Ferdie"),
+			get_account_id_from_seed::<sr25519::Public>("Alice//stash"),
+			get_account_id_from_seed::<sr25519::Public>("Bob//stash"),
+			get_account_id_from_seed::<sr25519::Public>("Charlie//stash"),
+			get_account_id_from_seed::<sr25519::Public>("Dave//stash"),
+			get_account_id_from_seed::<sr25519::Public>("Eve//stash"),
+			get_account_id_from_seed::<sr25519::Public>("Ferdie//stash"),
+		],
+		true,
+	);
+	let storage = gen.build_storage().unwrap();
+	sp_io::TestExternalities::from(storage)
+}
+
+// fn construct_block(
+// 	number: siip_node_runtime::BlockNumber,
+// 	parent_hash: siip_node_runtime::Hash,
+// 	extrinsics: Vec<<sp_runtime::generic::Block<sp_runtime::generic::Header<u32, BlakeTwo256>, sp_runtime::generic::UncheckedExtrinsic<siip_node_runtime::multiaddress::MultiAddress<<<MultiSignature as Verify>::Signer as IdentifyAccount>::AccountId, ()>, siip_node_runtime::Call, MultiSignature, (frame_system::extensions::check_spec_version::CheckSpecVersion<siip_node_runtime::Runtime>, frame_system::extensions::check_tx_version::CheckTxVersion<siip_node_runtime::Runtime>, frame_system::extensions::check_genesis::CheckGenesis<siip_node_runtime::Runtime>, frame_system::extensions::check_mortality::CheckMortality<siip_node_runtime::Runtime>, frame_system::extensions::check_nonce::CheckNonce<siip_node_runtime::Runtime>, frame_system::extensions::check_weight::CheckWeight<siip_node_runtime::Runtime>, pallet_transaction_payment::ChargeTransactionPayment<siip_node_runtime::Runtime>, siip_node_runtime::reward_miner::RewardMiner<siip_node_runtime::Runtime>)>> as Trait>::Extrinsic>
+// ) -> siip_node_runtime::Block {
+
+// 	let extrinsics_root = sp_trie::Layout::<BlakeTwo256>::ordered_trie_root(extrinsics.iter().map(codec::Encode::encode)).to_fixed_bytes().into();
+
+
+// 	let x = siip_node_runtime::ClientBuilder::new();
+// 	let header = siip_node_runtime::Header {
+// 		parent_hash,
+// 		number,
+// 		state_root: Default::default(),
+// 		extrinsics_root,
+// 		digest
+// 	};
+// }
+
+#[test]
+fn bla() {
+	new_test_ext().execute_with(|| {
+		let register = siip_node_runtime::pallet_siip::Call::register_certificate(
+			"Sam".chars().map(|c| c as u8).collect(),
+			"abc.com".chars().map(|c| c as u8).collect(),
+			"127.0.0.1".chars().map(|c| c as u8).collect(),
+			"{}".chars().map(|c| c as u8).collect(),
+			"abcdef".chars().map(|c| c as u8).collect()
+		);
+		let r = siip_node_runtime::Call::SiipModule(register);
+
+		let extrinsic = siip_node_runtime::UncheckedExtrinsic {
+			function: r,
+			signature: None
+		};
+		println!("abc");
+
+		match siip_node_runtime::Runtime::apply_extrinsic(extrinsic.clone()) {
+			Ok(_) => println!("yes"),
+			Err(_) => println!("no")
+		};
+		match siip_node_runtime::Runtime::apply_extrinsic(extrinsic.clone()) {
+			Ok(_) => println!("yes"),
+			Err(_) => println!("no")
+		};
+
+		let x = siip_node_runtime::Runtime::finalize_block();
+
+		let b = siip_node_runtime::Block {
+			header: x,
+			extrinsics: vec![extrinsic]
+		};
+
+		siip_node_runtime::Runtime::execute_block(b);
+		// assert_err!(siip_node_runtime::Runtime::apply_extrinsic(extrinsic), "bla");
+	});
 }
