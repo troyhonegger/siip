@@ -36,6 +36,7 @@ frame-system = { default-features = false, version = '2.0.1' }
 frame-system-benchmarking = { default-features = false, optional = true, version = '2.0.1' }
 frame-system-rpc-runtime-api = { default-features = false, version = '2.0.1' }
 pallet-balances = { default-features = false, version = '2.0.1' }
+pallet-democracy = { default-features = false, version = '2.0.1' }
 pallet-randomness-collective-flip = { default-features = false, version = '2.0.1' }
 pallet-sudo = { default-features = false, version = '2.0.1' }
 pallet-transaction-payment = { default-features = false, version = '2.0.1' }

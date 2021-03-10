@@ -6,6 +6,7 @@
 #[cfg(feature = "std")]
 include!(concat!(env!("OUT_DIR"), "/wasm_binary.rs"));
 
+use frame_support::traits::{EnsureOrigin, OnUnbalanced};
 use sp_std::prelude::*;
 use sp_core::{crypto::KeyTypeId, OpaqueMetadata};
 use sp_runtime::{
@@ -35,10 +36,16 @@ pub use frame_support::{
 	},
 };
 
+pub const MILLICENTS: Balance = 1_000_000_000;
+pub const CENTS: Balance = 1_000 * MILLICENTS;    // assume this is worth about a cent.
+pub const DOLLARS: Balance = 100 * CENTS;
+
 mod reward_miner;
 
 /// Import the SIIP pallet.
 pub use pallet_siip;
+
+pub use pallet_democracy;
 
 /// An index to a block.
 pub type BlockNumber = u32;
@@ -251,6 +258,58 @@ impl pallet_siip::Trait for Runtime {
 	type Event = Event;
 }
 
+// when () is provided as an EnsureOrigin type, reject all origins
+impl EnsureOrigin<Origin> for () {
+	type Success = AccountId;
+	fn try_origin(o: Origin) -> Result<Self::Success, Origin> {
+		Err(o)
+	}
+
+	fn ensure_origin(o: Origin) -> Result<Self::Success, Origin> {
+		Err(o)
+	}
+}
+
+parameter_types! {
+	pub const LaunchPeriod: BlockNumber = 30;
+	pub const VotingPeriod: BlockNumber = 30;
+	pub const InstantAllowed: bool = false;
+	pub const MinimumDeposit: Balance = 100 * DOLLARS;
+	pub const EnactmentPeriod: BlockNumber = 30 * 24 * 60 * MINUTES;
+	pub const CooloffPeriod: BlockNumber = 28 * 24 * 60 * MINUTES;
+	// One cent: $10,000 / MB
+	pub const PreimageByteDeposit: Balance = 1 * CENTS;
+	pub const MaxVotes: u32 = 100;
+	pub const MaxProposals: u32 = 100;
+}
+
+impl pallet_democracy::Trait for Runtime {
+	type Proposal = Call;
+	type Event = Event;
+	type Currency = Balances;
+	type EnactmentPeriod = EnactmentPeriod;
+	type LaunchPeriod = LaunchPeriod;
+	type VotingPeriod = VotingPeriod;
+	type MinimumDeposit = MinimumDeposit;
+	type ExternalOrigin = ();
+	type ExternalMajorityOrigin = ();
+	type ExternalDefaultOrigin = ();
+	type FastTrackOrigin = ();
+	type InstantOrigin = ();
+	type InstantAllowed = InstantAllowed;
+	type FastTrackVotingPeriod = ();
+	type CancellationOrigin = ();
+	type VetoOrigin = ();
+	type CooloffPeriod = CooloffPeriod;
+	type PreimageByteDeposit = PreimageByteDeposit;
+	type OperationalPreimageOrigin = ();
+	type Slash = (); //must have
+	type Scheduler = (); // must have
+	type PalletsOrigin = OriginCaller;
+	type MaxVotes = MaxVotes;
+	type WeightInfo = ();
+}
+
 // Create the runtime by composing the FRAME pallets that were previously configured.
 construct_runtime!(
 	pub enum Runtime where
@@ -265,6 +324,7 @@ construct_runtime!(
 		Sudo: pallet_sudo::{Module, Call, Config<T>, Storage, Event<T>},
 		// Include the custom logic from the SIIP pallet in the runtime.
 		SiipModule: pallet_siip::{Module, Call, Storage, Event<T>},
+		Democracy: pallet_democracy::{Module, Call, Storage, Config<T>, Event<T>},
 	}
 );
 
