@@ -8,6 +8,7 @@ use siip_node_runtime::{self, opaque::Block, RuntimeApi};
 use sc_service::{error::Error as ServiceError, Configuration, TaskManager};
 use sc_executor::native_executor_instance;
 pub use sc_executor::NativeExecutor;
+use sc_keystore::LocalKeystore;
 use sp_core::sr25519;
 
 use crate::chain_spec;
@@ -43,9 +44,13 @@ pub fn new_partial(config: &Configuration) -> Result<sc_service::PartialComponen
 		>,
 	)
 >, ServiceError> {
+	if config.keystore_remote.is_some() {
+		return Err(ServiceError::Other(
+			format!("Remote Keystores are not supported.")))
+	}
 	let inherent_data_providers = sp_inherents::InherentDataProviders::new();
 
-	let (client, backend, keystore, task_manager) =
+	let (client, backend, keystore_container, task_manager) =
 		sc_service::new_full_parts::<Block, RuntimeApi, Executor>(&config)?;
 	let client = Arc::new(client);
 
@@ -53,6 +58,7 @@ pub fn new_partial(config: &Configuration) -> Result<sc_service::PartialComponen
 
 	let transaction_pool = sc_transaction_pool::BasicPool::new_full(
 		config.transaction_pool.clone(),
+		config.role.is_authority().into(),
 		config.prometheus_registry(),
 		task_manager.spawn_handle(),
 		client.clone(),
@@ -73,7 +79,6 @@ pub fn new_partial(config: &Configuration) -> Result<sc_service::PartialComponen
 	let import_queue = sc_consensus_pow::import_queue(
 		Box::new(pow_block_import.clone()),
 		None,
-		None,
 		MinimalSha3Algorithm,
 		inherent_data_providers.clone(),
 		&task_manager.spawn_handle(),
@@ -81,19 +86,36 @@ pub fn new_partial(config: &Configuration) -> Result<sc_service::PartialComponen
 	)?;
 
 	Ok(sc_service::PartialComponents {
-		client, backend, task_manager, import_queue, keystore, select_chain, transaction_pool,
+		client, backend, task_manager, import_queue, keystore_container, select_chain, transaction_pool,
 		inherent_data_providers,
 		other: (pow_block_import,),
 	})
 }
 
+fn remote_keystore(_url: &String) -> Result<Arc<LocalKeystore>, &'static str> {
+	// FIXME: here would the concrete keystore be built,
+	//        must return a concrete type (NOT `LocalKeystore`) that
+	//        implements `CryptoStore` and `SyncCryptoStore`
+	Err("Remote Keystore not supported.")
+}
+
 /// Builds a new service for a full client.
 pub fn new_full(config: Configuration) -> Result<TaskManager, ServiceError> {
 	let sc_service::PartialComponents {
-		client, backend, mut task_manager, import_queue, keystore, select_chain, transaction_pool,
+		client, backend, mut task_manager, import_queue, mut keystore_container, select_chain, transaction_pool,
 		inherent_data_providers,
 		other: (block_import, ),
 	} = new_partial(&config)?;
+
+	if let Some(url) = &config.keystore_remote {
+		match remote_keystore(url) {
+			Ok(k) => keystore_container.set_remote_keystore(k),
+			Err(e) => {
+				return Err(ServiceError::Other(
+					format!("Error hooking up remote keystore for {}: {}", url, e)))
+			}
+		};
+	}
 
 	let (network, network_status_sinks, system_rpc_tx, network_starter) =
 		sc_service::build_network(sc_service::BuildNetworkParams {
@@ -104,8 +126,6 @@ pub fn new_full(config: Configuration) -> Result<TaskManager, ServiceError> {
 			import_queue,
 			on_demand: None,
 			block_announce_validator_builder: None,
-			finality_proof_request_builder: None,
-			finality_proof_provider: None,
 		})?;
 
 	if config.offchain_worker.enabled {
@@ -115,9 +135,9 @@ pub fn new_full(config: Configuration) -> Result<TaskManager, ServiceError> {
 	}
 
 	let role = config.role.clone();
+	let _backoff_authoring_blocks: Option<()> = None;
 	let name = config.network.node_name.clone();
 	let prometheus_registry = config.prometheus_registry().cloned();
-	let telemetry_connection_sinks = sc_service::TelemetryConnectionSinks::default();
 
 	let rpc_extensions_builder = {
 		let client = client.clone();
@@ -134,21 +154,26 @@ pub fn new_full(config: Configuration) -> Result<TaskManager, ServiceError> {
 		})
 	};
 
-	sc_service::spawn_tasks(sc_service::SpawnTasksParams {
-		network: network.clone(),
-		client: client.clone(),
-		keystore: keystore.clone(),
-		task_manager: &mut task_manager,
-		transaction_pool: transaction_pool.clone(),
-		telemetry_connection_sinks: telemetry_connection_sinks.clone(),
-		rpc_extensions_builder: rpc_extensions_builder,
-		on_demand: None,
-		remote_blockchain: None,
-		backend, network_status_sinks, system_rpc_tx, config,
-	})?;
+	let (_rpc_handlers, _telemetry_connection_notifier) = sc_service::spawn_tasks(
+		sc_service::SpawnTasksParams {
+			network: network.clone(),
+			client: client.clone(),
+			keystore: keystore_container.sync_keystore(),
+			task_manager: &mut task_manager,
+			transaction_pool: transaction_pool.clone(),
+			rpc_extensions_builder,
+			on_demand: None,
+			remote_blockchain: None,
+			backend,
+			network_status_sinks,
+			system_rpc_tx,
+			config,
+		},
+	)?;
 
 	if role.is_authority() {
 		let proposer = sc_basic_authorship::ProposerFactory::new(
+			task_manager.spawn_handle(),
 			client.clone(),
 			transaction_pool,
 			prometheus_registry.as_ref(),
@@ -199,7 +224,7 @@ pub fn new_full(config: Configuration) -> Result<TaskManager, ServiceError> {
 //use sc_finality_grandpa::{FinalityProofProvider as GrandpaFinalityProofProvider};
 
 /// Builds a new service for a light client.
-pub fn new_light(_config: Configuration) -> Result<TaskManager, ServiceError> {
+pub fn new_light(mut _config: Configuration) -> Result<TaskManager, ServiceError> {
 	Err(ServiceError::Other("Light clients are not yet implemented (TODO)".to_string()))
 
 	// This block comment is the node-template implementation.
