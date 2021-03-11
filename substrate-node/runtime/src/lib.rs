@@ -443,3 +443,29 @@ impl_runtime_apis! {
 		}
 	}
 }
+
+#[cfg(test)]
+pub fn test_construct_block(
+	number: BlockNumber,
+	parent_hash: Hash,
+	extrinsics: Vec<UncheckedExtrinsic>
+) -> Block {
+	
+	let calls: Vec<Call> = extrinsics.clone().into_iter().map(|x| x.function).collect();
+	let extrinsics_root = frame_system::extrinsics_root::<BlakeTwo256, _>(&calls[..]);
+
+	// let extrinsics_root = sp_trie::TrieConfiguration::ordered_trie_root(extrinsics.iter().map(|x| x.function).map(codec::Encode::encode)).to_fixed_bytes().into();
+
+	let header = Header {
+		parent_hash,
+		number,
+		state_root: Default::default(),
+		extrinsics_root,
+		digest: Default::default()
+	};
+
+	Block {
+		header,
+		extrinsics
+	}
+}
