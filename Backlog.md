@@ -15,21 +15,22 @@
 | :tada:            | `:tada:`              | A feature that will be useful for demonstrations |
 
 ## Blockchain Nodes
-- [ ] :warning: As a security-conscious tech enthusiast, I want to create a full node to run the blockchain
+- [X] :warning: As a security-conscious tech enthusiast, I want to create a full node to run the blockchain
 - [ ] :trophy: As a full node just getting started, I should be able to connect to multiple other full nodes on the network, and download/verify the entire block database
 - [ ] :trophy: As a full node running the blockchain, I want to send and receive gossip from other nodes about new blocks
 - [ ] :gear: As a developer initializing the blockchain, I would like to run a command-line utility that scrapes the web for the most common domain names, gets their IP addresses and digital certificates, and creates SIIP certificates on these users' behalf.
-- [ ] :tada::gear: As an administrator of a full node, I want a user interface to show me statistics and information about my node
+- [X] :tada::gear: As an administrator of a full node, I want a user interface to show me statistics and information about my node
 - [ ] :gear: As a developer testing the blockchain, I want to run multiple instances of the blockchain locally, each in a separate container (i.e. via Docker)
 - [ ] :gear: As someone setting up my own blockchain or mining agent, I should expect some documentation directing the creation of my architecture.
+- [ ] :gift: As someone with a large stake in the SIIP blockchain, I would like the chain to support forkless runtime upgrades that are approved by a vote of nodes (potentially weighted by how many coins each voter has).
 
 ## Managing SIIP Certificates
-- [ ] :warning: As a website owner, I want to register an account on the blockchain, with a public/private key pair. (My public key should be stored on the blockchain)
-- [ ] :warning: As a website owner, I want to post my server's IP address, domain name, and SSL public key to the blockchain
-- [ ] :trophy: As a website owner, I want all certificate-related transactions to cost something, so no one can spam the chain and potentially buy up my domain
-- [ ] :gem: As a website owner, I want to modify my SIIP certificate to change the IP address corresponding to a domain name.
-- [ ] :gem: As a website owner, I want to modify my SIIP certificate to change the public key corresponding to a domain name.
-- [ ] :gem: As a website owner, I want to take my website down by revoking my SIIP certificate.
+- [X] :warning: As a website owner, I want to register an account on the blockchain, with a public/private key pair. (My public key should be stored on the blockchain)
+- [X] :warning: As a website owner, I want to post my server's IP address, domain name, and SSL public key to the blockchain to create an SIIP certificate.
+- [X] :trophy: As a website owner, I want all certificate-related transactions to cost something, so no one can spam the chain and potentially buy up my domain.
+- [X] :gem: As a website owner, I want to modify my SIIP certificate to change the IP address corresponding to a domain name.
+- [X] :gem: As a website owner, I want to modify my SIIP certificate to change the public key corresponding to a domain name.
+- [X] :gem: As a website owner, I want to take my website down by revoking my SIIP certificate.
 - [ ] :gift: As a website owner, I want to transfer ownership of my certificate to another user. (In this case, the other user, not me, should pay the fee, and both of our signatures should be required)
 - [ ] :gift: As a blockchain user who has discovered the private key of an SIIP certificate, I want to revoke the certificate by posting the private key to the blockchain
 - [ ] :wastebasket: As a website owner whose certificate has just been revoked, I want my domain name to be reserved for a short time afterward - say, 48 hours - to give me time to create a new certificate. During this time, no one except myself should be able to reserve this domain name
@@ -43,11 +44,11 @@ Economic structure for baseline blockchain (to be improved upon, time permitting
 - The number of coins in circulation is fixed
 
 User stories:
-- [ ] :warning: As a full node running the blockchain server, I want to combine transactions into a block and mine them to add them to the blockchain
+- [X] :warning: As a full node running the blockchain server, I want to combine transactions into a block and mine them to add them to the blockchain
 - [ ] :trophy: As a miner, I want to receive gossip about unverified transactions, so I can include them in blocks
 - [ ] :trophy: As a miner, I want to receive updates from the blockchain when blocks are added, so I don't waste my time trying to add already-mined transactions.
-- [ ] :trophy: As a miner, I want to be rewarded (in coins) whenever I complete the proof-of-work to validate a block. (My reward should be at least the cost of all transactions in the block, so no coins are lost)
-- [ ] :gem: As a coin holder, I want to sign another user's transaction to pay for it on their behalf. (Presumably they will pay me in real-world currency for this service)
+- [X] :trophy: As a miner, I want to be rewarded (in coins) whenever I complete the proof-of-work to validate a block. (My reward should be at least the cost of all transactions in the block, so no coins are lost)
+- [ ] :gem: As the owner of a coin, I want to sign another user's transaction to pay for it on their behalf. (Presumably they will pay me in real-world currency for this service)
 - [ ] :hourglass: As a resource-constrained miner, I want to mine blocks without running a full node
 - [ ] :hourglass: As a resource-constrained miner not running a full node, I should be able to dynamically get a list of full nodes, which will send me gossip about unverified transactions
 - [ ] :gift: As a miner, I want to receive an additional reward whenever I complete the proof-of-work to validate a block, on top of the number of coins expended by users on that block. (This additional reward should decrease geometrically w.r.t. time, so the total number of coins in existence does not grow without bound)
