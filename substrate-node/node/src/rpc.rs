@@ -47,7 +47,7 @@ impl<C> SiipRpcTrait for SiipRpcStruct<C> where C: Send + Sync + 'static {
             "Genesis".as_bytes().to_vec(),
             domain.as_bytes().to_vec(),
             ip.as_bytes().to_vec(),
-            "Genesis".as_bytes().to_vec(),
+            "{}".as_bytes().to_vec(),
             pubkey.as_bytes().to_vec()
         );
 
