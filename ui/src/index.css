@@ -1,0 +1,14 @@
+.card {
+    padding: 1rem;
+    box-shadow: 0.5rem 0.5rem 0.5rem gray;
+}
+
+.card:hover {
+    box-shadow: 1rem 1rem 1rem gray;
+}
+
+.container {
+    display: flex;
+}
+
+
