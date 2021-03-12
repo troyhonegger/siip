@@ -40,6 +40,7 @@ mod reward_miner;
 
 /// Import the SIIP pallet.
 pub use pallet_siip;
+pub use pallet_balances;
 
 /// An index to a block.
 pub type BlockNumber = u32;
@@ -295,6 +296,19 @@ pub type SignedExtra = (
 	frame_system::CheckWeight<Runtime>,
 	pallet_transaction_payment::ChargeTransactionPayment<Runtime>,
 );
+
+pub fn default_extras(nonce: u32) -> SignedExtra {
+	(
+		frame_system::CheckSpecVersion::<Runtime>::new(),
+		frame_system::CheckTxVersion::<Runtime>::new(),
+		frame_system::CheckGenesis::<Runtime>::new(),
+		frame_system::CheckEra::<Runtime>::from(sp_runtime::generic::Era::Immortal),
+		frame_system::CheckNonce::<Runtime>::from(nonce),
+		frame_system::CheckWeight::<Runtime>::new(),
+		pallet_transaction_payment::ChargeTransactionPayment::<Runtime>::from(1_000_000_000_000u64.into())
+	)
+}
+
 /// Unchecked extrinsic type as expected by this runtime.
 pub type UncheckedExtrinsic = generic::UncheckedExtrinsic<Address, Call, Signature, SignedExtra>;
 /// Extrinsic type that has already been checked.
@@ -481,7 +495,12 @@ pub fn test_construct_block(
 	for extrinsic in extrinsics.iter() {
 		let res = Executive::apply_extrinsic(extrinsic.clone());
 		match res {
-			Ok(_) => {},
+			Ok(sub_res) => {
+				match sub_res {
+					Ok(_) => {},
+					Err(e) => panic!("Dispatch error: {:?}", e)
+				}
+			},
 			Err(e) => panic!("Applying extrinsic failed: {:?}", e)
 		}
 

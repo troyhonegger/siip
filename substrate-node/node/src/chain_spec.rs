@@ -1,9 +1,7 @@
+use frame_benchmarking::frame_support::pallet_prelude::ValueQuery;
 use sp_core::{Pair, Public, sr25519};
-use siip_node_runtime::{
-	AccountId, BalancesConfig, GenesisConfig,
-	SudoConfig, SystemConfig, WASM_BINARY, Signature
-};
-use sp_runtime::traits::{Verify, IdentifyAccount};
+use siip_node_runtime::{AccountId, BalancesConfig, GenesisConfig, Signature, SudoConfig, SystemConfig, UncheckedExtrinsic, WASM_BINARY};
+use sp_runtime::{MultiSignature, traits::{Verify, IdentifyAccount}};
 use sc_service::ChainType;
 
 // The URL for the telemetry server.
@@ -137,6 +135,8 @@ use sp_block_builder::runtime_decl_for_BlockBuilder::BlockBuilder;
 #[cfg(test)]
 use sp_api::{runtime_decl_for_Core::Core};
 #[cfg(test)]
+use sp_core::Encode;
+#[cfg(test)]
 fn new_test_ext() -> sp_io::TestExternalities {
 	let wasm_binary = WASM_BINARY.unwrap();
 
@@ -205,4 +205,69 @@ fn bla() {
 		siip_node_runtime::Runtime::execute_block(b);
 		// assert_err!(siip_node_runtime::Runtime::apply_extrinsic(extrinsic), "bla");
 	});
+}
+
+#[test]
+fn transaction_fee_subtracted() {
+	new_test_ext().execute_with(|| {
+		let register = siip_node_runtime::pallet_siip::Call::register_certificate(
+			"Sam".chars().map(|c| c as u8).collect(),
+			"abc.com".chars().map(|c| c as u8).collect(),
+			"127.0.0.1".chars().map(|c| c as u8).collect(),
+			"{}".chars().map(|c| c as u8).collect(),
+			"abcdef".chars().map(|c| c as u8).collect()
+		);
+
+	
+		let alice_bal = siip_node_runtime::pallet_balances::Module::<siip_node_runtime::Runtime>::free_balance(get_account_id_from_seed::<sr25519::Public>("Alice"));
+		println!("Alice has {:?}", alice_bal);
+
+		let r = siip_node_runtime::Call::SiipModule(register);
+		let extras = siip_node_runtime::default_extras(0);
+		let signed = sign("Alice", &r, &extras);
+
+		let extrinsic = siip_node_runtime::UncheckedExtrinsic {
+			function: r.clone(),
+			signature: Some((
+				siip_node_runtime::Address::Id(get_account_id_from_seed::<sr25519::Public>("Alice")),
+				signed,
+				extras
+			))
+		};
+
+		let genesis_hash = hex::decode("8fda83852a8834b91247d520f0fccde46af1c7cd298ad3d3e072f2c1265a44ae").expect("Decoding failed");
+
+		let genesis_hash = siip_node_runtime::Hash::from_slice(&genesis_hash[..]);
+
+		let genesis_hash = siip_node_runtime::test_block_hash(0);
+
+		println!("{}", genesis_hash);
+		// for i in 0..32 {
+		// 	bytes[i] = genesis_hash[i];
+		// }
+
+		// let genesis_hash = bytes;
+		// let genesis_hash: siip_node_runtime::Hash = [6e174167eb21b5985c84441386028c5393ba0129103fbd471d01424f81ec0465];
+
+
+		let b = siip_node_runtime::test_construct_block(1, genesis_hash, vec![extrinsic]);
+	
+		let alice_bal = siip_node_runtime::pallet_balances::Module::<siip_node_runtime::Runtime>::free_balance(get_account_id_from_seed::<sr25519::Public>("Alice"));
+		println!("Alice has {:?}", alice_bal);
+
+		println!("GOT HERE");
+		siip_node_runtime::Runtime::execute_block(b);
+		// assert_err!(siip_node_runtime::Runtime::apply_extrinsic(extrinsic), "bla");
+	});
+}
+
+
+pub fn sign(name: &str, function: &siip_node_runtime::Call, extras: &siip_node_runtime::SignedExtra ) -> siip_node_runtime::Signature {
+	use sp_core::Encode;
+	let encoded = function.encode();
+	let encoded_b = extras.encode();
+	let sig= sr25519::Pair::from_string(&format!("//{}", name), None)
+		.expect("static values are valid; qed").sign(&[&encoded[..], &encoded_b[..]].concat()[..]);
+	
+	siip_node_runtime::Signature::Sr25519(sig)
 }
