@@ -219,8 +219,10 @@ fn transaction_fee_subtracted() {
 		);
 
 	
-		let alice_bal = siip_node_runtime::pallet_balances::Module::<siip_node_runtime::Runtime>::free_balance(get_account_id_from_seed::<sr25519::Public>("Alice"));
-		println!("Alice has {:?}", alice_bal);
+		// let alice_bal = siip_node_runtime::pallet_balances::Module::<siip_node_runtime::Runtime>::free_balance(get_account_id_from_seed::<sr25519::Public>("Alice"));
+		// println!("Alice has {:?}", alice_bal);
+
+		print_balances("Alice");
 
 		let r = siip_node_runtime::Call::SiipModule(register);
 		let extras = siip_node_runtime::default_extras(0);
@@ -234,6 +236,7 @@ fn transaction_fee_subtracted() {
 				extras
 			))
 		};
+
 
 		let genesis_hash = hex::decode("8fda83852a8834b91247d520f0fccde46af1c7cd298ad3d3e072f2c1265a44ae").expect("Decoding failed");
 
@@ -249,25 +252,33 @@ fn transaction_fee_subtracted() {
 		// let genesis_hash = bytes;
 		// let genesis_hash: siip_node_runtime::Hash = [6e174167eb21b5985c84441386028c5393ba0129103fbd471d01424f81ec0465];
 
-
+		println!("{:?}", siip_node_runtime::Executive::validate_transaction(sp_transaction_pool::TransactionSource::InBlock, extrinsic.clone()));
 		let b = siip_node_runtime::test_construct_block(1, genesis_hash, vec![extrinsic]);
 	
-		let alice_bal = siip_node_runtime::pallet_balances::Module::<siip_node_runtime::Runtime>::free_balance(get_account_id_from_seed::<sr25519::Public>("Alice"));
-		println!("Alice has {:?}", alice_bal);
+		print_balances("Alice");
 
 		println!("GOT HERE");
-		siip_node_runtime::Runtime::execute_block(b);
+		// siip_node_runtime::Runtime::execute_block(b);
 		// assert_err!(siip_node_runtime::Runtime::apply_extrinsic(extrinsic), "bla");
 	});
 }
 
+fn print_balances(name: &str) {
+	let free_balance = siip_node_runtime::pallet_balances::Module::<siip_node_runtime::Runtime>::free_balance(get_account_id_from_seed::<sr25519::Public>(name)) / 1_000_000_000_000u128;
+	println!("{} has {:?} free", name, free_balance);
+	let reserved_balance = siip_node_runtime::pallet_balances::Module::<siip_node_runtime::Runtime>::reserved_balance(get_account_id_from_seed::<sr25519::Public>(name)) / 1_000_000_000_000u128;
+	println!("{} has {:?} reserved", name, reserved_balance);
+}
 
 pub fn sign(name: &str, function: &siip_node_runtime::Call, extras: &siip_node_runtime::SignedExtra ) -> siip_node_runtime::Signature {
 	use sp_core::Encode;
-	let encoded = function.encode();
-	let encoded_b = extras.encode();
-	let sig= sr25519::Pair::from_string(&format!("//{}", name), None)
-		.expect("static values are valid; qed").sign(&[&encoded[..], &encoded_b[..]].concat()[..]);
-	
-	siip_node_runtime::Signature::Sr25519(sig)
+	let raw_payload = siip_node_runtime::SignedPayload::new(function.clone(), extras.clone()).unwrap();
+	// let sig= sr25519::Pair::from_string(&format!("//{}", name), None)
+	// 	.expect("static values are valid; qed").sign(&raw_payload.encode()[..]);
+	let sig = raw_payload.using_encoded(|p| sr25519::Pair::from_string(&format!("//{}", name), None)
+	.expect("static values are valid; qed").sign(p));
+
+	let signature = siip_node_runtime::Signature::Sr25519(sig);
+	// println!("{:?}", signature.verify(&raw_payload.encode()[..], &get_account_id_from_seed::<sr25519::Public>("Alice")));
+	signature
 }

@@ -68,6 +68,8 @@ pub type Hash = sp_core::H256;
 /// Digest item type.
 pub type DigestItem = generic::DigestItem<Hash>;
 
+pub use generic::SignedPayload;
+
 /// Opaque types. These are used by the CLI to instantiate machinery that don't need to know
 /// the specifics of the runtime. They can then be made to be agnostic over specific formats
 /// of data like extrinsics, allowing for them to continue syncing the network through upgrades
@@ -299,13 +301,13 @@ pub type SignedExtra = (
 
 pub fn default_extras(nonce: u32) -> SignedExtra {
 	(
-		frame_system::CheckSpecVersion::<Runtime>::new(),
-		frame_system::CheckTxVersion::<Runtime>::new(),
-		frame_system::CheckGenesis::<Runtime>::new(),
-		frame_system::CheckEra::<Runtime>::from(sp_runtime::generic::Era::Immortal),
-		frame_system::CheckNonce::<Runtime>::from(nonce),
-		frame_system::CheckWeight::<Runtime>::new(),
-		pallet_transaction_payment::ChargeTransactionPayment::<Runtime>::from(1_000_000_000_000u64.into())
+		frame_system::CheckSpecVersion::new(),
+		frame_system::CheckTxVersion::new(),
+		frame_system::CheckGenesis::new(),
+		frame_system::CheckEra::from(sp_runtime::generic::Era::mortal(256, 0)),
+		frame_system::CheckNonce::from(nonce),
+		frame_system::CheckWeight::new(),
+		pallet_transaction_payment::ChargeTransactionPayment::from(0u64.into())
 	)
 }
 
@@ -523,3 +525,5 @@ pub fn test_block_hash(i: u32) -> Hash {
 	frame_system::Pallet::<Runtime>::parent_hash()
 }
 
+use sp_runtime::traits::Checkable;
+pub type Checked = <UncheckedExtrinsic as Checkable<frame_system::ChainContext<Runtime>>>::Checked;
