@@ -129,3 +129,80 @@ fn testnet_genesis(
 		}),
 	}
 }
+
+#[cfg(test)]
+use siip_node_runtime::BuildStorage;
+#[cfg(test)]
+use sp_block_builder::runtime_decl_for_BlockBuilder::BlockBuilder;
+#[cfg(test)]
+use sp_api::{runtime_decl_for_Core::Core};
+#[cfg(test)]
+fn new_test_ext() -> sp_io::TestExternalities {
+	let wasm_binary = WASM_BINARY.unwrap();
+
+	let gen = testnet_genesis(
+		wasm_binary,
+		// Sudo account
+		get_account_id_from_seed::<sr25519::Public>("Alice"),
+		// Pre-funded accounts
+		vec![
+			get_account_id_from_seed::<sr25519::Public>("Alice"),
+			get_account_id_from_seed::<sr25519::Public>("Bob"),
+			get_account_id_from_seed::<sr25519::Public>("Charlie"),
+			get_account_id_from_seed::<sr25519::Public>("Dave"),
+			get_account_id_from_seed::<sr25519::Public>("Eve"),
+			get_account_id_from_seed::<sr25519::Public>("Ferdie"),
+			get_account_id_from_seed::<sr25519::Public>("Alice//stash"),
+			get_account_id_from_seed::<sr25519::Public>("Bob//stash"),
+			get_account_id_from_seed::<sr25519::Public>("Charlie//stash"),
+			get_account_id_from_seed::<sr25519::Public>("Dave//stash"),
+			get_account_id_from_seed::<sr25519::Public>("Eve//stash"),
+			get_account_id_from_seed::<sr25519::Public>("Ferdie//stash"),
+		],
+		true,
+	);
+	let storage = gen.build_storage().unwrap();
+	sp_io::TestExternalities::from(storage)
+}
+
+
+#[test]
+fn bla() {
+	new_test_ext().execute_with(|| {
+		let register = siip_node_runtime::pallet_siip::Call::register_certificate(
+			"Sam".chars().map(|c| c as u8).collect(),
+			"abc.com".chars().map(|c| c as u8).collect(),
+			"127.0.0.1".chars().map(|c| c as u8).collect(),
+			"{}".chars().map(|c| c as u8).collect(),
+			"abcdef".chars().map(|c| c as u8).collect()
+		);
+		let r = siip_node_runtime::Call::SiipModule(register);
+
+		let extrinsic = siip_node_runtime::UncheckedExtrinsic {
+			function: r,
+			signature: None
+		};
+
+		let genesis_hash = hex::decode("8fda83852a8834b91247d520f0fccde46af1c7cd298ad3d3e072f2c1265a44ae").expect("Decoding failed");
+
+		let genesis_hash = siip_node_runtime::Hash::from_slice(&genesis_hash[..]);
+
+		let genesis_hash = siip_node_runtime::test_block_hash(0);
+
+		println!("{}", genesis_hash);
+		// for i in 0..32 {
+		// 	bytes[i] = genesis_hash[i];
+		// }
+
+		// let genesis_hash = bytes;
+		// let genesis_hash: siip_node_runtime::Hash = [6e174167eb21b5985c84441386028c5393ba0129103fbd471d01424f81ec0465];
+
+
+		let b = siip_node_runtime::test_construct_block(1, genesis_hash, vec![extrinsic]);
+	
+
+		println!("GOT HERE");
+		siip_node_runtime::Runtime::execute_block(b);
+		// assert_err!(siip_node_runtime::Runtime::apply_extrinsic(extrinsic), "bla");
+	});
+}

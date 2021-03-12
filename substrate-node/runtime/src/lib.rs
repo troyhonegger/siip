@@ -444,7 +444,7 @@ impl_runtime_apis! {
 	}
 }
 
-#[cfg(test)]
+// #[cfg(test)]
 pub fn test_construct_block(
 	number: BlockNumber,
 	parent_hash: Hash,
@@ -464,8 +464,43 @@ pub fn test_construct_block(
 		digest: Default::default()
 	};
 
+	// let block = Block {
+	// 	header.clone(),
+	// 	extrinsics
+	// };
+
+	Executive::initialize_block(&header);
+
+	frame_support::debug::RuntimeLogger::init();
+    
+	use frame_support::debug::debug;
+
+	debug!("A");
+
+
+	for extrinsic in extrinsics.iter() {
+		let res = Executive::apply_extrinsic(extrinsic.clone());
+		match res {
+			Ok(_) => {},
+			Err(e) => panic!("Applying extrinsic failed: {:?}", e)
+		}
+
+	}
+
+	debug!("B");
+	
+	let header = Executive::finalize_block();
+	debug!("C");
+
 	Block {
 		header,
 		extrinsics
 	}
 }
+
+// #[cfg(test)]
+pub fn test_block_hash(i: u32) -> Hash {
+	// frame_system::Pallet::<Runtime>::block_hash(i)
+	frame_system::Pallet::<Runtime>::parent_hash()
+}
+
