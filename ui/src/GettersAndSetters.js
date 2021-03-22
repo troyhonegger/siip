@@ -8,7 +8,7 @@ function Field (props) {
     <div>
       <label>{ props.label }</label>
       <div>
-        <TextareaAutosize name={ props.name } id={ props.name } placeholder={ props.placeholder }
+        <TextareaAutosize id={ props.name } placeholder={ props.placeholder }
                           className="input_field" />
       </div>
     </div>
@@ -22,15 +22,19 @@ function RegisterCertificate (props) {
         Register an SIIP Certificate
       </h3>
       <form>
-        <Field label="Owner's Name:" name="owners_name" placeholder={props.name} />
-        <Field label="Domain Name:" name="domain_name" placeholder={props.domain} />
-        <Field label="IPv4 Address:" name="ipv4_address" placeholder={props.ip_addr}/>
-        <Field label="Info:" name="info" placeholder={props.info}/>
-        <Field label="Public Key:" name="public_key" placeholder={props.public_key}/>
+        <Field label="Domain Name:" id="register_domain_name" placeholder={props.domain} />
+        <br />
+        <br />
+        <Field label="Owner's Name:" id="register_owners_name" placeholder={props.name} />
+        <Field label="IPv4 Address:" id="register_ipv4_address" placeholder={props.ip_addr}/>
+        <Field label="Info:" id="register_info" placeholder={props.info}/>
+        <Field label="Public Key:" id="register_public_key" placeholder={props.public_key}/>
       </form>
     </div>
   );
 }
+
+// Input validation!
 
 function ModifyCertificate (props) {
   return (
