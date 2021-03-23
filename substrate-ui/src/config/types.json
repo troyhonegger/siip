@@ -1,6 +1,4 @@
 {
-"Address": "MultiAddress",
-"LookupSource": "MultiAddress",
 "Certificate": {
     "version_number": "i32",
     "owner_id": "AccountId",
