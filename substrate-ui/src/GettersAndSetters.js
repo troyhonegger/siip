@@ -26,9 +26,9 @@ function RegisterCertificate (props) {
         <br />
         <br />
         <Field label="Owner's Name:" id="register_owners_name" placeholder={props.name} />
-        <Field label="IPv4 Address:" id="register_ipv4_address" placeholder={props.ip_addr}/>
+        <Field label="IPv4 Address:" id="register_ipv4_address" placeholder={props.ipAddr}/>
         <Field label="Info:" id="register_info" placeholder={props.info}/>
-        <Field label="Public Key:" id="register_public_key" placeholder={props.public_key}/>
+        <Field label="Public Key:" id="register_public_key" placeholder={props.publicKey}/>
       </form>
     </div>
   );
@@ -54,16 +54,15 @@ function RemoveCertificate (props) {
 
 export default function GettersAndSetters (props) {
   // const { accountPair } = props;
-  const name = "John Smith";
-  const domain = "website.com";
-  const ip_addr = "192.168.0.1";
-  const info = "{ country\": \"US\",..."
-  const public_key = "04:EB:9A:AF:31:11...";
-
+  const name = 'John Smith';
+  const domain = 'website.com';
+  const ipAddr = '192.168.0.1"';
+  const info = '{ country": "US",...';
+  const publicKey = '04:EB:9A:AF:31:11...';
 
   return (
     <div>
-      <RegisterCertificate name={name} domain={domain} ip_addr={ip_addr} info={info} public_key={public_key}/>
+      <RegisterCertificate name={name} domain={domain} ipAddr={ipAddr} info={info} publicKey={publicKey}/>
       <ModifyCertificate/>
       <RemoveCertificate/>
     </div>

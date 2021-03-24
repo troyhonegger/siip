@@ -28,6 +28,7 @@
     "prop-types": "^15.7.2",
     "query-string": "^6.13.5",
     "react": "^16.14.0",
+    "react-autosize-textarea": "^7.1.0",
     "react-copy-to-clipboard": "^5.0.3",
     "react-dom": "^16.14.0",
     "react-scripts": "^4.0.2",
