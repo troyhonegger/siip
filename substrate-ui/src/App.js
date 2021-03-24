@@ -9,7 +9,7 @@ import { DeveloperConsole } from './substrate-lib/components';
 // import Balances from './Balances';
 import BlockNumber from './BlockNumber';
 // import Events from './Events';
-// import Interactor from './Interactor';
+import Interactor from './Interactor';
 // import Metadata from './Metadata';
 // import NodeInfo from './NodeInfo';
 // import TemplateModule from './TemplateModule';
@@ -70,10 +70,10 @@ function Main () {
           {/*  <Transfer accountPair={accountPair} />*/}
           {/*  <Upgrade accountPair={accountPair} />*/}
           {/*</Grid.Row>*/}
-          {/*<Grid.Row>*/}
-          {/*  <Interactor accountPair={accountPair} />*/}
+          <Grid.Row>
+            <Interactor accountPair={accountPair} />
           {/*  <Events />*/}
-          {/*</Grid.Row>*/}
+          </Grid.Row>
           {/*<Grid.Row>*/}
           {/*  <TemplateModule accountPair={accountPair} />*/}
           {/*</Grid.Row>*/}

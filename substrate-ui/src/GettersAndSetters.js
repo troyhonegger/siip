@@ -1,7 +1,9 @@
-import React from 'react';
-// import ReactDOM from 'react-dom';
+import React, { useEffect, useState } from 'react';
 import './css/GettersAndSetters.css';
 import TextareaAutosize from 'react-autosize-textarea';
+// import { useSubstrate } from './substrate-lib';
+// import { Dropdown, Form, Grid, Input, Label } from 'semantic-ui-react';
+// import { TxButton, TxGroupButton } from './substrate-lib/components';
 
 function Field (props) {
   return (
