@@ -5,7 +5,7 @@ import 'semantic-ui-css/semantic.min.css';
 import { SubstrateContextProvider, useSubstrate } from './substrate-lib';
 import { DeveloperConsole } from './substrate-lib/components';
 
-// import AccountSelector from './AccountSelector';
+import AccountSelector from './AccountSelector';
 // import Balances from './Balances';
 import BlockNumber from './BlockNumber';
 // import Events from './Events';
@@ -50,11 +50,13 @@ function Main () {
 
   const contextRef = createRef();
 
+  console.log('accountPair: ' + accountPair);
+
   return (
     <div ref={contextRef}>
-      {/*<Sticky context={contextRef}>*/}
-      {/*  <AccountSelector setAccountAddress={setAccountAddress} />*/}
-      {/*</Sticky>*/}
+      <Sticky context={contextRef}>
+        <AccountSelector setAccountAddress={setAccountAddress} />
+      </Sticky>
       <Container>
         <Grid stackable columns='equal'>
           <Grid.Row stretched>

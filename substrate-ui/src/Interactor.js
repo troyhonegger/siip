@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from 'react';
-import { Grid, Form, Dropdown, Input, Label } from 'semantic-ui-react';
+import { Grid, Form, Input, Label } from 'semantic-ui-react';
 
 import { useSubstrate } from './substrate-lib';
-import { TxButton, TxGroupButton } from './substrate-lib/components';
+import { TxGroupButton } from './substrate-lib/components';
 
 const argIsOptional = (arg) =>
   arg.type.toString().startsWith('Option<');
@@ -23,14 +23,6 @@ function Main (props) {
 
   const [formState, setFormState] = useState(initFormState);
   const { palletRpc, callable, inputParams } = formState;
-
-  const getApiType = (api, interxType) => api.tx;
-
-  const siipModule = {key: "siipModule", value: "siipModule", text: "siipModule" };
-  const palletRPCs = [siipModule];
-
-  const registerCertificate = { key: "registerCertificate", value: "registerCertificate", text: "registerCertificate" };
-  const callables = [registerCertificate];
 
   const updateParamFields = () => {
     if (!api || palletRpc === '' || callable === '') {
@@ -58,24 +50,13 @@ function Main (props) {
   formState.palletRpc = 'siipModule';
   formState.callable = 'registerCertificate';
 
-  const onPalletCallableParamChange = (_, data) => {
+  const updateFields = (_, data) => {
     setFormState(formState => {
-      let res;
       const { state, value } = data;
-      if (typeof state === 'object') {
-        // Input parameter updated
-        const { ind, paramField: { type } } = state;
-        const inputParams = [...formState.inputParams];
-        inputParams[ind] = { type, value };
-        res = { ...formState, inputParams };
-      } else if (state === 'palletRpc') {
-        console.log('state: ' + state)
-        console.log('value: ' + value)
-        res = { ...formState, [state]: value, callable: '', inputParams: [] };
-      } else if (state === 'callable') {
-        res = { ...formState, [state]: value, inputParams: [] };
-      }
-      return res;
+      const { ind, paramField: { type } } = state;
+      const inputParams = [...formState.inputParams];
+      inputParams[ind] = { type, value };
+      return { ...formState, inputParams };
     });
   };
 
@@ -97,7 +78,7 @@ function Main (props) {
               label={paramField.name}
               state={{ ind, paramField }}
               value={ inputParams[ind] ? inputParams[ind].value : '' }
-              onChange={onPalletCallableParamChange}
+              onChange={updateFields}
             />
             { paramField.optional
               ? <Label
@@ -124,6 +105,5 @@ function Main (props) {
 }
 
 export default function Interactor (props) {
-  const { api } = useSubstrate();
-  return api.tx ? <Main {...props} /> : null;
+  return <Main {...props} />;
 }
