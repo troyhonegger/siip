@@ -1,9 +1,12 @@
 use frame_benchmarking::frame_support::pallet_prelude::ValueQuery;
 use sp_core::{Pair, Public, sr25519};
-use siip_node_runtime::{AccountId, BalancesConfig, GenesisConfig, Signature, SudoConfig, SystemConfig, UncheckedExtrinsic, WASM_BINARY};
 use sp_runtime::{
 	MultiSignature, traits::{Verify, IdentifyAccount}, 
 	transaction_validity::{TransactionValidity, InvalidTransaction, TransactionValidityError}
+};
+use siip_node_runtime::{
+	AccountId, BalancesConfig, GenesisConfig,
+	SudoConfig, SystemConfig, WASM_BINARY, Signature, DemocracyConfig, UncheckedExtrinsic
 };
 
 use sc_service::ChainType;
@@ -129,6 +132,7 @@ fn testnet_genesis(
 			// Assign network admin rights.
 			key: root_key,
 		}),
+		pallet_democracy: Some(DemocracyConfig::default())
 	}
 }
 
