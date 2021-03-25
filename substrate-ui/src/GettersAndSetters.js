@@ -1,64 +1,11 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import './css/GettersAndSetters.css';
 import TextareaAutosize from 'react-autosize-textarea';
-import { Grid, Form, Input, Label, Button } from 'semantic-ui-react';
 
 import { useSubstrate } from './substrate-lib';
-import { TxButton, TxGroupButton } from './substrate-lib/components';
-import {web3FromSource} from "@polkadot/extension-dapp";
 import utils from "./substrate-lib/utils";
 
-const argIsOptional = (arg) =>
-  arg.type.toString().startsWith('Option<');
-
-function Field (props) {
-  return (
-    <div>
-      <label>{ props.label }</label>
-      <div>
-        <TextareaAutosize id={ props.name } placeholder={ props.placeholder }
-                          className="input_field" />
-      </div>
-    </div>
-  );
-}
-
-function RegisterForm (props) {
-  const { api, jsonrpc } = useSubstrate();
-  const { accountPair } = props;
-  const [status, setStatus] = useState(null);
-  const [interxType] = useState('EXTRINSIC');
-  const [unsub, setUnsub] = useState(null);
-
-  let getFromAcct = async () => {
-    const {
-      address,
-      meta: { source, isInjected }
-    } = accountPair;
-    let fromAcct;
-
-    // signer is from Polkadot-js browser extension
-    if (isInjected) {
-      const injected = await web3FromSource(source);
-      fromAcct = address;
-      api.setSigner(injected.signer);
-    } else {
-      fromAcct = accountPair;
-    }
-
-    return fromAcct;
-  };
-
-  const txResHandler = ({ status }) =>
-    status.isFinalized
-      ? setStatus(`😉 Finalized. Block hash: ${status.asFinalized.toString()}`)
-      : setStatus(`Current transaction status: ${status.type}`);
-
-  const txErrHandler = err => {
-    setStatus(`😞 Transaction Failed: ${err.toString()}`);
-  }
-
-  const transformParams = (paramFields, inputParams, opts = { emptyAsNull: true }) => {
+function transformParams (paramFields, inputParams) {
     // if `opts.emptyAsNull` is true, empty param value will be added to res as `null`.
     //   Otherwise, it will not be added
     const paramVal = inputParams.map(inputParam => {
@@ -93,22 +40,52 @@ function RegisterForm (props) {
       }
       return [...memo, converted];
     }, []);
-  };
+}
 
-  const isNumType = type =>
-    utils.paramConversion.num.some(el => type.indexOf(el) >= 0);
+function isNumType (type) {
+  utils.paramConversion.num.some(el => type.indexOf(el) >= 0);
+}
+
+function Field (props) {
+  return (
+    <div>
+      <label>{ props.label }</label>
+      <div>
+        <TextareaAutosize id={ props.name } placeholder={ props.placeholder }
+                          className="input_field" />
+      </div>
+    </div>
+  );
+}
+
+function RegisterCertificate (props) {
+  const { api, jsonrpc } = useSubstrate();
+  const { accountPair } = props;
+  const [unsub, setUnsub] = useState(null);
+
+  let message = '';
+
+  const txResHandler = ({ status }) =>
+    status.isFinalized
+      ? message = `😉 Finalized. Block hash: ${status.asFinalized.toString()}`
+      : message = `Current transaction status: ${status.type}`;
+
+  const txErrHandler = err => {
+    message = `😞 Transaction Failed: ${err.toString()}`;
+  }
+
+  const palletRpc = 'siipModule';
+  const interxType = 'EXTRINSIC';
+  const name = { name: "name", type: "Bytes", optional: false };
+  const domain = { name: "domain", type: "Bytes", optional: false };
+  const ip_addr = { name: "ip_addr", type: "Bytes", optional: false };
+  const info = { name: "info", type: "Bytes", optional: false };
+  const key = { name: "key", type: "Bytes", optional: false };
 
   let registerSubmit = async () => {
-    const palletRpc = 'siipModule';
     const callable = 'registerCertificate';
-    const interxType = 'EXTRINSIC'
 
-    let paramFields = [
-    { name: "name", type: "Bytes", optional: false },
-    { name: "domain", type: "Bytes", optional: false },
-    { name: "ip_addr", type: "Bytes", optional: false },
-    { name: "info", type: "Bytes", optional: false },
-    { name: "key", type: "Bytes", optional: false }];
+    let paramFields = [domain, name, ip_addr, info, key];
 
     let inputParams = [
     { type: "Bytes", value: "A" },
@@ -117,52 +94,18 @@ function RegisterForm (props) {
     { type: "Bytes", value: "D" },
     { type: "Bytes", value: "E" }];
 
-    // paramFields = Array.from(paramFields);
-    // inputParams = Array.from(inputParams);
-
-    console.log('paramFields is:');
-    console.log(paramFields);
-    console.log('inputParams is:');
-    console.log(inputParams);
-
-    const fromAcct = await getFromAcct();
     const transformed = transformParams(paramFields, inputParams);
-
-    console.log('transformed: ' + transformed);
 
     const txExecute = transformed
       ? api.tx[palletRpc][callable](...transformed)
       : api.tx[palletRpc][callable]();
 
-    const unsub = await txExecute.signAndSend(fromAcct, txResHandler)
+    const unsub = await txExecute.signAndSend(accountPair, txResHandler)
       .catch(txErrHandler);
     setUnsub(() => unsub);
 
     return;
   }
-
-  // <TxButton
-  //   label='Signed'
-  //   type='SIGNED-TX'
-  //   color='blue'
-  //   {...props}
-  // />
-
-  // const { palletRpc, callable, inputParams, paramFields } = attrs;
-
-  // async () => {
-  //   const fromAcct = await getFromAcct();
-  //   const transformed = transformParams(paramFields, inputParams);
-  //   // transformed can be empty parameters
-  //
-  //   const txExecute = transformed
-  //     ? api.tx[palletRpc][callable](...transformed)
-  //     : api.tx[palletRpc][callable]();
-  //
-  //   const unsub = await txExecute.signAndSend(fromAcct, txResHandler)
-  //     .catch(txErrHandler);
-  //   setUnsub(() => unsub);
-  // };
 
   return (
     <div className="card">
@@ -209,7 +152,7 @@ export default function GettersAndSetters (props) {
 
   return (
     <div>
-      <RegisterForm {...props} name={name} domain={domain} ipAddr={ipAddr} info={info} publicKey={publicKey}/>
+      <RegisterCertificate {...props} name={name} domain={domain} ipAddr={ipAddr} info={info} publicKey={publicKey}/>
       <ModifyCertificate/>
       <RemoveCertificate/>
     </div>

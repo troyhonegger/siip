@@ -65,6 +65,9 @@ function Main (props) {
       ? 'Optional Parameter'
       : 'Leaving this field as blank will submit a NONE value';
 
+  console.log('attr should be:');
+  console.log({ interxType, palletRpc, callable, inputParams, paramFields });
+
   return (
     <Grid.Column width={8}>
       <h1>Pallet Interactor</h1>
