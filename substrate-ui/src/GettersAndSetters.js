@@ -46,16 +46,8 @@ function isNumType (type) {
   utils.paramConversion.num.some(el => type.indexOf(el) >= 0);
 }
 
-function Field (props) {
-  return (
-    <div>
-      <label>{ props.label }</label>
-      <div>
-        <TextareaAutosize id={ props.name } placeholder={ props.placeholder }
-                          className="input_field" />
-      </div>
-    </div>
-  );
+function submitRegister (props) {
+
 }
 
 function RegisterCertificate (props) {
@@ -75,24 +67,23 @@ function RegisterCertificate (props) {
   }
 
   const palletRpc = 'siipModule';
-  const interxType = 'EXTRINSIC';
-  const name = { name: "name", type: "Bytes", optional: false };
-  const domain = { name: "domain", type: "Bytes", optional: false };
-  const ip_addr = { name: "ip_addr", type: "Bytes", optional: false };
-  const info = { name: "info", type: "Bytes", optional: false };
-  const key = { name: "key", type: "Bytes", optional: false };
+  const name_field = { name: "name", type: "Bytes", optional: false };
+  const domain_field = { name: "domain", type: "Bytes", optional: false };
+  const ip_addr_field = { name: "ip_addr", type: "Bytes", optional: false };
+  const info_field = { name: "info", type: "Bytes", optional: false };
+  const key_field = { name: "key", type: "Bytes", optional: false };
 
   let registerSubmit = async () => {
     const callable = 'registerCertificate';
 
-    let paramFields = [domain, name, ip_addr, info, key];
+    let paramFields = [domain_field, name_field, ip_addr_field, info_field, key_field];
 
     let inputParams = [
-    { type: "Bytes", value: "A Name" },
-    { type: "Bytes", value: "adomain.com" },
-    { type: "Bytes", value: "127.0.0.1" },
-    { type: "Bytes", value: "{}" },
-    { type: "Bytes", value: "42:42:42:42" }];
+    { type: "Bytes", value: domain },
+    { type: "Bytes", value: name },
+    { type: "Bytes", value: ipAddr },
+    { type: "Bytes", value: info },
+    { type: "Bytes", value: key }];
 
     const transformed = transformParams(paramFields, inputParams);
 
@@ -103,12 +94,31 @@ function RegisterCertificate (props) {
     const unsub = await txExecute.signAndSend(accountPair, txResHandler)
       .catch(txErrHandler);
     setUnsub(() => unsub);
+  }
 
-    console.log('signature is:');
-    console.log(accountPair);
-    console.log('Reminder: The Interactor.js/TxButton also has an incorrect signature.');
+  let [domain, setDomain] = useState('');
+  const updateDomain = (event) => {
+    setDomain(event.target.value);
+  }
 
-    return;
+  let [name, setName] = useState('');
+  const updateName = (event) => {
+    setName(event.target.value);
+  }
+
+  let [ipAddr, setIpAddr] = useState('');
+  const updateIpAddr = (event) => {
+    setIpAddr(event.target.value);
+  }
+
+  let [info, setInfo] = useState('');
+  const updateInfo = (event) => {
+    setInfo(event.target.value);
+  }
+
+  let [key, setKey] = useState('');
+  const updateKey = (event) => {
+    setKey(event.target.value);
   }
 
   return (
@@ -117,17 +127,60 @@ function RegisterCertificate (props) {
         Register an SIIP Certificate
       </h3>
       <form>
-        <Field label="Domain Name:" id="register_domain_name" placeholder={props.domain} />
+        <label>Domain Name:</label>
+        <div>
+          <TextareaAutosize className="input_field" placeholder={props.domain} value={domain} onChange={updateDomain}/>
+        </div>
         <br />
         <br />
-        <Field label="Owner's Name:" id="register_owners_name" placeholder={props.name} />
-        <Field label="IPv4 Address:" id="register_ipv4_address" placeholder={props.ipAddr}/>
-        <Field label="Info:" id="register_info" placeholder={props.info}/>
-        <Field label="Public Key:" id="register_public_key" placeholder={props.publicKey}/>
+        <label>Owner's Name:</label>
+        <div>
+          <TextareaAutosize className="input_field" placeholder={props.name} value={name} onChange={updateName}/>
+        </div>
+        <label>IPv4 Address:</label>
+        <div>
+          <TextareaAutosize className="input_field" placeholder={props.ipAddr} value={ipAddr} onChange={updateIpAddr}/>
+        </div>
+        <label>Info:</label>
+        <div>
+          <TextareaAutosize className="input_field" placeholder={props.info} value={info} onChange={updateInfo}/>
+        </div>
+        <label>Public Key:</label>
+        <div>
+          <TextareaAutosize className="input_field" placeholder={props.publicKey} value={key} onChange={updateKey}/>
+        </div>
       </form>
       <button onClick={() => registerSubmit()}>Submit</button>
     </div>
   );
+}
+
+class RegisterCertificate2 extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = {
+      name: 'Placeholder'
+    };
+
+    this.updateName = this.updateName.bind(this);
+  }
+
+  updateName(event) {
+    console.log('Name is now: ' + event.target.value);
+    this.setState({name: event.target.value});
+  }
+
+  render() {
+    return (
+      <form>
+        <label>
+          Essay:
+          <textarea value={this.name} onChange={this.updateName} />
+        </label>
+        <input type="submit" value="Submit" />
+      </form>
+    )
+  }
 }
 
 function ModifyCertificate (props) {
@@ -157,6 +210,7 @@ export default function GettersAndSetters (props) {
   return (
     <div>
       <RegisterCertificate {...props} name={name} domain={domain} ipAddr={ipAddr} info={info} publicKey={publicKey}/>
+      <RegisterCertificate2 {...props} />
       <ModifyCertificate/>
       <RemoveCertificate/>
     </div>
