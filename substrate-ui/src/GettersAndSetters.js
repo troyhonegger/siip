@@ -88,11 +88,11 @@ function RegisterCertificate (props) {
     let paramFields = [domain, name, ip_addr, info, key];
 
     let inputParams = [
-    { type: "Bytes", value: "A" },
-    { type: "Bytes", value: "B" },
-    { type: "Bytes", value: "C" },
-    { type: "Bytes", value: "D" },
-    { type: "Bytes", value: "E" }];
+    { type: "Bytes", value: "A Name" },
+    { type: "Bytes", value: "adomain.com" },
+    { type: "Bytes", value: "127.0.0.1" },
+    { type: "Bytes", value: "{}" },
+    { type: "Bytes", value: "42:42:42:42" }];
 
     const transformed = transformParams(paramFields, inputParams);
 
@@ -103,6 +103,10 @@ function RegisterCertificate (props) {
     const unsub = await txExecute.signAndSend(accountPair, txResHandler)
       .catch(txErrHandler);
     setUnsub(() => unsub);
+
+    console.log('signature is:');
+    console.log(accountPair);
+    console.log('Reminder: The Interactor.js/TxButton also has an incorrect signature.');
 
     return;
   }
