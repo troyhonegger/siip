@@ -62,54 +62,104 @@ function SubmitButton (props) {
   );
 }
 
-function RegisterCertificate (props) {
-  const [domain, setDomain] = useState('website.com');
-  const updateDomain = (event) => {
-    setDomain(event.target.value);
+async function updateDb(domain, setDbName, setDbIpAddr, setDbInfo, setDbPublicKey, setDomainExists) {
+  const palletRpc = 'siipModule';
+  const callable = 'certificateMap';
+
+  const queryResHandler = result => {
+    if (result.isNone) {
+      console.log('Waiting...');
+    }
+    //Fields will be empty/0 if a certificate has not been stored
+    else {
+      let json = JSON.parse(result);
+      setDbName(json['owner_name']);
+      setDbIpAddr(json['ip_addr']);
+      setDbInfo(json['public_key_info']);
+      setDbPublicKey(json['public_key']);
+
+      //The version_number is only 0 if the certificate does not exist
+      if (json['version_number'] == '0') {
+        setDomainExists(false);
+      }
+      else {
+        setDomainExists(true);
+      }
+    }
+  }
+
+  api.query[palletRpc][callable](domain, queryResHandler);
+}
+
+export default function GettersAndSetters (props) {
+  const [inputDomain, setInputDomain] = useState('website.com');
+  const updateInputDomain = (event) => {
+    setInputDomain(event.target.value);
+    updateDb(event.target.value, setDbName, setDbIpAddr, setDbInfo, setDbPublicKey, setDomainExists);
   };
 
-  const [name, setName] = useState('John Smith');
-  const updateName = (event) => {
-    setName(event.target.value);
+  const [inputName, setInputName] = useState('John Smith');
+  const updateInputName = (event) => {
+    setInputName(event.target.value);
   };
 
-  const [ipAddr, setIpAddr] = useState('192.168.0.1');
-  const updateIpAddr = (event) => {
-    setIpAddr(event.target.value);
+  const [inputIpAddr, setInputIpAddr] = useState('192.168.0.1');
+  const updateInputIpAddr = (event) => {
+    setInputIpAddr(event.target.value);
   };
 
-  const [info, setInfo] = useState('{}');
-  const updateInfo = (event) => {
-    setInfo(event.target.value);
+  const [inputInfo, setInputInfo] = useState('{}');
+  const updateInputInfo = (event) => {
+    setInputInfo(event.target.value);
   };
 
-  const [publicKey, setPublicKey] = useState('04:EB:9A:AF:31:11');
-  const updatePublicKey = (event) => {
-    setPublicKey(event.target.value);
+  const [inputPublicKey, setInputPublicKey] = useState('04:EB:9A:AF:31:11');
+  const updateInputPublicKey = (event) => {
+    setInputPublicKey(event.target.value);
   };
+
+  const [dbName, setDbName] = useState('');
+  const [dbIpAddr, setDbIpAddr] = useState('');
+  const [dbInfo, setDbInfo] = useState('');
+  const [dbPublicKey, setDbPublicKey] = useState('');
+  const [domainExists, setDomainExists] = useState(false);
 
   return (
     <div className="container">
       <div className="card">
         <h3>
+          Lookup an SIIP Certificate
+        </h3>
+        <form>
+          <DomainName value={inputDomain} onChange={updateInputDomain}/>
+          <br />
+          <br />
+          <Static label='Owner&apos;s Name:' value={dbName} />
+          <Static label='IPv4 Address:' value={dbIpAddr} />
+          <Static label='Info:' value={dbInfo} />
+          <Static label='Public Key:' value={dbPublicKey} />
+        </form>
+      </div>
+      <div className="card">
+        <h3>
           Register an SIIP Certificate
         </h3>
         <form>
-          <DomainName value={domain} onChange={updateDomain}/>
+          <DomainName value={inputDomain} onChange={updateInputDomain}/>
           <br />
           <br />
-          <Name value={name} onChange={updateName}/>
-          <IpAddr value={ipAddr} onChange={updateIpAddr}/>
-          <Info value={info} onChange={updateInfo}/>
-          <PublicKey value={publicKey} onChange={updatePublicKey}/>
+          <Name value={inputName} onChange={updateInputName}/>
+          <IpAddr value={inputIpAddr} onChange={updateInputIpAddr}/>
+          <Info value={inputInfo} onChange={updateInputInfo}/>
+          <PublicKey value={inputPublicKey} onChange={updateInputPublicKey}/>
         </form>
         <SubmitButton
           {...props}
-          domain={domain}
-          name={name}
-          ipAddr={ipAddr}
-          info={info}
-          publicKey={publicKey}
+          domain={inputDomain}
+          name={inputName}
+          ipAddr={inputIpAddr}
+          info={inputInfo}
+          publicKey={inputPublicKey}
           method='Register'
         />
       </div>
@@ -118,21 +168,21 @@ function RegisterCertificate (props) {
           Modify an SIIP Certificate
         </h3>
         <form>
-          <DomainName value={domain} onChange={updateDomain}/>
+          <DomainName value={inputDomain} onChange={updateInputDomain}/>
           <br />
           <br />
-          <Name value={name} onChange={updateName}/>
-          <IpAddr value={ipAddr} onChange={updateIpAddr}/>
-          <Info value={info} onChange={updateInfo}/>
-          <PublicKey value={publicKey} onChange={updatePublicKey}/>
+          <Name value={inputName} onChange={updateInputName}/>
+          <IpAddr value={inputIpAddr} onChange={updateInputIpAddr}/>
+          <Info value={inputInfo} onChange={updateInputInfo}/>
+          <PublicKey value={inputPublicKey} onChange={updateInputPublicKey}/>
         </form>
         <SubmitButton
           {...props}
-          domain={domain}
-          name={name}
-          ipAddr={ipAddr}
-          info={info}
-          publicKey={publicKey}
+          domain={inputDomain}
+          name={inputName}
+          ipAddr={inputIpAddr}
+          info={inputInfo}
+          publicKey={inputPublicKey}
           method='Modify'
         />
       </div>
@@ -141,15 +191,15 @@ function RegisterCertificate (props) {
           Delete an SIIP Certificate
         </h3>
         <form>
-          <DomainName value={domain} onChange={updateDomain}/>
+          <DomainName value={inputDomain} onChange={updateInputDomain}/>
         </form>
         <SubmitButton
           {...props}
-          domain={domain}
-          name={name}
-          ipAddr={ipAddr}
-          info={info}
-          publicKey={publicKey}
+          domain={inputDomain}
+          name={inputName}
+          ipAddr={inputIpAddr}
+          info={inputInfo}
+          publicKey={inputPublicKey}
           method='Delete'
         />
       </div>
@@ -237,28 +287,16 @@ function PublicKey (props) {
   );
 }
 
-function ModifyCertificate (props) {
-  return (
-    <h2>
-      Modify
-    </h2>
-  );
-}
-
-function RemoveCertificate (props) {
-  return (
-    <h2>
-      Remove
-    </h2>
-  );
-}
-
-export default function GettersAndSetters (props) {
+function Static (props) {
   return (
     <div>
-      <RegisterCertificate {...props} />
-      <ModifyCertificate/>
-      <RemoveCertificate/>
+      <label>{props.label}</label>
+      <div>
+        <TextareaAutosize
+          className="input_field"
+          value={props.value}
+        />
+      </div>
     </div>
   );
 }

@@ -15,7 +15,6 @@ import NodeInfo from './NodeInfo';
 import TemplateModule from './TemplateModule';
 import Transfer from './Transfer';
 import Upgrade from './Upgrade';
-import Header from './Header';
 import GettersAndSetters from './GettersAndSetters';
 
 function Main () {
@@ -49,8 +48,6 @@ function Main () {
   }
 
   const contextRef = createRef();
-
-  console.log('accountPair: ' + accountPair);
 
   return (
     <div ref={contextRef}>
