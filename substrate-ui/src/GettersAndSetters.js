@@ -149,10 +149,10 @@ export default function GettersAndSetters (props) {
           <DomainName value={inputDomain} onChange={updateInputDomain}/>
           <br />
           <br />
-          <Static label='Owner&apos;s Name:' value={dbName} enable={domainExists}/>
-          <Static label='IPv4 Address:' value={dbIpAddr} enable={domainExists}/>
-          <Static label='Info:' value={dbInfo} enable={domainExists}/>
-          <Static label='Public Key:' value={dbPublicKey} enable={domainExists}/>
+          <Static label='Owner&apos;s Name:' value={dbName} enable={false}/>
+          <Static label='IPv4 Address:' value={dbIpAddr} enable={false}/>
+          <Static label='Info:' value={dbInfo} enable={false}/>
+          <Static label='Public Key:' value={dbPublicKey} enable={false}/>
         </form>
       </div>
       <div className="card">
