@@ -1,48 +1,63 @@
 import React, { useState } from 'react';
 import './css/GettersAndSetters.css';
 import TextareaAutosize from 'react-autosize-textarea';
-
-import { TxGroupButton } from './substrate-lib/components';
-import {Grid} from "semantic-ui-react";
-import NodeInfo from "./NodeInfo";
-import Metadata from "./Metadata";
-import BlockNumber from "./BlockNumber";
+import { TxButton } from './substrate-lib/components';
 
 function SubmitButton (props) {
   const { accountPair } = props;
+
   const nameField = { name: 'name', type: 'Bytes', optional: false };
   const domainField = { name: 'domain', type: 'Bytes', optional: false };
   const ipAddrField = { name: 'ip_addr', type: 'Bytes', optional: false };
   const infoField = { name: 'info', type: 'Bytes', optional: false };
   const keyField = { name: 'key', type: 'Bytes', optional: false };
 
+  const name = { type: 'Bytes', value: props.name };
+  const domain = { type: 'Bytes', value: props.domain };
+  const ipAddr = { type: 'Bytes', value: props.ipAddr };
+  const info = { type: 'Bytes', value: props.info };
+  const publicKey = { type: 'Bytes', value: props.publicKey };
+
   const interxType = 'EXTRINSIC';
   const palletRpc = 'siipModule';
-  const callable = 'registerCertificate';
-  const paramFields = [nameField, domainField, ipAddrField, infoField, keyField];
-  const inputParams = [
-    { type: 'Bytes', value: props.name },
-    { type: 'Bytes', value: props.domain },
-    { type: 'Bytes', value: props.ipAddr },
-    { type: 'Bytes', value: props.info },
-    { type: 'Bytes', value: props.publicKey }];
 
-  // eslint-disable-next-line
+  let callable = '';
+  let paramFields = [];
+  let inputParams = [];
+  let color = 'black';
+  if (props.method === 'Register') {
+    color = 'green';
+    callable = 'registerCertificate';
+    paramFields = [nameField, domainField, ipAddrField, infoField, keyField];
+    inputParams = [name, domain, ipAddr, info, publicKey];
+  } else if (props.method === 'Modify') {
+    color = 'yellow';
+    callable = 'modifyCertificate';
+    paramFields = [nameField, domainField, ipAddrField, infoField, keyField];
+    inputParams = [name, domain, ipAddr, info, publicKey];
+  } else if (props.method === 'Delete') {
+    color = 'red';
+    callable = 'removeCertificate';
+    paramFields = [domainField];
+    inputParams = [domain];
+  }
+
   const [status, setStatus] = useState('');
-
-  //console.log('accountPair:');
-  //console.log(accountPair);
-  //console.log('attrs:');
-  //console.log({ interxType, palletRpc, callable, inputParams, paramFields });
 
   return (
     <div>
       <br />
-      <TxGroupButton
+      <TxButton
+        label='Submit'
+        type='SIGNED-TX'
+        color={color}
         accountPair={accountPair}
         setStatus={setStatus}
         attrs={{ interxType, palletRpc, callable, inputParams, paramFields }}
       />
+      <p>
+        {status}
+      </p>
     </div>
   );
 }
@@ -88,7 +103,15 @@ function RegisterCertificate (props) {
           <Info value={info} onChange={updateInfo}/>
           <PublicKey value={publicKey} onChange={updatePublicKey}/>
         </form>
-        <SubmitButton {...props} domain={domain} name={name} ipAddr={ipAddr} info={info} publicKey={publicKey}/>
+        <SubmitButton
+          {...props}
+          domain={domain}
+          name={name}
+          ipAddr={ipAddr}
+          info={info}
+          publicKey={publicKey}
+          method='Register'
+        />
       </div>
       <div className="card">
         <h3>
@@ -103,7 +126,15 @@ function RegisterCertificate (props) {
           <Info value={info} onChange={updateInfo}/>
           <PublicKey value={publicKey} onChange={updatePublicKey}/>
         </form>
-        <SubmitButton {...props} domain={domain} name={name} ipAddr={ipAddr} info={info} publicKey={publicKey}/>
+        <SubmitButton
+          {...props}
+          domain={domain}
+          name={name}
+          ipAddr={ipAddr}
+          info={info}
+          publicKey={publicKey}
+          method='Modify'
+        />
       </div>
       <div className="card">
         <h3>
@@ -112,18 +143,19 @@ function RegisterCertificate (props) {
         <form>
           <DomainName value={domain} onChange={updateDomain}/>
         </form>
-        <SubmitButton {...props} domain={domain} name={name} ipAddr={ipAddr} info={info} publicKey={publicKey}/>
+        <SubmitButton
+          {...props}
+          domain={domain}
+          name={name}
+          ipAddr={ipAddr}
+          info={info}
+          publicKey={publicKey}
+          method='Delete'
+        />
       </div>
     </div>
   );
 }
-
-// <Grid.Row stretched>
-//   <NodeInfo />
-//   <Metadata />
-//   <BlockNumber />
-//   <BlockNumber finalized />
-// </Grid.Row>
 
 function DomainName (props) {
   return (
