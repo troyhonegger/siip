@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import './css/GettersAndSetters.css';
 import TextareaAutosize from 'react-autosize-textarea';
 import { TxButton } from './substrate-lib/components';
+import { Button } from 'semantic-ui-react';
 
 function SubmitButton (props) {
   const { accountPair } = props;
@@ -44,50 +45,64 @@ function SubmitButton (props) {
 
   const [status, setStatus] = useState('');
 
-  return (
-    <div>
-      <br />
-      <TxButton
-        label='Submit'
-        type='SIGNED-TX'
-        color={color}
-        accountPair={accountPair}
-        setStatus={setStatus}
-        attrs={{ interxType, palletRpc, callable, inputParams, paramFields }}
-      />
-      <p>
-        {status}
-      </p>
-    </div>
-  );
+  console.log('enable is: ' + props.enable);
+  if (props.enable) {
+    return (
+      <div>
+        <br />
+        <TxButton
+          label='Submit'
+          type='SIGNED-TX'
+          color={color}
+          accountPair={accountPair}
+          setStatus={setStatus}
+          attrs={{ interxType, palletRpc, callable, inputParams, paramFields }}
+        />
+        <p>
+          {status}
+        </p>
+      </div>
+    );
+  } else {
+    return (
+      <div>
+        <br />
+        <Button disabled>
+          Submit
+        </Button>
+        <p>
+          {status}
+        </p>
+      </div>
+    );
+  }
 }
 
-async function updateDb(domain, setDbName, setDbIpAddr, setDbInfo, setDbPublicKey, setDomainExists) {
+async function updateDb (domain, setDbName, setDbIpAddr, setDbInfo, setDbPublicKey, setDomainExists) {
   const palletRpc = 'siipModule';
   const callable = 'certificateMap';
 
   const queryResHandler = result => {
     if (result.isNone) {
       console.log('Waiting...');
-    }
-    //Fields will be empty/0 if a certificate has not been stored
-    else {
-      let json = JSON.parse(result);
-      setDbName(json['owner_name']);
-      setDbIpAddr(json['ip_addr']);
-      setDbInfo(json['public_key_info']);
-      setDbPublicKey(json['public_key']);
+    } else {
+      // Fields will be empty/0 if a certificate has not been stored
+      const json = JSON.parse(result);
+      setDbName(json.owner_name);
+      setDbIpAddr(json.ip_addr);
+      setDbInfo(json.public_key_info);
+      setDbPublicKey(json.public_key);
 
-      //The version_number is only 0 if the certificate does not exist
-      if (json['version_number'] == '0') {
+      // The version_number is only 0 if the certificate does not exist
+      if (json.version_number === 0) {
         setDomainExists(false);
-      }
-      else {
+      } else {
         setDomainExists(true);
       }
     }
-  }
+  };
 
+  // eslint-disable-next-line
   api.query[palletRpc][callable](domain, queryResHandler);
 }
 
@@ -95,7 +110,7 @@ export default function GettersAndSetters (props) {
   const [inputDomain, setInputDomain] = useState('website.com');
   const updateInputDomain = (event) => {
     setInputDomain(event.target.value);
-    updateDb(event.target.value, setDbName, setDbIpAddr, setDbInfo, setDbPublicKey, setDomainExists);
+    updateDb(event.target.value, setDbName, setDbIpAddr, setDbInfo, setDbPublicKey, setDomainExists).then();
   };
 
   const [inputName, setInputName] = useState('John Smith');
@@ -134,10 +149,10 @@ export default function GettersAndSetters (props) {
           <DomainName value={inputDomain} onChange={updateInputDomain}/>
           <br />
           <br />
-          <Static label='Owner&apos;s Name:' value={dbName} />
-          <Static label='IPv4 Address:' value={dbIpAddr} />
-          <Static label='Info:' value={dbInfo} />
-          <Static label='Public Key:' value={dbPublicKey} />
+          <Static label='Owner&apos;s Name:' value={dbName} enable={domainExists}/>
+          <Static label='IPv4 Address:' value={dbIpAddr} enable={domainExists}/>
+          <Static label='Info:' value={dbInfo} enable={domainExists}/>
+          <Static label='Public Key:' value={dbPublicKey} enable={domainExists}/>
         </form>
       </div>
       <div className="card">
@@ -148,10 +163,10 @@ export default function GettersAndSetters (props) {
           <DomainName value={inputDomain} onChange={updateInputDomain}/>
           <br />
           <br />
-          <Name value={inputName} onChange={updateInputName}/>
-          <IpAddr value={inputIpAddr} onChange={updateInputIpAddr}/>
-          <Info value={inputInfo} onChange={updateInputInfo}/>
-          <PublicKey value={inputPublicKey} onChange={updateInputPublicKey}/>
+          <Name value={inputName} onChange={updateInputName} enable={!domainExists}/>
+          <IpAddr value={inputIpAddr} onChange={updateInputIpAddr} enable={!domainExists}/>
+          <Info value={inputInfo} onChange={updateInputInfo} enable={!domainExists}/>
+          <PublicKey value={inputPublicKey} onChange={updateInputPublicKey} enable={!domainExists}/>
         </form>
         <SubmitButton
           {...props}
@@ -161,6 +176,7 @@ export default function GettersAndSetters (props) {
           info={inputInfo}
           publicKey={inputPublicKey}
           method='Register'
+          enable={!domainExists}
         />
       </div>
       <div className="card">
@@ -171,10 +187,10 @@ export default function GettersAndSetters (props) {
           <DomainName value={inputDomain} onChange={updateInputDomain}/>
           <br />
           <br />
-          <Name value={inputName} onChange={updateInputName}/>
-          <IpAddr value={inputIpAddr} onChange={updateInputIpAddr}/>
-          <Info value={inputInfo} onChange={updateInputInfo}/>
-          <PublicKey value={inputPublicKey} onChange={updateInputPublicKey}/>
+          <Name value={inputName} onChange={updateInputName} enable={domainExists}/>
+          <IpAddr value={inputIpAddr} onChange={updateInputIpAddr} enable={domainExists}/>
+          <Info value={inputInfo} onChange={updateInputInfo} enable={domainExists}/>
+          <PublicKey value={inputPublicKey} onChange={updateInputPublicKey} enable={domainExists}/>
         </form>
         <SubmitButton
           {...props}
@@ -184,6 +200,7 @@ export default function GettersAndSetters (props) {
           info={inputInfo}
           publicKey={inputPublicKey}
           method='Modify'
+          enable={domainExists}
         />
       </div>
       <div className="card">
@@ -201,6 +218,7 @@ export default function GettersAndSetters (props) {
           info={inputInfo}
           publicKey={inputPublicKey}
           method='Delete'
+          enable={domainExists}
         />
       </div>
     </div>
@@ -233,6 +251,7 @@ function Name (props) {
           placeholder='website.com'
           value={props.value}
           onChange={props.onChange}
+          disabled={!props.enable}
         />
       </div>
     </div>
@@ -249,6 +268,7 @@ function IpAddr (props) {
           placeholder='192.168.0.1'
           value={props.value}
           onChange={props.onChange}
+          disabled={!props.enable}
         />
       </div>
     </div>
@@ -265,6 +285,7 @@ function Info (props) {
           placeholder='{ country": "US",...'
           value={props.value}
           onChange={props.onChange}
+          disabled={!props.enable}
         />
       </div>
     </div>
@@ -281,6 +302,7 @@ function PublicKey (props) {
           placeholder='04:EB:9A:AF:31:11...'
           value={props.value}
           onChange={props.onChange}
+          disabled={!props.enable}
         />
       </div>
     </div>
@@ -295,6 +317,7 @@ function Static (props) {
         <TextareaAutosize
           className="input_field"
           value={props.value}
+          disabled={!props.enable}
         />
       </div>
     </div>
