@@ -2,185 +2,207 @@ import React, { useState } from 'react';
 import './css/GettersAndSetters.css';
 import TextareaAutosize from 'react-autosize-textarea';
 
-import { useSubstrate } from './substrate-lib';
-import utils from "./substrate-lib/utils";
+import { TxGroupButton } from './substrate-lib/components';
+import {Grid} from "semantic-ui-react";
+import NodeInfo from "./NodeInfo";
+import Metadata from "./Metadata";
+import BlockNumber from "./BlockNumber";
 
-function transformParams (paramFields, inputParams) {
-    // if `opts.emptyAsNull` is true, empty param value will be added to res as `null`.
-    //   Otherwise, it will not be added
-    const paramVal = inputParams.map(inputParam => {
-      // To cater the js quirk that `null` is a type of `object`.
-      if (typeof inputParam === 'object' && inputParam !== null && typeof inputParam.value === 'string') {
-        return inputParam.value.trim();
-      } else if (typeof inputParam === 'string') {
-        return inputParam.trim();
-      }
-      return inputParam;
-    });
-    const params = paramFields.map((field, ind) => ({ ...field, value: paramVal[ind] || null }));
-
-    return params.reduce((memo, { type = 'string', value }) => {
-      if (value == null || value === '') return (opts.emptyAsNull ? [...memo, null] : memo);
-
-      let converted = value;
-
-      // Deal with a vector
-      if (type.indexOf('Vec<') >= 0) {
-        converted = converted.split(',').map(e => e.trim());
-        converted = converted.map(single => isNumType(type)
-          ? (single.indexOf('.') >= 0 ? Number.parseFloat(single) : Number.parseInt(single))
-          : single
-        );
-        return [...memo, converted];
-      }
-
-      // Deal with a single value
-      if (isNumType(type)) {
-        converted = converted.indexOf('.') >= 0 ? Number.parseFloat(converted) : Number.parseInt(converted);
-      }
-      return [...memo, converted];
-    }, []);
-}
-
-function isNumType (type) {
-  utils.paramConversion.num.some(el => type.indexOf(el) >= 0);
-}
-
-function submitRegister (props) {
-
-}
-
-function RegisterCertificate (props) {
-  const { api, jsonrpc } = useSubstrate();
+function SubmitButton (props) {
   const { accountPair } = props;
-  const [unsub, setUnsub] = useState(null);
+  const nameField = { name: 'name', type: 'Bytes', optional: false };
+  const domainField = { name: 'domain', type: 'Bytes', optional: false };
+  const ipAddrField = { name: 'ip_addr', type: 'Bytes', optional: false };
+  const infoField = { name: 'info', type: 'Bytes', optional: false };
+  const keyField = { name: 'key', type: 'Bytes', optional: false };
 
-  let message = '';
-
-  const txResHandler = ({ status }) =>
-    status.isFinalized
-      ? message = `😉 Finalized. Block hash: ${status.asFinalized.toString()}`
-      : message = `Current transaction status: ${status.type}`;
-
-  const txErrHandler = err => {
-    message = `😞 Transaction Failed: ${err.toString()}`;
-  }
-
+  const interxType = 'EXTRINSIC';
   const palletRpc = 'siipModule';
-  const name_field = { name: "name", type: "Bytes", optional: false };
-  const domain_field = { name: "domain", type: "Bytes", optional: false };
-  const ip_addr_field = { name: "ip_addr", type: "Bytes", optional: false };
-  const info_field = { name: "info", type: "Bytes", optional: false };
-  const key_field = { name: "key", type: "Bytes", optional: false };
+  const callable = 'registerCertificate';
+  const paramFields = [nameField, domainField, ipAddrField, infoField, keyField];
+  const inputParams = [
+    { type: 'Bytes', value: props.name },
+    { type: 'Bytes', value: props.domain },
+    { type: 'Bytes', value: props.ipAddr },
+    { type: 'Bytes', value: props.info },
+    { type: 'Bytes', value: props.publicKey }];
 
-  let registerSubmit = async () => {
-    const callable = 'registerCertificate';
+  // eslint-disable-next-line
+  const [status, setStatus] = useState('');
 
-    let paramFields = [domain_field, name_field, ip_addr_field, info_field, key_field];
-
-    let inputParams = [
-    { type: "Bytes", value: domain },
-    { type: "Bytes", value: name },
-    { type: "Bytes", value: ipAddr },
-    { type: "Bytes", value: info },
-    { type: "Bytes", value: key }];
-
-    const transformed = transformParams(paramFields, inputParams);
-
-    const txExecute = transformed
-      ? api.tx[palletRpc][callable](...transformed)
-      : api.tx[palletRpc][callable]();
-
-    const unsub = await txExecute.signAndSend(accountPair, txResHandler)
-      .catch(txErrHandler);
-    setUnsub(() => unsub);
-  }
-
-  let [domain, setDomain] = useState('');
-  const updateDomain = (event) => {
-    setDomain(event.target.value);
-  }
-
-  let [name, setName] = useState('');
-  const updateName = (event) => {
-    setName(event.target.value);
-  }
-
-  let [ipAddr, setIpAddr] = useState('');
-  const updateIpAddr = (event) => {
-    setIpAddr(event.target.value);
-  }
-
-  let [info, setInfo] = useState('');
-  const updateInfo = (event) => {
-    setInfo(event.target.value);
-  }
-
-  let [key, setKey] = useState('');
-  const updateKey = (event) => {
-    setKey(event.target.value);
-  }
+  //console.log('accountPair:');
+  //console.log(accountPair);
+  //console.log('attrs:');
+  //console.log({ interxType, palletRpc, callable, inputParams, paramFields });
 
   return (
-    <div className="card">
-      <h3>
-        Register an SIIP Certificate
-      </h3>
-      <form>
-        <label>Domain Name:</label>
-        <div>
-          <TextareaAutosize className="input_field" placeholder={props.domain} value={domain} onChange={updateDomain}/>
-        </div>
-        <br />
-        <br />
-        <label>Owner's Name:</label>
-        <div>
-          <TextareaAutosize className="input_field" placeholder={props.name} value={name} onChange={updateName}/>
-        </div>
-        <label>IPv4 Address:</label>
-        <div>
-          <TextareaAutosize className="input_field" placeholder={props.ipAddr} value={ipAddr} onChange={updateIpAddr}/>
-        </div>
-        <label>Info:</label>
-        <div>
-          <TextareaAutosize className="input_field" placeholder={props.info} value={info} onChange={updateInfo}/>
-        </div>
-        <label>Public Key:</label>
-        <div>
-          <TextareaAutosize className="input_field" placeholder={props.publicKey} value={key} onChange={updateKey}/>
-        </div>
-      </form>
-      <button onClick={() => registerSubmit()}>Submit</button>
+    <div>
+      <br />
+      <TxGroupButton
+        accountPair={accountPair}
+        setStatus={setStatus}
+        attrs={{ interxType, palletRpc, callable, inputParams, paramFields }}
+      />
     </div>
   );
 }
 
-class RegisterCertificate2 extends React.Component {
-  constructor(props) {
-    super(props);
-    this.state = {
-      name: 'Placeholder'
-    };
+function RegisterCertificate (props) {
+  const [domain, setDomain] = useState('website.com');
+  const updateDomain = (event) => {
+    setDomain(event.target.value);
+  };
 
-    this.updateName = this.updateName.bind(this);
-  }
+  const [name, setName] = useState('John Smith');
+  const updateName = (event) => {
+    setName(event.target.value);
+  };
 
-  updateName(event) {
-    console.log('Name is now: ' + event.target.value);
-    this.setState({name: event.target.value});
-  }
+  const [ipAddr, setIpAddr] = useState('192.168.0.1');
+  const updateIpAddr = (event) => {
+    setIpAddr(event.target.value);
+  };
 
-  render() {
-    return (
-      <form>
-        <label>
-          Essay:
-          <textarea value={this.name} onChange={this.updateName} />
-        </label>
-        <input type="submit" value="Submit" />
-      </form>
-    )
-  }
+  const [info, setInfo] = useState('{}');
+  const updateInfo = (event) => {
+    setInfo(event.target.value);
+  };
+
+  const [publicKey, setPublicKey] = useState('04:EB:9A:AF:31:11');
+  const updatePublicKey = (event) => {
+    setPublicKey(event.target.value);
+  };
+
+  return (
+    <div className="container">
+      <div className="card">
+        <h3>
+          Register an SIIP Certificate
+        </h3>
+        <form>
+          <DomainName value={domain} onChange={updateDomain}/>
+          <br />
+          <br />
+          <Name value={name} onChange={updateName}/>
+          <IpAddr value={ipAddr} onChange={updateIpAddr}/>
+          <Info value={info} onChange={updateInfo}/>
+          <PublicKey value={publicKey} onChange={updatePublicKey}/>
+        </form>
+        <SubmitButton {...props} domain={domain} name={name} ipAddr={ipAddr} info={info} publicKey={publicKey}/>
+      </div>
+      <div className="card">
+        <h3>
+          Modify an SIIP Certificate
+        </h3>
+        <form>
+          <DomainName value={domain} onChange={updateDomain}/>
+          <br />
+          <br />
+          <Name value={name} onChange={updateName}/>
+          <IpAddr value={ipAddr} onChange={updateIpAddr}/>
+          <Info value={info} onChange={updateInfo}/>
+          <PublicKey value={publicKey} onChange={updatePublicKey}/>
+        </form>
+        <SubmitButton {...props} domain={domain} name={name} ipAddr={ipAddr} info={info} publicKey={publicKey}/>
+      </div>
+      <div className="card">
+        <h3>
+          Delete an SIIP Certificate
+        </h3>
+        <form>
+          <DomainName value={domain} onChange={updateDomain}/>
+        </form>
+        <SubmitButton {...props} domain={domain} name={name} ipAddr={ipAddr} info={info} publicKey={publicKey}/>
+      </div>
+    </div>
+  );
+}
+
+// <Grid.Row stretched>
+//   <NodeInfo />
+//   <Metadata />
+//   <BlockNumber />
+//   <BlockNumber finalized />
+// </Grid.Row>
+
+function DomainName (props) {
+  return (
+    <div>
+      <label>Domain Name:</label>
+      <div>
+        <TextareaAutosize
+          className="input_field"
+          placeholder='John Smith'
+          value={props.value}
+          onChange={props.onChange}
+        />
+      </div>
+    </div>
+  );
+}
+
+function Name (props) {
+  return (
+    <div>
+      <label>Owner's Name:</label>
+      <div>
+        <TextareaAutosize
+          className="input_field"
+          placeholder='website.com'
+          value={props.value}
+          onChange={props.onChange}
+        />
+      </div>
+    </div>
+  );
+}
+
+function IpAddr (props) {
+  return (
+    <div>
+      <label>IPv4 Address:</label>
+      <div>
+        <TextareaAutosize
+          className="input_field"
+          placeholder='192.168.0.1'
+          value={props.value}
+          onChange={props.onChange}
+        />
+      </div>
+    </div>
+  );
+}
+
+function Info (props) {
+  return (
+    <div>
+      <label>Info:</label>
+      <div>
+        <TextareaAutosize
+          className="input_field"
+          placeholder='{ country": "US",...'
+          value={props.value}
+          onChange={props.onChange}
+        />
+      </div>
+    </div>
+  );
+}
+
+function PublicKey (props) {
+  return (
+    <div>
+      <label>Public Key:</label>
+      <div>
+        <TextareaAutosize
+          className="input_field"
+          placeholder='04:EB:9A:AF:31:11...'
+          value={props.value}
+          onChange={props.onChange}
+        />
+      </div>
+    </div>
+  );
 }
 
 function ModifyCertificate (props) {
@@ -200,17 +222,9 @@ function RemoveCertificate (props) {
 }
 
 export default function GettersAndSetters (props) {
-  // const { accountPair } = props;
-  const name = 'John Smith';
-  const domain = 'website.com';
-  const ipAddr = '192.168.0.1"';
-  const info = '{ country": "US",...';
-  const publicKey = '04:EB:9A:AF:31:11...';
-
   return (
     <div>
-      <RegisterCertificate {...props} name={name} domain={domain} ipAddr={ipAddr} info={info} publicKey={publicKey}/>
-      <RegisterCertificate2 {...props} />
+      <RegisterCertificate {...props} />
       <ModifyCertificate/>
       <RemoveCertificate/>
     </div>
