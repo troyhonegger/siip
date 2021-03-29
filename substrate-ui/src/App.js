@@ -15,6 +15,7 @@ import NodeInfo from './NodeInfo';
 import TemplateModule from './TemplateModule';
 import Transfer from './Transfer';
 import Upgrade from './Upgrade';
+import GettersAndSetters from './GettersAndSetters';
 
 function Main () {
   const [accountAddress, setAccountAddress] = useState(null);
@@ -74,6 +75,9 @@ function Main () {
           </Grid.Row>
           <Grid.Row>
             <TemplateModule accountPair={accountPair} />
+          </Grid.Row>
+          <Grid.Row>
+            <GettersAndSetters accountPair={accountPair}/>
           </Grid.Row>
         </Grid>
       </Container>
