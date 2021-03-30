@@ -45,19 +45,20 @@ function SubmitButton (props) {
 
   const [status, setStatus] = useState('');
 
-  console.log('enable is: ' + props.enable);
   if (props.enable) {
     return (
       <div>
         <br />
-        <TxButton
-          label='Submit'
-          type='SIGNED-TX'
-          color={color}
-          accountPair={accountPair}
-          setStatus={setStatus}
-          attrs={{ interxType, palletRpc, callable, inputParams, paramFields }}
-        />
+        <div className='button_pos'>
+          <TxButton
+            label='Submit'
+            type='SIGNED-TX'
+            color={color}
+            accountPair={accountPair}
+            setStatus={setStatus}
+            attrs={{ interxType, palletRpc, callable, inputParams, paramFields }}
+          />
+        </div>
         <p>
           {status}
         </p>
@@ -67,9 +68,11 @@ function SubmitButton (props) {
     return (
       <div>
         <br />
-        <Button disabled>
-          Submit
-        </Button>
+        <div className='button_pos'>
+          <Button disabled>
+            Submit
+          </Button>
+        </div>
         <p>
           {status}
         </p>
@@ -209,6 +212,12 @@ export default function GettersAndSetters (props) {
         </h3>
         <form>
           <DomainName value={inputDomain} onChange={updateInputDomain}/>
+          <br />
+          <br />
+          <Static label='Owner&apos;s Name:' value={dbName} enable={false}/>
+          <Static label='IPv4 Address:' value={dbIpAddr} enable={false}/>
+          <Static label='Info:' value={dbInfo} enable={false}/>
+          <Static label='Public Key:' value={dbPublicKey} enable={false}/>
         </form>
         <SubmitButton
           {...props}

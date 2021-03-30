@@ -20,3 +20,9 @@
   flex-wrap: wrap;
   justify-content: space-between;
 }
+
+.button_pos {
+  position: relative;
+  bottom: 5px;
+  left: 50px;
+}

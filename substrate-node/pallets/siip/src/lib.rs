@@ -36,7 +36,7 @@ pub struct Certificate<AccountIdT> {
 	domain: Vec<u8>,
 }
 
-fn check_name(name: Vec<u8>) -> Option<Vec<u8>> {
+pub fn check_name(name: Vec<u8>) -> Option<Vec<u8>> {
 	//Must be a valid UTF-8 String
 	from_utf8(&name).ok()?;
 
@@ -101,7 +101,7 @@ fn check_ip(ip: Vec<u8>) -> Option<Vec<u8>> {
 }
 
 //The info field must be formatted with json
-fn check_info(info: Vec<u8>) -> Option<Vec<u8>> {
+pub fn check_info(info: Vec<u8>) -> Option<Vec<u8>> {
 	let info = from_utf8(&info).ok()?;
 
 	//Only checks for a valid json
