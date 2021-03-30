@@ -1,7 +1,11 @@
 use frame_benchmarking::frame_support::pallet_prelude::ValueQuery;
 use sp_core::{Pair, Public, sr25519};
 use siip_node_runtime::{AccountId, BalancesConfig, GenesisConfig, Signature, SudoConfig, SystemConfig, UncheckedExtrinsic, WASM_BINARY};
-use sp_runtime::{MultiSignature, traits::{Verify, IdentifyAccount}};
+use sp_runtime::{
+	MultiSignature, traits::{Verify, IdentifyAccount}, 
+	transaction_validity::{TransactionValidity, InvalidTransaction, TransactionValidityError}
+};
+
 use sc_service::ChainType;
 
 // The URL for the telemetry server.
@@ -167,51 +171,10 @@ fn new_test_ext() -> sp_io::TestExternalities {
 
 
 #[test]
-fn bla() {
-	new_test_ext().execute_with(|| {
-		let register = siip_node_runtime::pallet_siip::Call::register_certificate(
-			"Sam".chars().map(|c| c as u8).collect(),
-			"abc.com".chars().map(|c| c as u8).collect(),
-			"127.0.0.1".chars().map(|c| c as u8).collect(),
-			"{}".chars().map(|c| c as u8).collect(),
-			"abcdef".chars().map(|c| c as u8).collect()
-		);
-		let r = siip_node_runtime::Call::SiipModule(register);
-
-		let extrinsic = siip_node_runtime::UncheckedExtrinsic {
-			function: r,
-			signature: None
-		};
-
-		let genesis_hash = hex::decode("8fda83852a8834b91247d520f0fccde46af1c7cd298ad3d3e072f2c1265a44ae").expect("Decoding failed");
-
-		let genesis_hash = siip_node_runtime::Hash::from_slice(&genesis_hash[..]);
-
-		let genesis_hash = siip_node_runtime::test_block_hash(0);
-
-		println!("{}", genesis_hash);
-		// for i in 0..32 {
-		// 	bytes[i] = genesis_hash[i];
-		// }
-
-		// let genesis_hash = bytes;
-		// let genesis_hash: siip_node_runtime::Hash = [6e174167eb21b5985c84441386028c5393ba0129103fbd471d01424f81ec0465];
-
-
-		let b = siip_node_runtime::test_construct_block(1, genesis_hash, vec![extrinsic]);
-	
-
-		println!("GOT HERE");
-		siip_node_runtime::Runtime::execute_block(b);
-		// assert_err!(siip_node_runtime::Runtime::apply_extrinsic(extrinsic), "bla");
-	});
-}
-
-#[test]
 fn transaction_fee_subtracted() {
 	new_test_ext().execute_with(|| {
 		let register = siip_node_runtime::pallet_siip::Call::register_certificate(
-			"Sam".chars().map(|c| c as u8).collect(),
+			"Alice Smith".chars().map(|c| c as u8).collect(),
 			"abc.com".chars().map(|c| c as u8).collect(),
 			"127.0.0.1".chars().map(|c| c as u8).collect(),
 			"{}".chars().map(|c| c as u8).collect(),
@@ -219,10 +182,7 @@ fn transaction_fee_subtracted() {
 		);
 
 	
-		// let alice_bal = siip_node_runtime::pallet_balances::Module::<siip_node_runtime::Runtime>::free_balance(get_account_id_from_seed::<sr25519::Public>("Alice"));
-		// println!("Alice has {:?}", alice_bal);
-
-		print_balances("Alice");
+		let alice_bal = siip_node_runtime::pallet_balances::Module::<siip_node_runtime::Runtime>::free_balance(get_account_id_from_seed::<sr25519::Public>("Alice"));
 
 		let r = siip_node_runtime::Call::SiipModule(register);
 		let extras = siip_node_runtime::default_extras(0);
@@ -237,29 +197,48 @@ fn transaction_fee_subtracted() {
 			))
 		};
 
+		let genesis_hash = siip_node_runtime::test_block_hash(0);
 
-		let genesis_hash = hex::decode("8fda83852a8834b91247d520f0fccde46af1c7cd298ad3d3e072f2c1265a44ae").expect("Decoding failed");
+		let b = siip_node_runtime::test_construct_block(1, genesis_hash, vec![extrinsic]);
+	
+		let new_alice_bal = siip_node_runtime::pallet_balances::Module::<siip_node_runtime::Runtime>::free_balance(get_account_id_from_seed::<sr25519::Public>("Alice"));
 
-		let genesis_hash = siip_node_runtime::Hash::from_slice(&genesis_hash[..]);
+		assert!(new_alice_bal < alice_bal);
+
+	});
+}
+
+#[test]
+fn insufficient_balance_cant_register_certificate() {
+	new_test_ext().execute_with(|| {
+		let register = siip_node_runtime::pallet_siip::Call::register_certificate(
+			"Alice Smith".chars().map(|c| c as u8).collect(),
+			"abc.com".chars().map(|c| c as u8).collect(),
+			"127.0.0.1".chars().map(|c| c as u8).collect(),
+			"{}".chars().map(|c| c as u8).collect(),
+			"abcdef".chars().map(|c| c as u8).collect()
+		);
+
+	
+		let broke_bal = siip_node_runtime::pallet_balances::Module::<siip_node_runtime::Runtime>::free_balance(get_account_id_from_seed::<sr25519::Public>("Broke"));
+
+		let r = siip_node_runtime::Call::SiipModule(register);
+		let extras = siip_node_runtime::default_extras(0);
+		let signed = sign("Broke", &r, &extras);
+
+		let extrinsic = siip_node_runtime::UncheckedExtrinsic {
+			function: r.clone(),
+			signature: Some((
+				siip_node_runtime::Address::Id(get_account_id_from_seed::<sr25519::Public>("Broke")),
+				signed,
+				extras
+			))
+		};
 
 		let genesis_hash = siip_node_runtime::test_block_hash(0);
 
-		println!("{}", genesis_hash);
-		// for i in 0..32 {
-		// 	bytes[i] = genesis_hash[i];
-		// }
-
-		// let genesis_hash = bytes;
-		// let genesis_hash: siip_node_runtime::Hash = [6e174167eb21b5985c84441386028c5393ba0129103fbd471d01424f81ec0465];
-
-		println!("{:?}", siip_node_runtime::Executive::validate_transaction(sp_transaction_pool::TransactionSource::InBlock, extrinsic.clone()));
 		let b = siip_node_runtime::test_construct_block(1, genesis_hash, vec![extrinsic]);
-	
-		print_balances("Alice");
-
-		println!("GOT HERE");
-		// siip_node_runtime::Runtime::execute_block(b);
-		// assert_err!(siip_node_runtime::Runtime::apply_extrinsic(extrinsic), "bla");
+		assert_eq!(b, Err(TransactionValidityError::Invalid(InvalidTransaction::Payment)));
 	});
 }
 
@@ -273,12 +252,9 @@ fn print_balances(name: &str) {
 pub fn sign(name: &str, function: &siip_node_runtime::Call, extras: &siip_node_runtime::SignedExtra ) -> siip_node_runtime::Signature {
 	use sp_core::Encode;
 	let raw_payload = siip_node_runtime::SignedPayload::new(function.clone(), extras.clone()).unwrap();
-	// let sig= sr25519::Pair::from_string(&format!("//{}", name), None)
-	// 	.expect("static values are valid; qed").sign(&raw_payload.encode()[..]);
 	let sig = raw_payload.using_encoded(|p| sr25519::Pair::from_string(&format!("//{}", name), None)
 	.expect("static values are valid; qed").sign(p));
 
 	let signature = siip_node_runtime::Signature::Sr25519(sig);
-	// println!("{:?}", signature.verify(&raw_payload.encode()[..], &get_account_id_from_seed::<sr25519::Public>("Alice")));
 	signature
 }

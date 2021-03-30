@@ -10,7 +10,7 @@ use sp_std::prelude::*;
 use sp_core::{crypto::KeyTypeId, OpaqueMetadata};
 use sp_runtime::{
 	ApplyExtrinsicResult, generic, create_runtime_str, impl_opaque_keys, MultiSignature,
-	transaction_validity::{TransactionValidity, TransactionSource},
+	transaction_validity::{TransactionValidity, TransactionSource, TransactionValidityError},
 };
 use sp_runtime::traits::{
 	BlakeTwo256, Block as BlockT, Verify, IdentifyAccount, AccountIdLookup
@@ -460,12 +460,11 @@ impl_runtime_apis! {
 	}
 }
 
-// #[cfg(test)]
 pub fn test_construct_block(
 	number: BlockNumber,
 	parent_hash: Hash,
 	extrinsics: Vec<UncheckedExtrinsic>
-) -> Block {
+) -> Result<Block, TransactionValidityError> {
 	
 	let calls: Vec<Call> = extrinsics.clone().into_iter().map(|x| x.function).collect();
 	let extrinsics_root = frame_system::extrinsics_root::<BlakeTwo256, _>(&calls[..]);
@@ -487,12 +486,6 @@ pub fn test_construct_block(
 
 	Executive::initialize_block(&header);
 
-	frame_support::debug::RuntimeLogger::init();
-    
-	use frame_support::debug::debug;
-
-	debug!("A");
-
 
 	for extrinsic in extrinsics.iter() {
 		let res = Executive::apply_extrinsic(extrinsic.clone());
@@ -503,20 +496,17 @@ pub fn test_construct_block(
 					Err(e) => panic!("Dispatch error: {:?}", e)
 				}
 			},
-			Err(e) => panic!("Applying extrinsic failed: {:?}", e)
+			Err(e) => return Err(e)
 		}
 
 	}
 
-	debug!("B");
-	
 	let header = Executive::finalize_block();
-	debug!("C");
 
-	Block {
+	Ok(Block {
 		header,
 		extrinsics
-	}
+	})
 }
 
 // #[cfg(test)]
