@@ -1,0 +1,18 @@
+{
+  "runtime_id": 2,
+  "types": {
+    "Certificate": {
+      "type": "struct",
+      "type_mapping": [
+        ["version_number", "i32"],
+        ["owner_id", "AccountId"],
+        ["name", "Vec<u8>"]
+        ["info", "Vec<u8>"],
+        ["key", "Vec<u8>"],
+        ["ip_addr", "Vec<u8>"],
+        ["domain", "Vec<u8>"]
+      ]
+    }
+  },
+  "versioning": []
+}
