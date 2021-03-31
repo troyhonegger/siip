@@ -1,5 +1,15 @@
 #!/usr/bin/env python3
 
+import sys
+
+if len(sys.argv) != 2:
+    print("You must specify which domain's SIIP certificate to query for.")
+    print("Usage: plow.py DOMAIN")
+    sys.exit()
+
+domain = sys.argv[1]
+
+# We moved these after the argument check so it fails faster :)
 import substrateinterface
 from substrateinterface import SubstrateInterface, Keypair
 from substrateinterface.exceptions import SubstrateRequestException
@@ -26,5 +36,5 @@ substrate = SubstrateInterface(
     }
 )
 
-siip = substrate.query('SiipModule', 'CertificateMap', params=['test.com'])
+siip = substrate.query('SiipModule', 'CertificateMap', params=[domain])
 print(siip)
