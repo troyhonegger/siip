@@ -1,20 +1,5 @@
 #!/usr/bin/env python3
 
-import sys
-
-# TODO require all arguments
-if len(sys.argv) != 2:
-    print("You must specify the domain name.")
-    print("Usage: register.py DOMAIN")
-    sys.exit()
-
-domain = sys.argv[1]
-name = "test"
-ip_addr = "1.1.1.1"
-info = "{}"
-key = "121212"
-
-# We moved these after the argument check so it fails faster :)
 import substrateinterface
 from substrateinterface import SubstrateInterface, Keypair
 from substrateinterface.exceptions import SubstrateRequestException
@@ -43,16 +28,13 @@ substrate = SubstrateInterface(
 
 keypair = Keypair.create_from_uri('//Alice')
 call = substrate.compose_call(
-    call_module='SiipModule',
-    call_function='RegisterCertificate',
+    call_module='Balances',
+    call_function='transfer',
     call_params={
-        'name': name,
-        'domain': domain,
-        'ip_addr': ip_addr,
-        'info': info,
-        'key': key,
+        'dest': '5CiPPseXPECbkjWCa6MnjNokrgYjMqmKndv2rSnekmSK2DjL',
+        'value': 1 * 10**12
     }
 )
 extrinsic = substrate.create_signed_extrinsic(call=call, keypair=keypair)
-result = substrate.submit_extrinsic(extrincis, wait_for_inclusion=True)
+result = substrate.submit_extrinsic(extrinsic)
 print(result)
