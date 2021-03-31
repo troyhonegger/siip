@@ -110,28 +110,28 @@ async function updateDb (domain, setDbName, setDbIpAddr, setDbInfo, setDbPublicK
 }
 
 export default function GettersAndSetters (props) {
-  const [inputDomain, setInputDomain] = useState('website.com');
+  const [inputDomain, setInputDomain] = useState('');
   const updateInputDomain = (event) => {
     setInputDomain(event.target.value);
     updateDb(event.target.value, setDbName, setDbIpAddr, setDbInfo, setDbPublicKey, setDomainExists).then();
   };
 
-  const [inputName, setInputName] = useState('John Smith');
+  const [inputName, setInputName] = useState('');
   const updateInputName = (event) => {
     setInputName(event.target.value);
   };
 
-  const [inputIpAddr, setInputIpAddr] = useState('192.168.0.1');
+  const [inputIpAddr, setInputIpAddr] = useState('');
   const updateInputIpAddr = (event) => {
     setInputIpAddr(event.target.value);
   };
 
-  const [inputInfo, setInputInfo] = useState('{}');
+  const [inputInfo, setInputInfo] = useState('');
   const updateInputInfo = (event) => {
     setInputInfo(event.target.value);
   };
 
-  const [inputPublicKey, setInputPublicKey] = useState('04:EB:9A:AF:31:11');
+  const [inputPublicKey, setInputPublicKey] = useState('');
   const updateInputPublicKey = (event) => {
     setInputPublicKey(event.target.value);
   };
@@ -149,7 +149,7 @@ export default function GettersAndSetters (props) {
           Lookup an SIIP Certificate
         </h3>
         <form>
-          <DomainName value={inputDomain} onChange={updateInputDomain}/>
+          <DomainName value={inputDomain} placeholder='website.com' onChange={updateInputDomain}/>
           <br />
           <br />
           <Static label='Owner&apos;s Name:' value={dbName} enable={false}/>
@@ -163,13 +163,13 @@ export default function GettersAndSetters (props) {
           Register an SIIP Certificate
         </h3>
         <form>
-          <DomainName value={inputDomain} onChange={updateInputDomain}/>
+          <DomainName value={inputDomain} placeholder='website.com' onChange={updateInputDomain}/>
           <br />
           <br />
-          <Name value={inputName} onChange={updateInputName} enable={!domainExists}/>
-          <IpAddr value={inputIpAddr} onChange={updateInputIpAddr} enable={!domainExists}/>
-          <Info value={inputInfo} onChange={updateInputInfo} enable={!domainExists}/>
-          <PublicKey value={inputPublicKey} onChange={updateInputPublicKey} enable={!domainExists}/>
+          <Name value={inputName} onChange={updateInputName} placeholder='John Smith' enable={!domainExists}/>
+          <IpAddr value={inputIpAddr} onChange={updateInputIpAddr} placeholder='192.168.0.1' enable={!domainExists}/>
+          <Info value={inputInfo} onChange={updateInputInfo} placeholder='{ "country": "US",...' enable={!domainExists}/>
+          <PublicKey value={inputPublicKey} onChange={updateInputPublicKey} placeholder='04:EB:9A:AF:31:11...' enable={!domainExists}/>
         </form>
         <SubmitButton
           {...props}
@@ -187,13 +187,13 @@ export default function GettersAndSetters (props) {
           Modify an SIIP Certificate
         </h3>
         <form>
-          <DomainName value={inputDomain} onChange={updateInputDomain}/>
+          <DomainName value={inputDomain} placeholder='website.com' onChange={updateInputDomain}/>
           <br />
           <br />
-          <Name value={inputName} onChange={updateInputName} enable={domainExists}/>
-          <IpAddr value={inputIpAddr} onChange={updateInputIpAddr} enable={domainExists}/>
-          <Info value={inputInfo} onChange={updateInputInfo} enable={domainExists}/>
-          <PublicKey value={inputPublicKey} onChange={updateInputPublicKey} enable={domainExists}/>
+          <Name value={inputName} onChange={updateInputName} placeholder='John Smith' enable={domainExists}/>
+          <IpAddr value={inputIpAddr} onChange={updateInputIpAddr} placeholder='192.168.0.1' enable={domainExists}/>
+          <Info value={inputInfo} onChange={updateInputInfo} placeholder='{ "country": "US",...' enable={domainExists}/>
+          <PublicKey value={inputPublicKey} onChange={updateInputPublicKey} placeholder='04:EB:9A:AF:31:11...' enable={domainExists}/>
         </form>
         <SubmitButton
           {...props}
@@ -211,7 +211,7 @@ export default function GettersAndSetters (props) {
           Delete an SIIP Certificate
         </h3>
         <form>
-          <DomainName value={inputDomain} onChange={updateInputDomain}/>
+          <DomainName value={inputDomain} placeholder='website.com' onChange={updateInputDomain}/>
           <br />
           <br />
           <Static label='Owner&apos;s Name:' value={dbName} enable={false}/>
@@ -241,7 +241,7 @@ function DomainName (props) {
       <div>
         <TextareaAutosize
           className="input_field"
-          placeholder='John Smith'
+          placeholder={props.placeholder}
           value={props.value}
           onChange={props.onChange}
         />
@@ -257,7 +257,7 @@ function Name (props) {
       <div>
         <TextareaAutosize
           className="input_field"
-          placeholder='website.com'
+          placeholder={props.placeholder}
           value={props.value}
           onChange={props.onChange}
           disabled={!props.enable}
@@ -274,7 +274,7 @@ function IpAddr (props) {
       <div>
         <TextareaAutosize
           className="input_field"
-          placeholder='192.168.0.1'
+          placeholder={props.placeholder}
           value={props.value}
           onChange={props.onChange}
           disabled={!props.enable}
@@ -291,7 +291,7 @@ function Info (props) {
       <div>
         <TextareaAutosize
           className="input_field"
-          placeholder='{ country": "US",...'
+          placeholder={props.placeholder}
           value={props.value}
           onChange={props.onChange}
           disabled={!props.enable}
@@ -308,7 +308,7 @@ function PublicKey (props) {
       <div>
         <TextareaAutosize
           className="input_field"
-          placeholder='04:EB:9A:AF:31:11...'
+          placeholder={props.placeholder}
           value={props.value}
           onChange={props.onChange}
           disabled={!props.enable}

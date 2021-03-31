@@ -13,23 +13,14 @@ use sp_blockchain::{Error as BlockChainError, HeaderMetadata, HeaderBackend};
 use sp_block_builder::BlockBuilder;
 pub use sc_rpc_api::DenyUnsafe;
 use sp_transaction_pool::TransactionPool;
-
 use jsonrpc_derive::rpc;
 use sc_rpc_api::system::error::Result as SystemResult;
-// use siip_node_runtime::Runtime;
-// use siip_node_runtime::pallet_siip::Module as SiipModule;
-// use sp_core::sr25519;
-// use std::net::ToSocketAddrs;
-
 use core::str::from_utf8;
 use siip_node_runtime::pallet_siip::{check_name, check_domain, check_ip, check_info, check_key};
 
 #[rpc]
 /// RPCs related to the Siip Pallet
 pub trait SiipRpcTrait {
-    // #[rpc(name = "add_cert", returns = "String")]
-    // fn add_cert(&self, name: String, ip: String, info: String, pubkey: String) -> SystemResult<String>;
-
 	#[rpc(name = "validate_name", returns = "String")]
 	/// Validates the name provided.
 	/// Returns multiple lines. Each line will contain Ok: message, or Err: message
