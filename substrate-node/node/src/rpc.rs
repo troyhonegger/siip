@@ -22,28 +22,36 @@ use sp_core::sr25519;
 use std::net::ToSocketAddrs;
 
 //Sam's runtime testing
-use frame_benchmarking::frame_support::pallet_prelude::ValueQuery;
-use sp_core::{Pair, Public};
-use siip_node_runtime::{BalancesConfig, GenesisConfig, Signature, SudoConfig, SystemConfig, UncheckedExtrinsic, WASM_BINARY};
-use sp_runtime::{MultiSignature, traits::{Verify, IdentifyAccount}};
-use sc_service::ChainType;
-
-
-//Adrian's (non-runtime) testing stuff
-// use crate::{Error, mock::*};
-// use frame_support::{assert_ok, assert_noop};
-// use crate::Certificate;
-// use frame_system::ensure_signed;
-// use crate::mock::new_test_ext;
+// use frame_benchmarking::frame_support::pallet_prelude::ValueQuery;
+// use sp_core::{Pair, Public};
+// use siip_node_runtime::{BalancesConfig, GenesisConfig, Signature, SudoConfig, SystemConfig, UncheckedExtrinsic, WASM_BINARY};
+// use sp_runtime::{MultiSignature, traits::{Verify, IdentifyAccount}};
+// use sc_service::ChainType;
 
 //Random stuff
-use siip_node_runtime::pallet_siip::Certificate;
+// use siip_node_runtime::pallet_siip::Certificate;
 use core::str::from_utf8;
+use siip_node_runtime::pallet_siip::{check_name, check_domain, check_ip, check_info, check_key};
 
 #[rpc]
 pub trait SiipRpcTrait {
-    #[rpc(name = "add_cert", returns = "String")]
-    fn add_cert(&self, name: String, ip: String, info: String, pubkey: String) -> SystemResult<String>;
+    // #[rpc(name = "add_cert", returns = "String")]
+    // fn add_cert(&self, name: String, ip: String, info: String, pubkey: String) -> SystemResult<String>;
+
+	#[rpc(name = "validate_name", returns = "String")]
+	fn validate_name(&self, name: String) -> SystemResult<String>;
+
+	#[rpc(name = "validate_domain", returns = "String")]
+	fn validate_domain(&self, domain: String) -> SystemResult<String>;
+
+	#[rpc(name = "validate_ip", returns = "String")]
+	fn validate_ip(&self, domain: String) -> SystemResult<String>;
+
+	#[rpc(name = "validate_info", returns = "String")]
+	fn validate_info(&self, info: String) -> SystemResult<String>;
+
+	#[rpc(name = "validate_key", returns = "String")]
+	fn validate_key(&self, key: String) -> SystemResult<String>;
 }
 
 pub struct SiipRpcStruct<C> {
@@ -59,57 +67,36 @@ impl<C> SiipRpcStruct<C> {
 }
 
 impl<C> SiipRpcTrait for SiipRpcStruct<C> where C: Send + Sync + 'static {
-    fn add_cert(&self, domain: String, ip: String, info: String, pubkey: String) -> SystemResult<String> {
-        // let res = SiipModule::<Runtime>::register_certificate(
-        //     siip_node_runtime::Origin::signed(
-        //         crate::chain_spec::get_account_id_from_seed::<sr25519::Public>("Alice")
-        //     ),
-        //     "Genesis".as_bytes().to_vec(),
-        //     domain.as_bytes().to_vec(),
-        //     ip.as_bytes().to_vec(),
-        //     "{}".as_bytes().to_vec(),
-        //     pubkey.as_bytes().to_vec()
-        // );
-		//
-        // let msg = match res {
-        //     Ok(()) => domain,
-        //     Err(dispatch) => "uh oh".to_string(),
-        // };
-		//
-        // Ok(msg)
+    // fn add_cert(&self, domain: String, ip: String, info: String, pubkey: String) -> SystemResult<String> {
+	//
+	// 	let valid_input = siip_node_runtime::pallet_siip::check_info(info.into());
+	// 	match valid_input {
+	// 		Some(name) => Ok("Valid".into()),
+	// 		None => Ok("Not valid".into()),
+	// 	}
+    // }
 
-		type AccountPublic = <siip_node_runtime::Signature as Verify>::Signer;
-
-		// let register: siip_node_runtime::pallet_siip::Call<Signature> = siip_node_runtime::pallet_siip::Call::register_certificate(
-		// let register: siip_node_runtime::pallet_siip::Call<siip_node_runtime::Signature> = siip_node_runtime::pallet_siip::Call::register_certificate(
-		// let register: siip_node_runtime::pallet_siip::Call<AccountPublic> = siip_node_runtime::pallet_siip::Call::register_certificate(
-		// 	"Sam".into(),
-		// 	"abc.com".into(),
-		// 	"127.0.0.1".into(),
-		// 	"{}".into(),
-		// 	"01:23:45:56".into()
-		// );
-
-		//siip_node_runtime::Signature
-
-		let valid_input = siip_node_runtime::pallet_siip::check_info(info.into());
-
-		// let register = SiipModule::register_certificate(
-		// 	Origin::signed(1),
-		// 	"Sam".into(),
-		// 	"abc.com".into(),
-		// 	"127.0.0.1".into(),
-		// 	"{}".into(),
-		// 	"01:23:45:56".into()
-		// );
-
-		match valid_input {
-			Some(name) => Ok("Valid".into()),
-			None => Ok("Not valid".into()),
-		}
-
-		// Ok("test".to_string())
-    }
+	//Contains 'Err:' if invalid
+	fn validate_name(&self, name: String) -> SystemResult<String> {
+		let criteria = check_name(&name.into_bytes());
+		Ok(from_utf8(&criteria).unwrap().into())
+	}
+	fn validate_domain(&self, domain: String) -> SystemResult<String> {
+		let criteria = check_domain(&domain.into_bytes());
+		Ok(from_utf8(&criteria).unwrap().into())
+	}
+	fn validate_ip(&self, ip: String) -> SystemResult<String> {
+		let criteria = check_ip(&ip.into_bytes());
+		Ok(from_utf8(&criteria).unwrap().into())
+	}
+	fn validate_info(&self, info: String) -> SystemResult<String> {
+		let criteria = check_info(&info.into_bytes());
+		Ok(from_utf8(&criteria).unwrap().into())
+	}
+	fn validate_key(&self, key: String) -> SystemResult<String> {
+		let criteria = check_key(&key.into_bytes());
+		Ok(from_utf8(&criteria).unwrap().into())
+	}
 }
 
 /// Full client dependencies.
