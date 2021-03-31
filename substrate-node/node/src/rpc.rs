@@ -16,49 +16,54 @@ use sp_transaction_pool::TransactionPool;
 
 use jsonrpc_derive::rpc;
 use sc_rpc_api::system::error::Result as SystemResult;
-use siip_node_runtime::Runtime;
-use siip_node_runtime::pallet_siip::Module as SiipModule;
-use sp_core::sr25519;
-use std::net::ToSocketAddrs;
+// use siip_node_runtime::Runtime;
+// use siip_node_runtime::pallet_siip::Module as SiipModule;
+// use sp_core::sr25519;
+// use std::net::ToSocketAddrs;
 
-//Sam's runtime testing
-// use frame_benchmarking::frame_support::pallet_prelude::ValueQuery;
-// use sp_core::{Pair, Public};
-// use siip_node_runtime::{BalancesConfig, GenesisConfig, Signature, SudoConfig, SystemConfig, UncheckedExtrinsic, WASM_BINARY};
-// use sp_runtime::{MultiSignature, traits::{Verify, IdentifyAccount}};
-// use sc_service::ChainType;
-
-//Random stuff
-// use siip_node_runtime::pallet_siip::Certificate;
 use core::str::from_utf8;
 use siip_node_runtime::pallet_siip::{check_name, check_domain, check_ip, check_info, check_key};
 
 #[rpc]
+/// RPCs related to the Siip Pallet
 pub trait SiipRpcTrait {
     // #[rpc(name = "add_cert", returns = "String")]
     // fn add_cert(&self, name: String, ip: String, info: String, pubkey: String) -> SystemResult<String>;
 
 	#[rpc(name = "validate_name", returns = "String")]
+	/// Validates the name provided.
+	/// Returns multiple lines. Each line will contain Ok: message, or Err: message
 	fn validate_name(&self, name: String) -> SystemResult<String>;
 
 	#[rpc(name = "validate_domain", returns = "String")]
+	/// Validates the domain provided.
+	/// Returns multiple lines. Each line will contain Ok: message, or Err: message
 	fn validate_domain(&self, domain: String) -> SystemResult<String>;
 
 	#[rpc(name = "validate_ip", returns = "String")]
+	/// Validates the IPv4 address provided.
+	/// Returns multiple lines. Each line will contain Ok: message, or Err: message
 	fn validate_ip(&self, domain: String) -> SystemResult<String>;
 
 	#[rpc(name = "validate_info", returns = "String")]
+	/// Validates the json info provided.
+	/// Returns multiple lines. Each line will contain Ok: message, or Err: message
 	fn validate_info(&self, info: String) -> SystemResult<String>;
 
 	#[rpc(name = "validate_key", returns = "String")]
+	/// Validates the public key provided.
+	/// Returns multiple lines. Each line will contain Ok: message, or Err: message
 	fn validate_key(&self, key: String) -> SystemResult<String>;
 }
 
+/// A completely useless struct
 pub struct SiipRpcStruct<C> {
     client: Arc<C>
 }
 
+/// No idea what this does
 impl<C> SiipRpcStruct<C> {
+	/// What does this do?
     pub fn new(client: Arc<C>) -> Self {
         SiipRpcStruct {
             client
@@ -67,15 +72,6 @@ impl<C> SiipRpcStruct<C> {
 }
 
 impl<C> SiipRpcTrait for SiipRpcStruct<C> where C: Send + Sync + 'static {
-    // fn add_cert(&self, domain: String, ip: String, info: String, pubkey: String) -> SystemResult<String> {
-	//
-	// 	let valid_input = siip_node_runtime::pallet_siip::check_info(info.into());
-	// 	match valid_input {
-	// 		Some(name) => Ok("Valid".into()),
-	// 		None => Ok("Not valid".into()),
-	// 	}
-    // }
-
 	//Contains 'Err:' if invalid
 	fn validate_name(&self, name: String) -> SystemResult<String> {
 		let criteria = check_name(&name.into_bytes());
