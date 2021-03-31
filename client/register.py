@@ -3,16 +3,16 @@
 import sys
 
 # TODO require all arguments
-if len(sys.argv) != 2:
-    print("You must specify the domain name.")
-    print("Usage: register.py DOMAIN")
+if len(sys.argv) != 6:
+    print("You must specify all required SIIP certificate fields.")
+    print("Usage: register.py DOMAIN NAME IP_ADDRESS INFO PUBLIC_KEY")
     sys.exit()
 
 domain = sys.argv[1]
-name = "test"
-ip_addr = "1.1.1.1"
-info = "{}"
-key = "121212"
+name = sys.argv[2]
+ip_addr = sys.argv[3]
+info = sys.argv[4]
+key = sys.argv[5]
 
 # We moved these after the argument check so it fails faster :)
 import substrateinterface
@@ -44,7 +44,7 @@ substrate = SubstrateInterface(
 keypair = Keypair.create_from_uri('//Alice')
 call = substrate.compose_call(
     call_module='SiipModule',
-    call_function='RegisterCertificate',
+    call_function='register_certificate',
     call_params={
         'name': name,
         'domain': domain,
@@ -54,5 +54,5 @@ call = substrate.compose_call(
     }
 )
 extrinsic = substrate.create_signed_extrinsic(call=call, keypair=keypair)
-result = substrate.submit_extrinsic(extrincis, wait_for_inclusion=True)
+result = substrate.submit_extrinsic(extrinsic)
 print(result)
