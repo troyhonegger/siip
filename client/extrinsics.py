@@ -27,4 +27,3 @@ substrate = SubstrateInterface(
 )
 
 print(substrate.get_block_metadata().metadata.modules)
-#print(substrate.metadata_decoder.metadata.modules)
