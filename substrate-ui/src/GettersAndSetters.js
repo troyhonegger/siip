@@ -184,7 +184,7 @@ export default function GettersAndSetters (props) {
   const [dbPublicKey, setDbPublicKey] = useState('');
   const [domainExists, setDomainExists] = useState(false);
 
-  //Must initialize the Validity fields (else they'll be empty until the first character is pressed
+  // Must initialize the Validity fields (else they'll be empty until the first character is pressed
   validateField('validate_domain', inputName).then(data => {
     setDomainValidity(data.result);
   });
@@ -208,7 +208,7 @@ export default function GettersAndSetters (props) {
           Lookup an SIIP Certificate
         </h3>
         <form>
-          <DomainName value={inputDomain} placeholder='website.com' onChange={updateInputDomain}/>
+          <DomainName value={inputDomain} criteria={domainValidity} placeholder='website.com' onChange={updateInputDomain}/>
           <br />
           <br />
           <Static label='Owner&apos;s Name:' value={dbName} enable={false}/>
