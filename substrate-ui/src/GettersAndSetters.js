@@ -4,6 +4,7 @@ import TextareaAutosize from 'react-autosize-textarea';
 import { TxButton } from './substrate-lib/components';
 import { Button } from 'semantic-ui-react';
 
+
 function SubmitButton (props) {
   const { accountPair } = props;
 
@@ -118,8 +119,32 @@ export default function GettersAndSetters (props) {
 
   const [inputName, setInputName] = useState('');
   const updateInputName = (event) => {
-    setInputName(event.target.value);
+    const name = event.target.value;
+    setInputName(name);
+    validateName(name).then(data => {
+      console.log('data is: ');
+      console.log(data.result);
+    });
   };
+
+  const validateName = async (name) => {
+    console.log('Is this name valid?: ' + name);
+    // I used this article: https://jasonwatmore.com/post/2020/02/01/react-fetch-http-post-request-examples
+    // To figure out POST requests.
+    const requestOptions = {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json;charset=utf-8' },
+      body: JSON.stringify({
+        jsonrpc: '2.0',
+        id: 1,
+        method: 'validate_name',
+        params: ['Adrian Teigen']
+      })
+    }
+
+    const response = await fetch('http://localhost:9933', requestOptions);
+    return response.json();
+  }
 
   const [inputIpAddr, setInputIpAddr] = useState('');
   const updateInputIpAddr = (event) => {
