@@ -4,7 +4,6 @@ import TextareaAutosize from 'react-autosize-textarea';
 import { TxButton } from './substrate-lib/components';
 import { Button } from 'semantic-ui-react';
 
-
 function SubmitButton (props) {
   const { accountPair } = props;
 
@@ -112,53 +111,71 @@ async function updateDb (domain, setDbName, setDbIpAddr, setDbInfo, setDbPublicK
 
 export default function GettersAndSetters (props) {
   const [inputDomain, setInputDomain] = useState('');
+  const [domainValidity, setDomainValidity] = useState('');
   const updateInputDomain = (event) => {
-    setInputDomain(event.target.value);
-    updateDb(event.target.value, setDbName, setDbIpAddr, setDbInfo, setDbPublicKey, setDomainExists).then();
-  };
-
-  const [inputName, setInputName] = useState('');
-  const updateInputName = (event) => {
-    const name = event.target.value;
-    setInputName(name);
-    validateName(name).then(data => {
-      console.log('data is: ');
-      console.log(data.result);
+    const domain = event.target.value;
+    setInputDomain(domain);
+    updateDb(domain, setDbName, setDbIpAddr, setDbInfo, setDbPublicKey, setDomainExists).then();
+    validateField('validate_domain', domain).then(data => {
+      setDomainValidity(data.result);
     });
   };
 
-  const validateName = async (name) => {
-    console.log('Is this name valid?: ' + name);
-    // I used this article: https://jasonwatmore.com/post/2020/02/01/react-fetch-http-post-request-examples
-    // To figure out POST requests.
+  const [inputName, setInputName] = useState('');
+  const [nameValidity, setNameValidity] = useState('');
+  const updateInputName = (event) => {
+    const name = event.target.value;
+    setInputName(name);
+    validateField('validate_name', name).then(data => {
+      setNameValidity(data.result);
+    });
+  };
+
+  const validateField = async (method, parameter) => {
+    // For more info: https://developer.mozilla.org/en-US/docs/Web/API/Fetch_API/Using_Fetch
     const requestOptions = {
       method: 'POST',
       headers: { 'Content-Type': 'application/json;charset=utf-8' },
       body: JSON.stringify({
         jsonrpc: '2.0',
         id: 1,
-        method: 'validate_name',
-        params: ['Adrian Teigen']
+        method: method,
+        params: [parameter]
       })
-    }
+    };
 
     const response = await fetch('http://localhost:9933', requestOptions);
     return response.json();
-  }
+  };
 
   const [inputIpAddr, setInputIpAddr] = useState('');
+  const [ipAddrValidity, setIpAddrValidity] = useState('');
   const updateInputIpAddr = (event) => {
-    setInputIpAddr(event.target.value);
+    const ipAddr = event.target.value;
+    setInputIpAddr(ipAddr);
+    validateField('validate_ip', ipAddr).then(data => {
+      setIpAddrValidity(data.result);
+    });
   };
 
   const [inputInfo, setInputInfo] = useState('');
+  const [infoValidity, setInfoValidity] = useState('');
   const updateInputInfo = (event) => {
-    setInputInfo(event.target.value);
+    const info = event.target.value;
+    setInputInfo(info);
+    validateField('validate_info', info).then(data => {
+      setInfoValidity(data.result);
+    });
   };
 
   const [inputPublicKey, setInputPublicKey] = useState('');
+  const [publicKeyValidity, setPublicKeyValidity] = useState('');
   const updateInputPublicKey = (event) => {
-    setInputPublicKey(event.target.value);
+    const publicKey = event.target.value;
+    setInputPublicKey(publicKey);
+    validateField('validate_key', publicKey).then(data => {
+      setPublicKeyValidity(data.result);
+    });
   };
 
   const [dbName, setDbName] = useState('');
@@ -166,6 +183,23 @@ export default function GettersAndSetters (props) {
   const [dbInfo, setDbInfo] = useState('');
   const [dbPublicKey, setDbPublicKey] = useState('');
   const [domainExists, setDomainExists] = useState(false);
+
+  //Must initialize the Validity fields (else they'll be empty until the first character is pressed
+  validateField('validate_domain', inputName).then(data => {
+    setDomainValidity(data.result);
+  });
+  validateField('validate_name', inputName).then(data => {
+    setNameValidity(data.result);
+  });
+  validateField('validate_ip', inputName).then(data => {
+    setIpAddrValidity(data.result);
+  });
+  validateField('validate_info', inputName).then(data => {
+    setInfoValidity(data.result);
+  });
+  validateField('validate_key', inputName).then(data => {
+    setPublicKeyValidity(data.result);
+  });
 
   return (
     <div className="container">
@@ -188,13 +222,13 @@ export default function GettersAndSetters (props) {
           Register an SIIP Certificate
         </h3>
         <form>
-          <DomainName value={inputDomain} placeholder='website.com' onChange={updateInputDomain}/>
+          <DomainName value={inputDomain} criteria={domainValidity} placeholder='website.com' onChange={updateInputDomain}/>
           <br />
           <br />
-          <Name value={inputName} onChange={updateInputName} placeholder='John Smith' enable={!domainExists}/>
-          <IpAddr value={inputIpAddr} onChange={updateInputIpAddr} placeholder='192.168.0.1' enable={!domainExists}/>
-          <Info value={inputInfo} onChange={updateInputInfo} placeholder='{ "country": "US",...' enable={!domainExists}/>
-          <PublicKey value={inputPublicKey} onChange={updateInputPublicKey} placeholder='04:EB:9A:AF:31:11...' enable={!domainExists}/>
+          <Name value={inputName} onChange={updateInputName} criteria={nameValidity} placeholder='John Smith' enable={!domainExists}/>
+          <IpAddr value={inputIpAddr} onChange={updateInputIpAddr} criteria={ipAddrValidity} placeholder='192.168.0.1' enable={!domainExists}/>
+          <Info value={inputInfo} onChange={updateInputInfo} criteria={infoValidity} placeholder='{ "country": "US",...' enable={!domainExists}/>
+          <PublicKey value={inputPublicKey} onChange={updateInputPublicKey} criteria={publicKeyValidity} placeholder='04:EB:9A:AF:31:11...' enable={!domainExists}/>
         </form>
         <SubmitButton
           {...props}
@@ -212,13 +246,13 @@ export default function GettersAndSetters (props) {
           Modify an SIIP Certificate
         </h3>
         <form>
-          <DomainName value={inputDomain} placeholder='website.com' onChange={updateInputDomain}/>
+          <DomainName value={inputDomain} criteria={domainValidity} placeholder='website.com' onChange={updateInputDomain}/>
           <br />
           <br />
-          <Name value={inputName} onChange={updateInputName} placeholder='John Smith' enable={domainExists}/>
-          <IpAddr value={inputIpAddr} onChange={updateInputIpAddr} placeholder='192.168.0.1' enable={domainExists}/>
-          <Info value={inputInfo} onChange={updateInputInfo} placeholder='{ "country": "US",...' enable={domainExists}/>
-          <PublicKey value={inputPublicKey} onChange={updateInputPublicKey} placeholder='04:EB:9A:AF:31:11...' enable={domainExists}/>
+          <Name value={inputName} onChange={updateInputName} criteria={nameValidity} placeholder='John Smith' enable={domainExists}/>
+          <IpAddr value={inputIpAddr} onChange={updateInputIpAddr} criteria={ipAddrValidity} placeholder='192.168.0.1' enable={domainExists}/>
+          <Info value={inputInfo} onChange={updateInputInfo} criteria={infoValidity} placeholder='{ "country": "US",...' enable={domainExists}/>
+          <PublicKey value={inputPublicKey} onChange={updateInputPublicKey} criteria={publicKeyValidity} placeholder='04:EB:9A:AF:31:11...' enable={domainExists}/>
         </form>
         <SubmitButton
           {...props}
@@ -236,7 +270,7 @@ export default function GettersAndSetters (props) {
           Delete an SIIP Certificate
         </h3>
         <form>
-          <DomainName value={inputDomain} placeholder='website.com' onChange={updateInputDomain}/>
+          <DomainName value={inputDomain} criteria={domainValidity} placeholder='website.com' onChange={updateInputDomain}/>
           <br />
           <br />
           <Static label='Owner&apos;s Name:' value={dbName} enable={false}/>
@@ -259,7 +293,33 @@ export default function GettersAndSetters (props) {
   );
 }
 
+function Validation (props) {
+  if (!props.enable) {
+    return (
+      <div></div>
+    );
+  }
+
+  const criteria = props.criteria.split('\n');
+  const criteriaElements = [];
+  for (let i = 0; i < criteria.length; i++) {
+    criteriaElements.push(
+      <p key={i}>
+        {criteria[i]}
+      </p>
+    );
+  }
+
+  return (
+    <div>
+      {criteriaElements}
+    </div>
+  );
+}
+
 function DomainName (props) {
+  const [isFocused, setFocused] = useState(false);
+
   return (
     <div>
       <label>Domain Name:</label>
@@ -269,13 +329,24 @@ function DomainName (props) {
           placeholder={props.placeholder}
           value={props.value}
           onChange={props.onChange}
+          onFocus={(e) => {
+            console.log('Focused');
+            setFocused(true);
+          }}
+          onBlur={(e) => {
+            console.log('Not focused');
+            setFocused(false);
+          }}
         />
+        <Validation criteria={props.criteria} enable={isFocused}/>
       </div>
     </div>
   );
 }
 
 function Name (props) {
+  const [isFocused, setFocused] = useState(false);
+
   return (
     <div>
       <label>Owner's Name:</label>
@@ -286,13 +357,24 @@ function Name (props) {
           value={props.value}
           onChange={props.onChange}
           disabled={!props.enable}
+          onFocus={(e) => {
+            console.log('Focused');
+            setFocused(true);
+          }}
+          onBlur={(e) => {
+            console.log('Not focused');
+            setFocused(false);
+          }}
         />
+        <Validation criteria={props.criteria} enable={isFocused}/>
       </div>
     </div>
   );
 }
 
 function IpAddr (props) {
+  const [isFocused, setFocused] = useState(false);
+
   return (
     <div>
       <label>IPv4 Address:</label>
@@ -303,13 +385,24 @@ function IpAddr (props) {
           value={props.value}
           onChange={props.onChange}
           disabled={!props.enable}
+          onFocus={(e) => {
+            console.log('Focused');
+            setFocused(true);
+          }}
+          onBlur={(e) => {
+            console.log('Not focused');
+            setFocused(false);
+          }}
         />
+        <Validation criteria={props.criteria} enable={isFocused}/>
       </div>
     </div>
   );
 }
 
 function Info (props) {
+  const [isFocused, setFocused] = useState(false);
+
   return (
     <div>
       <label>Info:</label>
@@ -320,13 +413,24 @@ function Info (props) {
           value={props.value}
           onChange={props.onChange}
           disabled={!props.enable}
+          onFocus={(e) => {
+            console.log('Focused');
+            setFocused(true);
+          }}
+          onBlur={(e) => {
+            console.log('Not focused');
+            setFocused(false);
+          }}
         />
+        <Validation criteria={props.criteria} enable={isFocused}/>
       </div>
     </div>
   );
 }
 
 function PublicKey (props) {
+  const [isFocused, setFocused] = useState(false);
+
   return (
     <div>
       <label>Public Key:</label>
@@ -337,7 +441,16 @@ function PublicKey (props) {
           value={props.value}
           onChange={props.onChange}
           disabled={!props.enable}
+          onFocus={(e) => {
+            console.log('Focused');
+            setFocused(true);
+          }}
+          onBlur={(e) => {
+            console.log('Not focused');
+            setFocused(false);
+          }}
         />
+        <Validation criteria={props.criteria} enable={isFocused}/>
       </div>
     </div>
   );
