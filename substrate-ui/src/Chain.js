@@ -7,7 +7,6 @@ import {max} from "@popperjs/core/lib/utils/math";
 
 async function printBlockHeader(maxBlockNum) {
     var num = window.prompt("Enter block number: ", 0);
-
     if(num < 0 || num > maxBlockNum){
         window.alert("Entry must be greater than 0 and less than " + maxBlockNum);
     }
