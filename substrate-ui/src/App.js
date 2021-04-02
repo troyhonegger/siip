@@ -6,7 +6,7 @@ import { SubstrateContextProvider, useSubstrate } from './substrate-lib';
 import { DeveloperConsole } from './substrate-lib/components';
 
 import AccountSelector from './AccountSelector';
-// import Balances from './Balances';
+import Balances from './Balances';
 import BlockNumber from './BlockNumber';
 import Events from './Events';
 import Interactor from './Interactor';
@@ -23,24 +23,24 @@ function Main () {
   const [accountAddress, setAccountAddress] = useState(null);
   const { apiState, keyring, keyringState, apiError } = useSubstrate();
   const accountPair =
-    accountAddress &&
-    keyringState === 'READY' &&
-    keyring.getPair(accountAddress);
+      accountAddress &&
+      keyringState === 'READY' &&
+      keyring.getPair(accountAddress);
 
   const loader = text =>
-    <Dimmer active>
-      <Loader size='small'>{text}</Loader>
-    </Dimmer>;
+      <Dimmer active>
+        <Loader size='small'>{text}</Loader>
+      </Dimmer>;
 
   const message = err =>
-    <Grid centered columns={2} padded>
-      <Grid.Column>
-        <Message negative compact floating
-          header='Error Connecting to Substrate'
-          content={`${JSON.stringify(err, null, 4)}`}
-        />
-      </Grid.Column>
-    </Grid>;
+      <Grid centered columns={2} padded>
+        <Grid.Column>
+          <Message negative compact floating
+                   header='Error Connecting to Substrate'
+                   content={`${JSON.stringify(err, null, 4)}`}
+          />
+        </Grid.Column>
+      </Grid>;
 
   if (apiState === 'ERROR') return message(apiError);
   else if (apiState !== 'READY') return loader('Connecting to Substrate');
@@ -52,45 +52,46 @@ function Main () {
   const contextRef = createRef();
 
   return (
-    <div ref={contextRef}>
-      <Sticky context={contextRef}>
-        <AccountSelector setAccountAddress={setAccountAddress} />
-      </Sticky>
-      <Container>
-        <Grid stackable columns='equal'>
-          <Grid.Row stretched>
-            <NodeInfo />
-            <Metadata />
-            {/*<BlockNumber />*/}
-            {/*<BlockNumber finalized />*/}
-            <Metrics />
-          </Grid.Row>
-          <Grid.Row>
-            <GettersAndSetters accountPair={accountPair}/>
-          </Grid.Row>
-          {/* <Grid.Row stretched> */}
-          {/*  <Balances /> */}
-          {/* </Grid.Row> */}
-          {/* <Grid.Row> */}
-          {/*  <Transfer accountPair={accountPair} /> */}
-          {/*  <Upgrade accountPair={accountPair} /> */}
-          {/* </Grid.Row> */}
-          <Grid.Row stretched>
-            <h1>Blockchain</h1>
-            <Chain />
-          </Grid.Row>
+      <div ref={contextRef}>
+        <Sticky context={contextRef}>
+          <AccountSelector setAccountAddress={setAccountAddress} />
+        </Sticky>
+        <Container>
+          <Grid stackable columns='equal'>
+            <Grid.Row stretched>
+              <NodeInfo />
+              <Metadata />
+              <Metrics />
+              {/*<BlockNumber>*/}
+              {/*<BlockNumber finalized />*/}
+            </Grid.Row>
+            <Grid.Row>
+              <GettersAndSetters accountPair={accountPair}/>
+            </Grid.Row>
 
-          <Grid.Row>
-            <Interactor accountPair={accountPair} />
-            <Events />
-          </Grid.Row>
-          <Grid.Row>
-            <TemplateModule accountPair={accountPair} />
-          </Grid.Row>
-        </Grid>
-      </Container>
-      <DeveloperConsole />
-    </div>
+            <Grid.Row stretched>
+              <h1>Blockchain</h1>
+              <Chain />
+            </Grid.Row>
+
+            <Grid.Row stretched>
+              <Balances />
+            </Grid.Row>
+            {/*<Grid.Row>*/}
+            {/* <Transfer accountPair={accountPair} />*/}
+            {/* <Upgrade accountPair={accountPair} />*/}
+            {/*</Grid.Row>*/}
+            <Grid.Row>
+              <Interactor accountPair={accountPair} />
+              <Events />
+            </Grid.Row>
+            <Grid.Row>
+              <TemplateModule accountPair={accountPair} />
+            </Grid.Row>
+          </Grid>
+        </Container>
+        <DeveloperConsole />
+      </div>
   );
 }
 
