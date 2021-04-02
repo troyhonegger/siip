@@ -4,41 +4,21 @@ import {useSubstrate} from './substrate-lib';
 
 import BlockNumber from './BlockNumber';
 import TextareaAutosize from "react-autosize-textarea";
+import {max} from "@popperjs/core/lib/utils/math";
 
-var search_block_number = 0;
-
-async function printBlockHeader() {
+async function printBlockHeader(maxBlockNum) {
     var num = window.prompt("Enter block number: ");
 
-    const blockHash = await api.rpc.chain.getBlockHash(num);
-    const signedBlock = await api.rpc.chain.getBlock(blockHash);
-    window.alert("Block Number " + num + " Header\n\n" + signedBlock.block.header.toString());
-    return (signedBlock.block.header.toString());
+    if((num < 0 || num > maxBlockNum) || !Number.isInteger(num)){
+        window.alert("Entry must be greater than 0 and less than " + maxBlockNum);
+    }
+    else {
+        const blockHash = await api.rpc.chain.getBlockHash(num);
+        const signedBlock = await api.rpc.chain.getBlock(blockHash);
+        window.alert("Block Number " + num + " Header\n\n" + signedBlock.block.header.toString());
+    }
 }
-function SearchBlockNum (props) {
-    const [isFocused, setFocused] = useState(false);
 
-    return (
-        <div>
-            <label>Search Block Number:</label>
-            <div>
-                <TextareaAutosize
-                    style={{ width: width }}
-                    className="input_field"
-                    placeholder={props.placeholder}
-                    value={props.value}
-                    onChange={props.onChange}
-                    onFocus={(e) => {
-                        setFocused(true);
-                    }}
-                    onBlur={(e) => {
-                        setFocused(false);
-                    }}
-                />
-            </div>
-        </div>
-    );
-}
 function getBlockNumValue(num){
     if(num > 0){
         return num;
@@ -56,11 +36,6 @@ export default function Main(props) {
     const [blockNumber, setBlockNumber] = useState(0);
     const [blockNumberTimer, setBlockNumberTimer] = useState(0);
     const bestNumber = api.derive.chain.bestNumber;
-
-    const updateSearchBlockNum = (event) => {
-        const num = event.target.value;
-        search_block_number = num;
-    };
 
     useEffect(() => {
         const addresses = keyring.getPairs().map(account => account.address);
@@ -98,7 +73,10 @@ export default function Main(props) {
             <Grid.Column>
                 <Card>
                     <Card.Content textAlign='center'>
-                        <Button onClick={() => printBlockHeader()}>Get Block Header</Button>
+                        <Button onClick={() => printBlockHeader(blockNumber)}>Search For Block Header</Button>
+                        <br />
+                        <br />
+                        <br />
                     </Card.Content>
                 </Card>
             </Grid.Column>
