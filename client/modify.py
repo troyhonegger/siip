@@ -4,7 +4,7 @@ import sys
 
 if len(sys.argv) != 6:
     print("You must specify all required SIIP certificate fields.")
-    print("Usage: register.py DOMAIN NAME IP_ADDRESS INFO PUBLIC_KEY")
+    print("Usage: modify.py DOMAIN NAME IP_ADDRESS INFO PUBLIC_KEY")
     sys.exit()
 
 domain = sys.argv[1]
@@ -43,7 +43,7 @@ substrate = SubstrateInterface(
 keypair = Keypair.create_from_uri('//Alice')
 call = substrate.compose_call(
     call_module='SiipModule',
-    call_function='register_certificate',
+    call_function='modify_certificate',
     call_params={
         'name': name,
         'domain': domain,
