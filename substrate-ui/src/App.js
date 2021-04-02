@@ -13,6 +13,8 @@ import Interactor from './Interactor';
 import Metadata from './Metadata';
 import NodeInfo from './NodeInfo';
 import TemplateModule from './TemplateModule';
+import Metrics from "./Metrics";
+import Chain from "./Chain";
 // import Transfer from './Transfer';
 // import Upgrade from './Upgrade';
 import GettersAndSetters from './GettersAndSetters';
@@ -59,8 +61,9 @@ function Main () {
           <Grid.Row stretched>
             <NodeInfo />
             <Metadata />
-            <BlockNumber />
-            <BlockNumber finalized />
+            {/*<BlockNumber />*/}
+            {/*<BlockNumber finalized />*/}
+            <Metrics />
           </Grid.Row>
           <Grid.Row>
             <GettersAndSetters accountPair={accountPair}/>
@@ -72,6 +75,11 @@ function Main () {
           {/*  <Transfer accountPair={accountPair} /> */}
           {/*  <Upgrade accountPair={accountPair} /> */}
           {/* </Grid.Row> */}
+          <Grid.Row stretched>
+            <h1>Blockchain</h1>
+            <Chain />
+          </Grid.Row>
+
           <Grid.Row>
             <Interactor accountPair={accountPair} />
             <Events />
