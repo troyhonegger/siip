@@ -187,19 +187,37 @@ export default function GettersAndSetters (props) {
   // Must initialize the Validity fields (else they'll be empty until the first character is pressed
   validateField('validate_domain', inputDomain).then(data => {
     setDomainValidity(data.result);
+    updateValidity();
   });
   validateField('validate_name', inputName).then(data => {
     setNameValidity(data.result);
+    updateValidity();
   });
   validateField('validate_ip', inputIpAddr).then(data => {
     setIpAddrValidity(data.result);
+    updateValidity();
   });
   validateField('validate_info', inputInfo).then(data => {
     setInfoValidity(data.result);
+    updateValidity();
   });
   validateField('validate_key', inputPublicKey).then(data => {
     setPublicKeyValidity(data.result);
+    updateValidity();
   });
+
+  const [allFieldsValid, setAllFieldsValid] = useState(false);
+  const updateValidity = () => {
+    if (domainValidity.includes('Err:')
+      || nameValidity.includes('Err:')
+      || ipAddrValidity.includes('Err:')
+      || infoValidity.includes('Err:')
+      || publicKeyValidity.includes('Err:')) {
+      setAllFieldsValid(false);
+    } else {
+      setAllFieldsValid(true);
+    }
+  }
 
   return (
     <div className="container">
@@ -238,7 +256,7 @@ export default function GettersAndSetters (props) {
           info={inputInfo}
           publicKey={inputPublicKey}
           method='Register'
-          enable={!domainExists}
+          enable={!domainExists && allFieldsValid}
         />
       </div>
       <div className="card">
@@ -262,7 +280,7 @@ export default function GettersAndSetters (props) {
           info={inputInfo}
           publicKey={inputPublicKey}
           method='Modify'
-          enable={domainExists}
+          enable={domainExists && domainValidity && nameValidity && ipAddrValidity && infoValidity && publicKeyValidity}
         />
       </div>
       <div className="card">
@@ -286,7 +304,7 @@ export default function GettersAndSetters (props) {
           info={inputInfo}
           publicKey={inputPublicKey}
           method='Delete'
-          enable={domainExists}
+          enable={domainExists && domainValidity && nameValidity && ipAddrValidity && infoValidity && publicKeyValidity}
         />
       </div>
     </div>
@@ -347,11 +365,9 @@ function DomainName (props) {
           value={props.value}
           onChange={props.onChange}
           onFocus={(e) => {
-            console.log('Focused');
             setFocused(true);
           }}
           onBlur={(e) => {
-            console.log('Not focused');
             setFocused(false);
           }}
         />

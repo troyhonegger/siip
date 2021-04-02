@@ -87,13 +87,13 @@ pub fn check_domain(domain: &[u8]) -> Vec<u8> {
 	}
 
 	//Must not contain these symbols
-	let invalid_chars = vec!['_', ' ', '!', '@', '#', '$', '^', '&', '*', '(', ')'];
+	let invalid_chars = vec!['_', ' ', '!', '@', '#', '$', '^', '&', '*', '(', ')', '\n'];
 	if domain.chars().all(|c| !invalid_chars.contains(&c)) {
 		criteria.extend_from_slice("Ok: Must not contain the characters: '_', ' ', '!', '@',\
-		'#', '$', '^', '&', '*', '(', ')'\n".as_bytes());
+		'#', '$', '^', '&', '*', '(', ')', '\\n'\n".as_bytes());
 	} else {
 		criteria.extend_from_slice("Err: Must not contain the characters: '_', ' ', '!', '@',\
-		'#', '$', '^', '&', '*', '(', ')'\n".as_bytes());
+		'#', '$', '^', '&', '*', '(', ')', '\\n'\n".as_bytes());
 	}
 
 	//Domains must be lowercase
@@ -102,6 +102,31 @@ pub fn check_domain(domain: &[u8]) -> Vec<u8> {
 	} else {
 		criteria.extend_from_slice("Err: Characters may not be uppercase\n".as_bytes());
 	}
+
+	//The top level domain must be a 2-63 character long
+	let parts: Vec<&str> = domain.split('.').collect();
+	let tld = "";
+	if (parts.len() < 2) || (!parts.last().is_some()) {
+		criteria.extend_from_slice("Err: TLD must be between 2 and 63\
+	 	characters in length\n".as_bytes());
+	} else {
+		let tld = parts.last().unwrap();
+		if (tld.chars().count() < 2) || (tld.chars().count() > 63) {
+			criteria.extend_from_slice("Err: TLD must be between 2 and 63\
+	 		characters in length\n".as_bytes());
+		} else {
+			criteria.extend_from_slice("Ok: TLD must be between 2 and 63\
+	 		characters in length\n".as_bytes());
+		}
+	}
+	if (domain.chars().count() - tld.chars().count()) > 1 {
+		criteria.extend_from_slice("Ok: Subdomain must be at least 1 character long\
+			\n".as_bytes());
+	} else {
+		criteria.extend_from_slice("Err: Subdomain must be at least 1 character long\
+			\n".as_bytes());
+	}
+
 
 	criteria
 }
