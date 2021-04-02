@@ -53,6 +53,9 @@ impl system::Config for Test {
 
 impl pallet_siip::Config for Test {
 	type Event = Event;
+	fn inflationary_reward() {
+		
+	}
 }
 
 // Build genesis storage according to the mock runtime.

@@ -178,7 +178,7 @@ fn transaction_fee_subtracted() {
 			"abc.com".chars().map(|c| c as u8).collect(),
 			"127.0.0.1".chars().map(|c| c as u8).collect(),
 			"{}".chars().map(|c| c as u8).collect(),
-			"abcdef".chars().map(|c| c as u8).collect()
+			"12:12:12".chars().map(|c| c as u8).collect()
 		);
 
 	
@@ -216,7 +216,7 @@ fn insufficient_balance_cant_register_certificate() {
 			"abc.com".chars().map(|c| c as u8).collect(),
 			"127.0.0.1".chars().map(|c| c as u8).collect(),
 			"{}".chars().map(|c| c as u8).collect(),
-			"abcdef".chars().map(|c| c as u8).collect()
+			"12:12:12".chars().map(|c| c as u8).collect()
 		);
 
 	
