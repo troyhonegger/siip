@@ -21,6 +21,7 @@ mod tests;
 pub trait Config: frame_system::Config {
 	/// Because this pallet emits events, it depends on the runtime's definition of an event.
 	type Event: From<Event<Self>> + Into<<Self as frame_system::Config>::Event>;
+	fn inflationary_reward();
 }
 
 pub const CERTIFICATE_VERSION: i32 = 1;
@@ -432,6 +433,10 @@ decl_module! {
 
 			Self::deposit_event(RawEvent::CertificateRemoved(old_cert, sender));
 			Ok(())
+		}
+
+		fn on_finalize(_n: T::BlockNumber) {
+			T::inflationary_reward();
 		}
 	}
 }

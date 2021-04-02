@@ -256,9 +256,20 @@ impl pallet_sudo::Config for Runtime {
 	type Call = Call;
 }
 
+use frame_support::traits::Currency;
+const MAX_TOKENS: Balance = 1_000_000_000_000_000_000u128; // note that 1_000_000_000_000 = 1 unit
 /// Configure the SIIP pallet in pallets/siip.
 impl pallet_siip::Config for Runtime {
 	type Event = Event;
+	fn inflationary_reward() {
+		reward_miner::get_block_miner::<Runtime>().map(|minerID| {
+			let total_issuance = Balances::total_issuance();
+			if {total_issuance < MAX_TOKENS} {
+				let geometric_reward = (MAX_TOKENS - Balances::total_issuance()) / 1000;
+				Balances::deposit_creating(&minerID, geometric_reward);
+			}
+		});
+	}
 }
 
 // Create the runtime by composing the FRAME pallets that were previously configured.
