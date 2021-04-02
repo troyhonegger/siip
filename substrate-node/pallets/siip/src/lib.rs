@@ -98,9 +98,9 @@ pub fn check_domain(domain: &[u8]) -> Vec<u8> {
 
 	//Domains must be lowercase
 	if domain.chars().all(|c| !c.is_uppercase()) {
-		criteria.extend_from_slice("Ok: Characters may not be uppercase".as_bytes());
+		criteria.extend_from_slice("Ok: Characters may not be uppercase\n".as_bytes());
 	} else {
-		criteria.extend_from_slice("Err: Characters may not be uppercase".as_bytes());
+		criteria.extend_from_slice("Err: Characters may not be uppercase\n".as_bytes());
 	}
 
 	criteria

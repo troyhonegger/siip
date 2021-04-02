@@ -185,19 +185,19 @@ export default function GettersAndSetters (props) {
   const [domainExists, setDomainExists] = useState(false);
 
   // Must initialize the Validity fields (else they'll be empty until the first character is pressed
-  validateField('validate_domain', inputName).then(data => {
+  validateField('validate_domain', inputDomain).then(data => {
     setDomainValidity(data.result);
   });
   validateField('validate_name', inputName).then(data => {
     setNameValidity(data.result);
   });
-  validateField('validate_ip', inputName).then(data => {
+  validateField('validate_ip', inputIpAddr).then(data => {
     setIpAddrValidity(data.result);
   });
-  validateField('validate_info', inputName).then(data => {
+  validateField('validate_info', inputInfo).then(data => {
     setInfoValidity(data.result);
   });
-  validateField('validate_key', inputName).then(data => {
+  validateField('validate_key', inputPublicKey).then(data => {
     setPublicKeyValidity(data.result);
   });
 
@@ -293,6 +293,8 @@ export default function GettersAndSetters (props) {
   );
 }
 
+const width = 200;
+
 function Validation (props) {
   if (!props.enable) {
     return (
@@ -303,13 +305,27 @@ function Validation (props) {
   const criteria = props.criteria.split('\n');
   const criteriaElements = [];
   for (let i = 0; i < criteria.length; i++) {
+    if (criteria[i] === '') {
+      continue;
+    }
+
+    let color;
+    if (criteria[i].startsWith('Ok:')) {
+      color = 'LightGreen';
+      criteria[i] = criteria[i].slice(4);
+    } else {
+      color = 'Coral';
+      criteria[i] = criteria[i].slice(5);
+    }
+
     criteriaElements.push(
-      <p key={i}>
-        {criteria[i]}
-      </p>
+      <div className='small_card' key={i} style={{ background: color, width: width }}>
+        <p style={{ color: 'black', whiteSpace: 'pre-wrap', overflowWrap: 'break-word' }}>
+          {criteria[i]}
+        </p>
+      </div>
     );
   }
-
   return (
     <div>
       {criteriaElements}
@@ -325,6 +341,7 @@ function DomainName (props) {
       <label>Domain Name:</label>
       <div>
         <TextareaAutosize
+          style={{ width: width }}
           className="input_field"
           placeholder={props.placeholder}
           value={props.value}
@@ -352,6 +369,7 @@ function Name (props) {
       <label>Owner's Name:</label>
       <div>
         <TextareaAutosize
+          style={{ width: width }}
           className="input_field"
           placeholder={props.placeholder}
           value={props.value}
@@ -380,6 +398,7 @@ function IpAddr (props) {
       <label>IPv4 Address:</label>
       <div>
         <TextareaAutosize
+          style={{ width: width }}
           className="input_field"
           placeholder={props.placeholder}
           value={props.value}
@@ -408,6 +427,7 @@ function Info (props) {
       <label>Info:</label>
       <div>
         <TextareaAutosize
+          style={{ width: width }}
           className="input_field"
           placeholder={props.placeholder}
           value={props.value}
@@ -436,6 +456,7 @@ function PublicKey (props) {
       <label>Public Key:</label>
       <div>
         <TextareaAutosize
+          style={{ width: width }}
           className="input_field"
           placeholder={props.placeholder}
           value={props.value}
