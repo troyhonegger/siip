@@ -13,24 +13,48 @@ use sp_blockchain::{Error as BlockChainError, HeaderMetadata, HeaderBackend};
 use sp_block_builder::BlockBuilder;
 pub use sc_rpc_api::DenyUnsafe;
 use sp_transaction_pool::TransactionPool;
-
 use jsonrpc_derive::rpc;
 use sc_rpc_api::system::error::Result as SystemResult;
-use siip_node_runtime::Runtime;
-use siip_node_runtime::pallet_siip::Module as SiipModule;
-use sp_core::sr25519;
+use core::str::from_utf8;
+use siip_node_runtime::pallet_siip::{check_name, check_domain, check_ip, check_info, check_key};
 
 #[rpc]
+/// RPCs related to the Siip Pallet
 pub trait SiipRpcTrait {
-    #[rpc(name = "add_cert", returns = "String")]
-    fn add_cert(&self, name: String, ip: String, pubkey: String) -> SystemResult<String>;
+	#[rpc(name = "validate_name", returns = "String")]
+	/// Validates the name provided.
+	/// Returns multiple lines. Each line will contain Ok: message, or Err: message
+	fn validate_name(&self, name: String) -> SystemResult<String>;
+
+	#[rpc(name = "validate_domain", returns = "String")]
+	/// Validates the domain provided.
+	/// Returns multiple lines. Each line will contain Ok: message, or Err: message
+	fn validate_domain(&self, domain: String) -> SystemResult<String>;
+
+	#[rpc(name = "validate_ip", returns = "String")]
+	/// Validates the IPv4 address provided.
+	/// Returns multiple lines. Each line will contain Ok: message, or Err: message
+	fn validate_ip(&self, domain: String) -> SystemResult<String>;
+
+	#[rpc(name = "validate_info", returns = "String")]
+	/// Validates the json info provided.
+	/// Returns multiple lines. Each line will contain Ok: message, or Err: message
+	fn validate_info(&self, info: String) -> SystemResult<String>;
+
+	#[rpc(name = "validate_key", returns = "String")]
+	/// Validates the public key provided.
+	/// Returns multiple lines. Each line will contain Ok: message, or Err: message
+	fn validate_key(&self, key: String) -> SystemResult<String>;
 }
 
+/// A completely useless struct
 pub struct SiipRpcStruct<C> {
     client: Arc<C>
 }
 
+/// No idea what this does
 impl<C> SiipRpcStruct<C> {
+	/// What does this do?
     pub fn new(client: Arc<C>) -> Self {
         SiipRpcStruct {
             client
@@ -39,25 +63,27 @@ impl<C> SiipRpcStruct<C> {
 }
 
 impl<C> SiipRpcTrait for SiipRpcStruct<C> where C: Send + Sync + 'static {
-    fn add_cert(&self, domain: String, ip: String, pubkey: String) -> SystemResult<String> {
-        let res = SiipModule::<Runtime>::register_certificate(
-            siip_node_runtime::Origin::signed(
-                crate::chain_spec::get_account_id_from_seed::<sr25519::Public>("Alice")
-            ),
-            "Genesis".as_bytes().to_vec(),
-            domain.as_bytes().to_vec(),
-            ip.as_bytes().to_vec(),
-            "{}".as_bytes().to_vec(),
-            pubkey.as_bytes().to_vec()
-        );
-
-        let msg = match res {
-            Ok(()) => domain,
-            Err(dispatch) => "uh oh".to_string(),
-        };
-
-        Ok(msg)
-    }
+	//Contains 'Err:' if invalid
+	fn validate_name(&self, name: String) -> SystemResult<String> {
+		let criteria = check_name(&name.into_bytes());
+		Ok(from_utf8(&criteria).unwrap().into())
+	}
+	fn validate_domain(&self, domain: String) -> SystemResult<String> {
+		let criteria = check_domain(&domain.into_bytes());
+		Ok(from_utf8(&criteria).unwrap().into())
+	}
+	fn validate_ip(&self, ip: String) -> SystemResult<String> {
+		let criteria = check_ip(&ip.into_bytes());
+		Ok(from_utf8(&criteria).unwrap().into())
+	}
+	fn validate_info(&self, info: String) -> SystemResult<String> {
+		let criteria = check_info(&info.into_bytes());
+		Ok(from_utf8(&criteria).unwrap().into())
+	}
+	fn validate_key(&self, key: String) -> SystemResult<String> {
+		let criteria = check_key(&key.into_bytes());
+		Ok(from_utf8(&criteria).unwrap().into())
+	}
 }
 
 /// Full client dependencies.

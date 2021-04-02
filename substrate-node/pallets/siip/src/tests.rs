@@ -117,27 +117,14 @@ fn uppercase_domain() {
 	new_test_ext().execute_with(|| {
 		//A domain with a domain containing uppercase characters
 		let new_domain: String = "AdrianTeigen.com".into();
-		assert_ok!(SiipModule::register_certificate(
+		assert_noop!(SiipModule::register_certificate(
 			Origin::signed(1),
 			NAME.into(),
 			new_domain.into(),
 			IP_ADDR.into(),
 			INFO.into(),
 			KEY.into()
-		));
-
-		//Ensure that the saved domain is undercase
-		let response = SiipModule::get_certificate(Vec::<u8>::from(DOMAIN));
-		let expected = Certificate {
-			version_number: 1,
-			owner_id: ensure_signed(Origin::signed(1)).unwrap(),
-			name: NAME.into(),
-			info: INFO.into(),
-			key: KEY.into(),
-			ip_addr: IP_ADDR.into(),
-			domain: DOMAIN.into(),
-		};
-		assert_eq!(expected, response);
+		), Error::<Test>::InvalidDomain);
 	});
 }
 
@@ -192,7 +179,7 @@ fn modify_nonexistant() {
 		assert_noop!(SiipModule::modify_certificate(
 			Origin::signed(1),
 			NAME.into(),
-			"aDifferentDomain.com".into(),
+			"adifferentdomain.com".into(),
 			IP_ADDR.into(),
 			INFO.into(),
 			KEY.into()
@@ -219,7 +206,7 @@ fn modify_uppercase_domain() {
 			IP_ADDR.into(),
 			INFO.into(),
 			KEY.into()
-		), Error::<Test>::NoModifications);
+		), Error::<Test>::InvalidDomain);
 	})
 }
 
@@ -336,6 +323,25 @@ fn invalid_ip() {
 				INFO.into(),
 				KEY.into()
 			), Error::<Test>::InvalidIP);
+	})
+}
+
+#[test]
+fn odd_length_key() {
+	new_test_ext().execute_with(|| {
+		let new_key: String = "01:23:4".into();
+		assert_ok!(SiipModule::register_certificate(
+			Origin::signed(1),
+			NAME.into(),
+			DOMAIN.into(),
+			IP_ADDR.into(),
+			INFO.into(),
+			new_key.clone().into()
+		));
+
+		let cert = SiipModule::get_certificate(Vec::<u8>::from(DOMAIN));
+		let key_vec: Vec::<u8> = new_key.into();
+		assert_eq!(cert.key, key_vec);
 	})
 }
 

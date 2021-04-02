@@ -36,147 +36,239 @@ pub struct Certificate<AccountIdT> {
 	domain: Vec<u8>,
 }
 
-fn check_name(name: Vec<u8>) -> Option<Vec<u8>> {
+pub fn check_name(name: &[u8]) -> Vec<u8> {
+	let mut criteria: Vec<u8> = Vec::new();
+
 	//Must be a valid UTF-8 String
-	from_utf8(&name).ok()?;
+	let name = from_utf8(name);
+	match name {
+		Ok(_val) => criteria.extend_from_slice("Ok: Must be a valid string\n".as_bytes()),
+		Err(_err) => {
+			criteria.extend_from_slice("Err: Must be a valid string\n".as_bytes());
+			return criteria;
+		},
+	}
+	let name = name.unwrap();
+
+	//Must be at least 1 character long
+	if name.len() >= 1 {
+		criteria.extend_from_slice("Ok: Must be at least 1 character long\n".as_bytes());
+	} else {
+		criteria.extend_from_slice("Err: Must be at least 1 character long\n".as_bytes());
+	}
 
 	//I'm not willing to make further assumptions about people's names.
 	//Read this link for more info:
 	//https://www.kalzumeus.com/2010/06/17/falsehoods-programmers-believe-about-names/
 
-	Some(name)
+	criteria
 }
 
-fn check_domain(domain: Vec<u8>) -> Option<Vec<u8>> {
+pub fn check_domain(domain: &[u8]) -> Vec<u8> {
+	let mut criteria: Vec<u8> = Vec::new();
+
 	//Must be a valid UTF-8 String
-	let domain: &str = from_utf8(&domain).ok()?;
+	let domain = from_utf8(&domain);
+	match domain {
+		Ok(_val) => criteria.extend_from_slice("Ok: Must be a valid string\n".as_bytes()),
+		Err(_err) => {
+			criteria.extend_from_slice("Err: Must be a valid string\n".as_bytes());
+			return criteria;
+		},
+	}
+	let domain = domain.unwrap();
 
 	//Must be less than 64 characters long
 	const DOMAIN_MAX_CHARS: usize = 64;
-	if domain.chars().count() >= DOMAIN_MAX_CHARS {
-		return None;
+	if domain.chars().count() < DOMAIN_MAX_CHARS {
+		criteria.extend_from_slice("Ok: Must be shorter than 64 characters\n".as_bytes());
+	} else {
+		criteria.extend_from_slice("Err: Must be shorter than 64 characters\n".as_bytes());
 	}
 
 	//Must not contain these symbols
-	let invalid_chars = vec!['_', ' ', '!', '@', '#', '$', '^', '&', '*', '(', ')'];
-	for char in invalid_chars {
-		if domain.matches(char).count() != 0 {
-			return None
-		}
+	let invalid_chars = vec!['_', ' ', '!', '@', '#', '$', '^', '&', '*', '(', ')', '\n'];
+	if domain.chars().all(|c| !invalid_chars.contains(&c)) {
+		criteria.extend_from_slice("Ok: Must not contain the characters: '_', ' ', '!', '@',\
+		'#', '$', '^', '&', '*', '(', ')', '\\n'\n".as_bytes());
+	} else {
+		criteria.extend_from_slice("Err: Must not contain the characters: '_', ' ', '!', '@',\
+		'#', '$', '^', '&', '*', '(', ')', '\\n'\n".as_bytes());
 	}
 
-	//Domains are not case sensitive
-	let domain = domain.to_lowercase();
+	//Domains must be lowercase
+	if domain.chars().all(|c| !c.is_uppercase()) {
+		criteria.extend_from_slice("Ok: Characters may not be uppercase\n".as_bytes());
+	} else {
+		criteria.extend_from_slice("Err: Characters may not be uppercase\n".as_bytes());
+	}
 
-	//Convert to a vector of <u8>
-	Some(domain.as_bytes().to_vec())
+	//The top level domain must be a 2-63 character long
+	let parts: Vec<&str> = domain.split('.').collect();
+	let tld = "";
+	if (parts.len() < 2) || (!parts.last().is_some()) {
+		criteria.extend_from_slice("Err: TLD must be between 2 and 63\
+	 	characters in length\n".as_bytes());
+	} else {
+		let tld = parts.last().unwrap();
+		if (tld.chars().count() < 2) || (tld.chars().count() > 63) {
+			criteria.extend_from_slice("Err: TLD must be between 2 and 63\
+	 		characters in length\n".as_bytes());
+		} else {
+			criteria.extend_from_slice("Ok: TLD must be between 2 and 63\
+	 		characters in length\n".as_bytes());
+		}
+	}
+	if (domain.chars().count() - tld.chars().count()) > 1 {
+		criteria.extend_from_slice("Ok: Subdomain must be at least 1 character long\
+			\n".as_bytes());
+	} else {
+		criteria.extend_from_slice("Err: Subdomain must be at least 1 character long\
+			\n".as_bytes());
+	}
+
+
+	criteria
 }
 
 //Must be a valid IPv4 address. We will not support IPv6 as of yet.
 //Must be in dotted-decimal notation
-fn check_ip(ip: Vec<u8>) -> Option<Vec<u8>> {
-	//Should still be a valid UTF-8 string
-	let ip: &str = from_utf8(&ip).ok()?;
+pub fn check_ip(ip: &[u8]) -> Vec<u8> {
+	let mut criteria: Vec<u8> = Vec::new();
+
+	//Must be a valid UTF-8 String
+	let ip = from_utf8(&ip);
+	match ip {
+		Ok(_val) => criteria.extend_from_slice("Ok: Must be a valid string\n".as_bytes()),
+		Err(_err) => {
+			criteria.extend_from_slice("Err: Must be a valid string\n".as_bytes());
+			return criteria;
+		},
+	}
+	let ip = ip.unwrap();
 
 	//There must be 3 periods
-	if ip.matches('.').count() != 3 {
-		return None;
+	if ip.matches('.').count() == 3 {
+		criteria.extend_from_slice("Ok: There must be three periods\n".as_bytes());
+	} else {
+		criteria.extend_from_slice("Err: There must be three periods\n".as_bytes());
 	}
 
-	//There must be 4 parts
+	//There must be 4 sections
 	let nums: Vec<&str> = ip.clone().split('.').collect();
-	if nums.len() != 4 {
-		return None;
+	if nums.iter().all(|str| str.len() >= 1) {
+		criteria.extend_from_slice("Ok: There must be four sections (separated by periods)\n".as_bytes());
+	} else {
+		criteria.extend_from_slice("Err: There must be four sections (separated by periods)\n".as_bytes());
 	}
 
-	//Each part must be a valid u8 integer
-	for num in nums.into_iter() {
-		let num: i32 = num.parse().ok()?;
-		if (num < u8::MIN as i32) || (num > u8::MAX as i32) {
-			return None;
-		}
+	//Each section must be a valid U8 number
+	if nums.into_iter().all(|str| str.parse::<u8>().is_ok()) {
+		criteria.extend_from_slice("Ok: Numbers must be between 0 and 255\n".as_bytes());
+	} else {
+		criteria.extend_from_slice("Err: Numbers must be between 0 and 255\n".as_bytes());
 	}
 
-	return Some(ip.as_bytes().to_vec());
+	criteria
 }
 
 //The info field must be formatted with json
-fn check_info(info: Vec<u8>) -> Option<Vec<u8>> {
-	let info = from_utf8(&info).ok()?;
+pub fn check_info(info: &[u8]) -> Vec<u8> {
+	let mut criteria: Vec<u8> = Vec::new();
+
+	//Must be a valid UTF-8 String
+	let info = from_utf8(&info);
+	match info {
+		Ok(_val) => criteria.extend_from_slice("Ok: Must be a valid string\n".as_bytes()),
+		Err(_err) => {
+			criteria.extend_from_slice("Err: Must be a valid string\n".as_bytes());
+			return criteria;
+		},
+	}
+	let info = info.unwrap();
 
 	//Only checks for a valid json
 	//Source: https://users.rust-lang.org/t/serde-json-checking-syntax-of-json-file/16265/3
-	let _: serde_json::Value = serde_json::from_str(&info).ok()?;
+	//let _: serde_json::Value = serde_json::from_str(&info).ok()?;
 
-	return Some(info.as_bytes().to_vec());
+	if serde_json::from_str::<serde_json::Value>(&info).is_ok() {
+		criteria.extend_from_slice("Ok: Must be a valid json\n".as_bytes());
+	} else {
+		criteria.extend_from_slice("Err: Must be a valid json\n".as_bytes());
+	}
+
+	criteria
 }
 
 //Key must be in hexadecimal notation, converts it to uppercase
-fn check_key(key: Vec<u8>) -> Option<Vec<u8>> {
-	let key = from_utf8(&key).ok()?;
+pub fn check_key(key: &[u8]) -> Vec<u8> {
+	let mut criteria: Vec<u8> = Vec::new();
 
-	//A vector containing the string (as bytes) without the ':' and '-' characters
-	let mut new_key: Vec<u8> = Vec::new();
+	//Must be a valid UTF-8 String
+	let key = from_utf8(&key);
+	match key {
+		Ok(_val) => criteria.extend_from_slice("Ok: Must be a valid string\n".as_bytes()),
+		Err(_err) => {
+			criteria.extend_from_slice("Err: Must be a valid string\n".as_bytes());
+			return criteria;
+		},
+	}
+	let key = key.unwrap();
 
-	//4 bytes is the max length of a UTF-8 character
-	let mut buffer: [u8; 4] = [0; 4];
+	//Must be correctly formatted
+	let mut valid_separator = true;
+	let mut valid_values = true;
+	let mut i = 0;
 
-	//Parses the string and adds the non-{':', '-'} characters
 	for char in key.chars() {
-		match char {
-			':' => (),
-			'-' => (),
-			_ => {
-				new_key.extend_from_slice(char.encode_utf8(&mut buffer).as_bytes())
+		if (i != 0) && ((i + 1) % 3 == 0) {
+			if char != ':' {
+				valid_separator = false;
 			}
-		};
-	}
-
-	//Converts to upper case
-	let key = from_utf8(&new_key).ok()?.to_uppercase().as_bytes().to_vec();
-
-	//Ensure that the remaining key is hexadecimal
-	for i in key.iter() {
-		match i {
-			b'0' => (),
-			b'1' => (),
-			b'2' => (),
-			b'3' => (),
-			b'4' => (),
-			b'5' => (),
-			b'6' => (),
-			b'7' => (),
-			b'8' => (),
-			b'9' => (),
-			b'A' => (),
-			b'B' => (),
-			b'C' => (),
-			b'D' => (),
-			b'E' => (),
-			b'F' => (),
-			_ => return None,
-		};
-	}
-
-	//I won't get into what the minimum key size should be, but I will require a key
-	if key.len() < 2 {
-		return None;
-	}
-
-	//We know know that the key only consists of these characters.
-	//So, each character occupies at most 1 character
-
-	//Adds a colon after every 2 hexadecimal characters for readability
-	let mut new_key: Vec<u8> = Vec::new();
-	for i in 0..(key.len() / 2) {
-		if i != 0 {
-			new_key.push(':' as u8);
+		} else {
+			match char {
+				'0' => (),
+				'1' => (),
+				'2' => (),
+				'3' => (),
+				'4' => (),
+				'5' => (),
+				'6' => (),
+				'7' => (),
+				'8' => (),
+				'9' => (),
+				'A' => (),
+				'B' => (),
+				'C' => (),
+				'D' => (),
+				'E' => (),
+				'F' => (),
+				_ => valid_values = false,
+			};
 		}
-		new_key.push(key[2 * i] as u8);
-		new_key.push(key[2 * i + 1] as u8);
+		i += 1;
+	}
+	if key.chars().last() == Some(':') {
+		valid_separator = false;
 	}
 
-	Some(new_key)
+	if valid_separator {
+		criteria.extend_from_slice("Ok: Every pair of hexadecimal digits must be \
+		separated by ':'\n".as_bytes());
+	} else {
+		criteria.extend_from_slice("Err: Every pair of hexadecimal digits must be \
+		separated by ':'\n".as_bytes());
+	}
+
+	if valid_values {
+		criteria.extend_from_slice("Ok: Non-separators must be valid hexadecimal \
+		digits (uppercase hexadecimal)\n".as_bytes());
+	} else {
+		criteria.extend_from_slice("Err: Non-separators must be valid hexadecimal \
+		digits (uppercase hexadecimal)\n".as_bytes());
+	}
+
+	criteria
 }
 
 
@@ -209,11 +301,11 @@ decl_event!(
 // Errors inform users that something went wrong.
 decl_error! {
 	pub enum Error for Module<T: Config> {
+		InvalidOwner,
+		InvalidDomain,
 		InvalidIP,
 		InvalidInfo,
 		InvalidKey,
-		InvalidOwner,
-		InvalidDomain,
 		DomainAlreadyTaken,
 		NonexistentDomain,
 		DifferentOwner,
@@ -244,11 +336,13 @@ decl_module! {
 		) -> dispatch::DispatchResult{
 
 			let sender = ensure_signed(origin)?;
-			let name = check_name(name).ok_or_else(|| Error::<T>::InvalidOwner)?;
-			let domain = check_domain(domain).ok_or_else(|| Error::<T>::InvalidDomain)?;
-			let ip_addr = check_ip(ip_addr).ok_or_else(|| Error::<T>::InvalidIP)?;
-			let info = check_info(info).ok_or_else(|| Error::<T>::InvalidInfo)?;
-			let key = check_key(key).ok_or_else(|| Error::<T>::InvalidKey)?;
+
+			//Input validation
+			ensure!(!from_utf8(&check_name(&name)).unwrap().contains("Err:"), Error::<T>::InvalidOwner);
+			ensure!(!from_utf8(&check_domain(&domain)).unwrap().contains("Err:"), Error::<T>::InvalidDomain);
+			ensure!(!from_utf8(&check_ip(&ip_addr)).unwrap().contains("Err:"), Error::<T>::InvalidIP);
+			ensure!(!from_utf8(&check_info(&info)).unwrap().contains("Err:"), Error::<T>::InvalidInfo);
+			ensure!(!from_utf8(&check_key(&key)).unwrap().contains("Err:"), Error::<T>::InvalidKey);
 
 			//Ensures that the domain is available
 			ensure!(!CertificateMap::<T>::contains_key(&domain), Error::<T>::DomainAlreadyTaken);
@@ -280,11 +374,14 @@ decl_module! {
 		) -> dispatch::DispatchResult{
 
 			let sender = ensure_signed(origin)?;
-			let name = check_name(name).ok_or_else(|| Error::<T>::InvalidOwner)?;
-			let domain = check_domain(domain).ok_or_else(|| Error::<T>::InvalidDomain)?;
-			let ip_addr = check_ip(ip_addr).ok_or_else(|| Error::<T>::InvalidIP)?;
-			let info = check_info(info).ok_or_else(|| Error::<T>::InvalidInfo)?;
-			let key = check_key(key).ok_or_else(|| Error::<T>::InvalidKey)?;
+
+
+			//Input validation
+			ensure!(!from_utf8(&check_name(&name)).unwrap().contains("Err:"), Error::<T>::InvalidOwner);
+			ensure!(!from_utf8(&check_domain(&domain)).unwrap().contains("Err:"), Error::<T>::InvalidDomain);
+			ensure!(!from_utf8(&check_ip(&ip_addr)).unwrap().contains("Err:"), Error::<T>::InvalidIP);
+			ensure!(!from_utf8(&check_info(&info)).unwrap().contains("Err:"), Error::<T>::InvalidInfo);
+			ensure!(!from_utf8(&check_key(&key)).unwrap().contains("Err:"), Error::<T>::InvalidKey);
 
 			//Ensures that the domain already exists
 			ensure!(CertificateMap::<T>::contains_key(&domain), Error::<T>::NonexistentDomain);
@@ -320,7 +417,9 @@ decl_module! {
 		) -> dispatch::DispatchResult{
 
 			let sender = ensure_signed(origin)?;
-			let domain = check_domain(domain).ok_or_else(|| Error::<T>::InvalidDomain)?;
+
+			//Input validation
+			ensure!(!from_utf8(&check_domain(&domain)).unwrap().contains("Err:"), Error::<T>::InvalidDomain);
 
 			//Ensures that the domain already exists
 			ensure!(CertificateMap::<T>::contains_key(&domain), Error::<T>::NonexistentDomain);
