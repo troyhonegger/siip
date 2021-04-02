@@ -1,12 +1,9 @@
 #!/usr/bin/env bash
 
-# After running slurp, compares results of dig and plow for several popular domains to ensure
-# they were added to the blockchain correctly.
+# Tests the various scripts in this client package.
+# Make sure you have a development node running with:
+# cargo run --release -- --dev --tmp
 
-plow=($(./plow.sh $1))
-sip=($(./sip.sh $1))
-
-echo "Comparing IPs:"
-diff <(echo "${plow[1]}") <(echo "${sip[1]}")
-echo "Comparing Keys:"
-diff <(echo "${plow[2]}") <(echo "${sip[2]}")
+echo "Registering Test.com: 1.1.1.1 12:12:12"
+./register.py 'test.com' 'test' '1.1.1.1' '{}' '121212'
+./plow.py 'test.com'
