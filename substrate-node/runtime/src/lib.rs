@@ -10,7 +10,7 @@ use sp_std::prelude::*;
 use sp_core::{crypto::KeyTypeId, OpaqueMetadata};
 use sp_runtime::{
 	ApplyExtrinsicResult, generic, create_runtime_str, impl_opaque_keys, MultiSignature,
-	transaction_validity::{TransactionValidity, TransactionSource},
+	transaction_validity::{TransactionValidity, TransactionSource, TransactionValidityError},
 };
 use sp_runtime::traits::{
 	BlakeTwo256, Block as BlockT, Verify, IdentifyAccount, AccountIdLookup
@@ -40,6 +40,7 @@ mod reward_miner;
 
 /// Import the SIIP pallet.
 pub use pallet_siip;
+pub use pallet_balances;
 
 /// An index to a block.
 pub type BlockNumber = u32;
@@ -66,6 +67,8 @@ pub type Hash = sp_core::H256;
 
 /// Digest item type.
 pub type DigestItem = generic::DigestItem<Hash>;
+
+pub use generic::SignedPayload;
 
 /// Opaque types. These are used by the CLI to instantiate machinery that don't need to know
 /// the specifics of the runtime. They can then be made to be agnostic over specific formats
@@ -295,6 +298,19 @@ pub type SignedExtra = (
 	frame_system::CheckWeight<Runtime>,
 	pallet_transaction_payment::ChargeTransactionPayment<Runtime>,
 );
+
+pub fn default_extras(nonce: u32) -> SignedExtra {
+	(
+		frame_system::CheckSpecVersion::new(),
+		frame_system::CheckTxVersion::new(),
+		frame_system::CheckGenesis::new(),
+		frame_system::CheckEra::from(sp_runtime::generic::Era::mortal(256, 0)),
+		frame_system::CheckNonce::from(nonce),
+		frame_system::CheckWeight::new(),
+		pallet_transaction_payment::ChargeTransactionPayment::from(0u64.into())
+	)
+}
+
 /// Unchecked extrinsic type as expected by this runtime.
 pub type UncheckedExtrinsic = generic::UncheckedExtrinsic<Address, Call, Signature, SignedExtra>;
 /// Extrinsic type that has already been checked.
@@ -443,3 +459,61 @@ impl_runtime_apis! {
 		}
 	}
 }
+
+pub fn test_construct_block(
+	number: BlockNumber,
+	parent_hash: Hash,
+	extrinsics: Vec<UncheckedExtrinsic>
+) -> Result<Block, TransactionValidityError> {
+	
+	let calls: Vec<Call> = extrinsics.clone().into_iter().map(|x| x.function).collect();
+	let extrinsics_root = frame_system::extrinsics_root::<BlakeTwo256, _>(&calls[..]);
+
+	// let extrinsics_root = sp_trie::TrieConfiguration::ordered_trie_root(extrinsics.iter().map(|x| x.function).map(codec::Encode::encode)).to_fixed_bytes().into();
+
+	let header = Header {
+		parent_hash,
+		number,
+		state_root: Default::default(),
+		extrinsics_root,
+		digest: Default::default()
+	};
+
+	// let block = Block {
+	// 	header.clone(),
+	// 	extrinsics
+	// };
+
+	Executive::initialize_block(&header);
+
+
+	for extrinsic in extrinsics.iter() {
+		let res = Executive::apply_extrinsic(extrinsic.clone());
+		match res {
+			Ok(sub_res) => {
+				match sub_res {
+					Ok(_) => {},
+					Err(e) => panic!("Dispatch error: {:?}", e)
+				}
+			},
+			Err(e) => return Err(e)
+		}
+
+	}
+
+	let header = Executive::finalize_block();
+
+	Ok(Block {
+		header,
+		extrinsics
+	})
+}
+
+// #[cfg(test)]
+pub fn test_block_hash(i: u32) -> Hash {
+	// frame_system::Pallet::<Runtime>::block_hash(i)
+	frame_system::Pallet::<Runtime>::parent_hash()
+}
+
+use sp_runtime::traits::Checkable;
+pub type Checked = <UncheckedExtrinsic as Checkable<frame_system::ChainContext<Runtime>>>::Checked;
