@@ -1,15 +1,14 @@
 import React, {useEffect, useState} from 'react';
-import {Grid, Statistic, Card, Button, Modal} from 'semantic-ui-react';
+import {Grid, Statistic, Card, Button} from 'semantic-ui-react';
 import {useSubstrate} from './substrate-lib';
 
 import BlockNumber from './BlockNumber';
-import TextareaAutosize from "react-autosize-textarea";
 import {max} from "@popperjs/core/lib/utils/math";
 
 async function printBlockHeader(maxBlockNum) {
     var num = window.prompt("Enter block number: ");
 
-    if((num < 0 || num > maxBlockNum) || !Number.isInteger(num)){
+    if(num < 0 || num > maxBlockNum){
         window.alert("Entry must be greater than 0 and less than " + maxBlockNum);
     }
     else {
@@ -85,7 +84,7 @@ export default function Main(props) {
                 <Card>
                     <Card.Content textAlign='center'>
                         <Statistic
-                            label={'Block'}
+                            label={'Block Number'}
                             value={getBlockNumValue(blockNumber - 2)}
                         />
                     </Card.Content>
@@ -96,7 +95,7 @@ export default function Main(props) {
                 <Card>
                     <Card.Content textAlign='center'>
                         <Statistic
-                            label={'Block'}
+                            label={'Block Number'}
                             value={getBlockNumValue(blockNumber - 1)}
                         />
                     </Card.Content>
@@ -107,8 +106,8 @@ export default function Main(props) {
                 <Card>
                     <Card.Content textAlign='center'>
                         <Statistic
-                            value={getBlockNumValue(blockNumber)}
                             label={'Block Number'}
+                            value={getBlockNumValue(blockNumber)}
                         />
                     </Card.Content>
                 </Card>
