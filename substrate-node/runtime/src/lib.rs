@@ -264,7 +264,7 @@ impl pallet_siip::Config for Runtime {
 	fn inflationary_reward() {
 		reward_miner::get_block_miner::<Runtime>().map(|minerID| {
 			let total_issuance = Balances::total_issuance();
-			if {total_issuance < MAX_TOKENS} {
+			if total_issuance < MAX_TOKENS {
 				let geometric_reward = (MAX_TOKENS - Balances::total_issuance()) / 1000;
 				Balances::deposit_creating(&minerID, geometric_reward);
 			}
