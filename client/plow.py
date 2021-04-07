@@ -38,3 +38,6 @@ substrate = SubstrateInterface(
 
 siip = substrate.query('SiipModule', 'CertificateMap', params=[domain])
 print(siip)
+
+if siip is None:
+    sys.exit(1)
