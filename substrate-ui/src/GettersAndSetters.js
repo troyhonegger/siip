@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import './css/GettersAndSetters.css';
+import './css/Siip.css';
 import TextareaAutosize from 'react-autosize-textarea';
 import { TxButton } from './substrate-lib/components';
 import { Button } from 'semantic-ui-react';
@@ -208,105 +208,134 @@ export default function GettersAndSetters (props) {
 
   const [allFieldsValid, setAllFieldsValid] = useState(false);
   const updateValidity = () => {
-    if (domainValidity.includes('Err:')
-      || nameValidity.includes('Err:')
-      || ipAddrValidity.includes('Err:')
-      || infoValidity.includes('Err:')
-      || publicKeyValidity.includes('Err:')) {
+    if (domainValidity.includes('Err:') ||
+      nameValidity.includes('Err:') ||
+      ipAddrValidity.includes('Err:') ||
+      infoValidity.includes('Err:') ||
+      publicKeyValidity.includes('Err:')) {
       setAllFieldsValid(false);
     } else {
       setAllFieldsValid(true);
     }
+  };
+
+  const staticName = <Static label='Owner&apos;s Name:' value={dbName} enable={false}/>;
+  const staticIpAddr = <Static label='IPv4 Address:' value={dbIpAddr} enable={false}/>;
+  const staticInfo = <Static label='Info:' value={dbInfo} enable={false}/>;
+  const staticPublicKey = <Static label='Public Key:' value={dbPublicKey} enable={false}/>;
+
+  function dynDomain (enable) {
+    return (
+      <Field
+        label='Domain Name:'
+        value={inputDomain}
+        criteria={domainValidity}
+        placeholder='website.com'
+        onChange={updateInputDomain}
+        enable={enable}
+      />
+    );
+  }
+
+  function dynName (enable) {
+    return (
+      <Field
+        label='Owner&apos;s Name:'
+        value={inputName}
+        criteria={nameValidity}
+        placeholder='John Smith'
+        onChange={updateInputName}
+        enable={enable}
+      />
+    );
+  }
+
+  function dynIpAddr (enable) {
+    return (
+      <Field
+        label='Ipv4 Address:'
+        value={inputIpAddr}
+        criteria={ipAddrValidity}
+        placeholder='192.168.0.1'
+        onChange={updateInputIpAddr}
+        enable={enable}
+      />
+    );
+  }
+
+  function dynInfo (enable) {
+    return (
+      <Field
+        label='Info:'
+        value={inputInfo}
+        criteria={infoValidity}
+        placeholder='{ "country": "US",...'
+        onChange={updateInputInfo}
+        enable={enable}
+      />
+    );
+  }
+
+  function dynPublicKey (enable) {
+    return (
+      <Field
+        label='Public Key:'
+        value={inputPublicKey}
+        criteria={publicKeyValidity}
+        placeholder='04:EB:9A:AF:31:11...'
+        onChange={updateInputPublicKey}
+        enable={enable}
+      />
+    );
+  }
+
+  function submit (method, enable) {
+    if (method === '') {
+      return (
+        <div></div>
+      );
+    }
+
+    return (
+      <SubmitButton
+        {...props}
+        domain={inputDomain}
+        name={inputName}
+        ipAddr={inputIpAddr}
+        info={inputInfo}
+        publicKey={inputPublicKey}
+        method={method}
+        enable={enable}
+      />
+    );
+  }
+
+  function staticCard (title, dynamic, enableField, method, enableButton) {
+    return (
+      <div className="card">
+        <h3>
+          {title}
+        </h3>
+        <form>
+          {dynDomain(true)}
+          <br />
+          <br />
+          {dynamic ? dynName(enableField) : staticName}
+          {dynamic ? dynIpAddr(enableField) : staticIpAddr}
+          {dynamic ? dynInfo(enableField) : staticInfo}
+          {dynamic ? dynPublicKey(enableField) : staticPublicKey}
+        </form>
+        {submit(method, enableButton)}
+      </div>
+    );
   }
 
   return (
     <div className="container">
-      <div className="card">
-        <h3>
-          Lookup an SIIP Certificate
-        </h3>
-        <form>
-          <DomainName value={inputDomain} criteria={domainValidity} placeholder='website.com' onChange={updateInputDomain}/>
-          <br />
-          <br />
-          <Static label='Owner&apos;s Name:' value={dbName} enable={false}/>
-          <Static label='IPv4 Address:' value={dbIpAddr} enable={false}/>
-          <Static label='Info:' value={dbInfo} enable={false}/>
-          <Static label='Public Key:' value={dbPublicKey} enable={false}/>
-        </form>
-      </div>
-      <div className="card">
-        <h3>
-          Register an SIIP Certificate
-        </h3>
-        <form>
-          <DomainName value={inputDomain} criteria={domainValidity} placeholder='website.com' onChange={updateInputDomain}/>
-          <br />
-          <br />
-          <Name value={inputName} onChange={updateInputName} criteria={nameValidity} placeholder='John Smith' enable={!domainExists}/>
-          <IpAddr value={inputIpAddr} onChange={updateInputIpAddr} criteria={ipAddrValidity} placeholder='192.168.0.1' enable={!domainExists}/>
-          <Info value={inputInfo} onChange={updateInputInfo} criteria={infoValidity} placeholder='{ "country": "US",...' enable={!domainExists}/>
-          <PublicKey value={inputPublicKey} onChange={updateInputPublicKey} criteria={publicKeyValidity} placeholder='04:EB:9A:AF:31:11...' enable={!domainExists}/>
-        </form>
-        <SubmitButton
-          {...props}
-          domain={inputDomain}
-          name={inputName}
-          ipAddr={inputIpAddr}
-          info={inputInfo}
-          publicKey={inputPublicKey}
-          method='Register'
-          enable={!domainExists && allFieldsValid}
-        />
-      </div>
-      <div className="card">
-        <h3>
-          Modify an SIIP Certificate
-        </h3>
-        <form>
-          <DomainName value={inputDomain} criteria={domainValidity} placeholder='website.com' onChange={updateInputDomain}/>
-          <br />
-          <br />
-          <Name value={inputName} onChange={updateInputName} criteria={nameValidity} placeholder='John Smith' enable={domainExists}/>
-          <IpAddr value={inputIpAddr} onChange={updateInputIpAddr} criteria={ipAddrValidity} placeholder='192.168.0.1' enable={domainExists}/>
-          <Info value={inputInfo} onChange={updateInputInfo} criteria={infoValidity} placeholder='{ "country": "US",...' enable={domainExists}/>
-          <PublicKey value={inputPublicKey} onChange={updateInputPublicKey} criteria={publicKeyValidity} placeholder='04:EB:9A:AF:31:11...' enable={domainExists}/>
-        </form>
-        <SubmitButton
-          {...props}
-          domain={inputDomain}
-          name={inputName}
-          ipAddr={inputIpAddr}
-          info={inputInfo}
-          publicKey={inputPublicKey}
-          method='Modify'
-          enable={domainExists && domainValidity && nameValidity && ipAddrValidity && infoValidity && publicKeyValidity}
-        />
-      </div>
-      <div className="card">
-        <h3>
-          Delete an SIIP Certificate
-        </h3>
-        <form>
-          <DomainName value={inputDomain} criteria={domainValidity} placeholder='website.com' onChange={updateInputDomain}/>
-          <br />
-          <br />
-          <Static label='Owner&apos;s Name:' value={dbName} enable={false}/>
-          <Static label='IPv4 Address:' value={dbIpAddr} enable={false}/>
-          <Static label='Info:' value={dbInfo} enable={false}/>
-          <Static label='Public Key:' value={dbPublicKey} enable={false}/>
-        </form>
-        <SubmitButton
-          {...props}
-          domain={inputDomain}
-          name={inputName}
-          ipAddr={inputIpAddr}
-          info={inputInfo}
-          publicKey={inputPublicKey}
-          method='Delete'
-          enable={domainExists && domainValidity && nameValidity && ipAddrValidity && infoValidity && publicKeyValidity}
-        />
-      </div>
+      {staticCard('Lookup an SIIP Certificate', false, false, '', false)}
+      {staticCard('Register an SIIP Certificate', true, !domainExists, 'Register', !domainExists && allFieldsValid)}
+      {staticCard('Modify an SIIP Certificate', true, domainExists, 'Modify', domainExists && allFieldsValid)}
+      {staticCard('Delete an SIIP Certificate', false, domainExists, 'Delete', domainExists && domainValidity)}
     </div>
   );
 }
@@ -351,139 +380,25 @@ function Validation (props) {
   );
 }
 
-function DomainName (props) {
+function Field (props) {
   const [isFocused, setFocused] = useState(false);
+  const width = 200;
 
   return (
     <div>
-      <label>Domain Name:</label>
+      <label>{props.label}</label>
       <div>
         <TextareaAutosize
           style={{ width: width }}
           className="input_field"
           placeholder={props.placeholder}
           value={props.value}
-          onChange={props.onChange}
-          onFocus={(e) => {
-            setFocused(true);
-          }}
-          onBlur={(e) => {
-            setFocused(false);
-          }}
-        />
-        <Validation criteria={props.criteria} enable={isFocused}/>
-      </div>
-    </div>
-  );
-}
-
-function Name (props) {
-  const [isFocused, setFocused] = useState(false);
-
-  return (
-    <div>
-      <label>Owner's Name:</label>
-      <div>
-        <TextareaAutosize
-          style={{ width: width }}
-          className="input_field"
-          placeholder={props.placeholder}
-          value={props.value}
-          onChange={props.onChange}
           disabled={!props.enable}
-          onFocus={(e) => {
-            console.log('Focused');
-            setFocused(true);
-          }}
-          onBlur={(e) => {
-            console.log('Not focused');
-            setFocused(false);
-          }}
-        />
-        <Validation criteria={props.criteria} enable={isFocused}/>
-      </div>
-    </div>
-  );
-}
-
-function IpAddr (props) {
-  const [isFocused, setFocused] = useState(false);
-
-  return (
-    <div>
-      <label>IPv4 Address:</label>
-      <div>
-        <TextareaAutosize
-          style={{ width: width }}
-          className="input_field"
-          placeholder={props.placeholder}
-          value={props.value}
           onChange={props.onChange}
-          disabled={!props.enable}
           onFocus={(e) => {
-            console.log('Focused');
             setFocused(true);
           }}
           onBlur={(e) => {
-            console.log('Not focused');
-            setFocused(false);
-          }}
-        />
-        <Validation criteria={props.criteria} enable={isFocused}/>
-      </div>
-    </div>
-  );
-}
-
-function Info (props) {
-  const [isFocused, setFocused] = useState(false);
-
-  return (
-    <div>
-      <label>Info:</label>
-      <div>
-        <TextareaAutosize
-          style={{ width: width }}
-          className="input_field"
-          placeholder={props.placeholder}
-          value={props.value}
-          onChange={props.onChange}
-          disabled={!props.enable}
-          onFocus={(e) => {
-            console.log('Focused');
-            setFocused(true);
-          }}
-          onBlur={(e) => {
-            console.log('Not focused');
-            setFocused(false);
-          }}
-        />
-        <Validation criteria={props.criteria} enable={isFocused}/>
-      </div>
-    </div>
-  );
-}
-
-function PublicKey (props) {
-  const [isFocused, setFocused] = useState(false);
-
-  return (
-    <div>
-      <label>Public Key:</label>
-      <div>
-        <TextareaAutosize
-          style={{ width: width }}
-          className="input_field"
-          placeholder={props.placeholder}
-          value={props.value}
-          onChange={props.onChange}
-          disabled={!props.enable}
-          onFocus={(e) => {
-            console.log('Focused');
-            setFocused(true);
-          }}
-          onBlur={(e) => {
-            console.log('Not focused');
             setFocused(false);
           }}
         />
@@ -495,15 +410,6 @@ function PublicKey (props) {
 
 function Static (props) {
   return (
-    <div>
-      <label>{props.label}</label>
-      <div>
-        <TextareaAutosize
-          className="input_field"
-          value={props.value}
-          disabled={!props.enable}
-        />
-      </div>
-    </div>
+    <Field disabled={true} {...props}/>
   );
 }
