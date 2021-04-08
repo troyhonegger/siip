@@ -52,6 +52,7 @@ function Main () {
   const contextRef = createRef();
 
   return (
+   UI_Metrics_Chain
       <div ref={contextRef}>
         <Sticky context={contextRef}>
           <AccountSelector setAccountAddress={setAccountAddress} />
