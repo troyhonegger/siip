@@ -208,16 +208,16 @@ export default function GettersAndSetters (props) {
 
   const [allFieldsValid, setAllFieldsValid] = useState(false);
   const updateValidity = () => {
-    if (domainValidity.includes('Err:')
-      || nameValidity.includes('Err:')
-      || ipAddrValidity.includes('Err:')
-      || infoValidity.includes('Err:')
-      || publicKeyValidity.includes('Err:')) {
+    if (domainValidity.includes('Err:') ||
+      nameValidity.includes('Err:') ||
+      ipAddrValidity.includes('Err:') ||
+      infoValidity.includes('Err:') ||
+      publicKeyValidity.includes('Err:')) {
       setAllFieldsValid(false);
     } else {
       setAllFieldsValid(true);
     }
-  }
+  };
 
   return (
     <div className="container">
