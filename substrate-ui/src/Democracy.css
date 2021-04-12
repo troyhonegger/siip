@@ -1,0 +1,23 @@
+.split-title {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.democracy-container {
+  padding-top: 1.5rem;
+}
+
+.proposal-card {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  margin-top: 0.3rem;
+  padding-bottom: 0.3rem;
+  border-bottom: 1px solid #d6d6d6;
+}
+
+.proposal-card > .ui.button {
+  padding: 0.5rem;
+  margin-left: 1rem;
+}
