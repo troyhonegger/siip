@@ -6,6 +6,12 @@ A fresh FRAME-based [Substrate](https://www.substrate.io/) node, ready for hacki
 
 Follow these steps to get started with the Node Template :hammer_and_wrench:
 
+### Hardware Considerations:
+
+It is absolutely possible to benefit from the SIIP network by simply communicating with full nodes,
+and doing so should be feasible on practically any computer. However, those who wish to
+run a full node may benefit from reading the documentation on [hardware considerations for full nodes](./doc/hardware-considerations.md)
+
 ### Rust Setup
 
 First, complete the [basic Rust setup instructions](./doc/rust-setup.md).
