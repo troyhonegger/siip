@@ -10,14 +10,22 @@
 
 .proposal-card {
   width: 100%;
-  display: flex;
-  align-items: center;
   margin-top: 0.3rem;
-  padding-bottom: 0.3rem;
-  border-bottom: 1px solid #d6d6d6;
+  padding: 0.3rem;
+  border: 1px solid #d6d6d6;
+  border-radius: 4px;
 }
 
-.proposal-card > .ui.button {
-  padding: 0.5rem;
-  margin-left: 1rem;
+.file-drop {
+  padding: 2rem;
+  border: 1px dashed #cccccc;
+  border-radius: 0.3rem;
+  text-align: center;
+  cursor: pointer;
+  user-select: none;
+  outline: 0;
+}
+
+.file-drop:focus, .file-drop:active {
+  outline: 0;
 }
