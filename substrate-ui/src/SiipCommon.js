@@ -1,11 +1,10 @@
 import React, { useState } from 'react';
 import './css/Siip.css';
 import TextareaAutosize from 'react-autosize-textarea';
-import {TxButton} from "./substrate-lib/components";
-import {Button} from "semantic-ui-react";
+import { TxButton } from './substrate-lib/components';
+import { Button } from 'semantic-ui-react';
 
 const width = 200;
-
 
 export function SubmitButton (props) {
   const { accountPair } = props;
@@ -113,7 +112,7 @@ export async function updateDb (domain, setDbName, setDbIpAddr, setDbInfo, setDb
 }
 
 export function Validation (props) {
-  if (!props.enable) {
+  if (!props.enable && !props.alwaysValidate) {
     return (
       <div></div>
     );
@@ -128,6 +127,10 @@ export function Validation (props) {
   const criteriaElements = [];
   for (let i = 0; i < criteria.length; i++) {
     if (criteria[i] === '') {
+      continue;
+    }
+
+    if (criteria[i].startsWith('Ok: ') && props.alwaysValidate && !props.enable) {
       continue;
     }
 
@@ -176,7 +179,7 @@ export function Field (props) {
             setFocused(false);
           }}
         />
-        <Validation criteria={props.criteria} enable={isFocused}/>
+        <Validation criteria={props.criteria} enable={isFocused} alwaysValidate={props.alwaysValidate}/>
       </div>
     </div>
   );

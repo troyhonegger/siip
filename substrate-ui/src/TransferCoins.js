@@ -1,108 +1,132 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import './css/Siip.css';
-import TextareaAutosize from 'react-autosize-textarea';
-import { TxButton } from './substrate-lib/components';
-import { Button } from 'semantic-ui-react';
-import { SubmitButton, Validation, Field, Static } from './SiipCommon';
+import { Field, Static } from './SiipCommon';
 
 export default function TransferCoins (props) {
-  //{sndr, rcpt} x {Addr, Name, Start, Delta, End}
+  const criteriaString = (isNum, validSign) => {
+    console.log('validSign is: ' + validSign);
+
+    let newCriteria = '';
+    if (isNum) {
+      newCriteria += 'Ok: The number must be correctly formatted\n';
+    } else {
+      newCriteria += 'Err: The number must be correctly formatted\n';
+    }
+
+    if (validSign) {
+      newCriteria += 'Ok: The number must have the correct sign (positive or negative)\n';
+    } else {
+      newCriteria += 'Err: The number must have the correct sign (positive or negative)\n';
+    }
+
+    return newCriteria;
+  };
+
   const [sndrAddr, setSndrAddr] = useState('');
   const [sndrName, setSndrName] = useState('');
   const [sndrStart, setSndrStart] = useState(0);
-
   const [sndrDelta, setSndrDelta] = useState('');
-  useEffect(() => {
-    console.log('sndDelta is: ' + sndrDelta);
-    updateAmount(-parseFloat(sndrDelta));
-    validateNumbers();
-  });
-
+  const [sndrDeltaCrit, setSndrDeltaCrit] = useState(criteriaString(false, false));
   const [sndrEnd, setSndrEnd] = useState('');
-  useEffect(() => {
-    updateAmount(-(parseFloat(sndrEnd) - sndrStart));
-    validateNumbers();
-  });
+  const [sndrEndCrit, setSndrEndCrit] = useState(criteriaString(false, false));
 
   const [rcptAddr, setRcptAddr] = useState('');
+  const [rcptAddrCrit, setRcptAddrCrit] = useState('');
   const [rcptName, setRcptName] = useState('');
   const [rcptStart, setRcptStart] = useState(0);
-
   const [rcptDelta, setRcptDelta] = useState('');
-  useEffect(() => {
-    updateAmount(parseFloat(rcptDelta));
-    validateNumbers();
-  });
-
+  const [rcptDeltaCrit, setRcptDeltaCrit] = useState(criteriaString(false, false));
   const [rcptEnd, setRcptEnd] = useState('');
-  useEffect(() => {
-    updateAmount(parseFloat(rcptEnd) - rcptStart);
-    validateNumbers();
-    console.log('You buffoon. useEffect get\'s run after every render. Go back to update functions, and pass all 4 params to validateNumbers()');
-  });
+  const [rcptEndCrit, setRcptEndCrit] = useState(criteriaString(false, false));
 
   const [amount, setAmount] = useState(0);
-  const [numCriteria, setNumCriteria] = useState('');
-  const [addrCriteria, setAddrCriteria] = useState('');
   const [valid, setValid] = useState(false);
 
+  const updateSndrDelta = (event) => {
+    const input = event.target.value;
+    setSndrDelta(input);
+
+    const amount = -parseFloat(input);
+    if (input.slice(-1) !== '.') {
+      updateAmount(amount);
+    }
+
+    const num = parseFloat(input);
+    setSndrDeltaCrit(criteriaString(!isNaN(num), num <= 0));
+  };
+
+  const updateSndrEnd = (event) => {
+    const input = event.target.value;
+    setSndrEnd(input);
+
+    const amount = -(parseFloat(input) - sndrStart);
+    if (input.slice(-1) !== '.') {
+      updateAmount(amount);
+    }
+
+    const num = parseFloat(input);
+    setSndrEndCrit(criteriaString(!isNaN(num), num >= 0));
+  };
+
+  const updateRcptDelta = (event) => {
+    const input = event.target.value;
+    setRcptDelta(input);
+
+    const amount = parseFloat(input);
+    if (input.slice(-1) !== '.') {
+      updateAmount(amount);
+    }
+
+    const num = parseFloat(input);
+    setRcptDeltaCrit(criteriaString(!isNaN(num), num >= 0));
+  };
+
+  const updateRcptEnd = (event) => {
+    const input = event.target.value;
+    setRcptEnd(input);
+
+    const amount = parseFloat(input) - rcptStart;
+    if (input.slice(-1) !== '.') {
+      updateAmount(amount);
+    }
+
+    const num = parseFloat(input);
+    setRcptEndCrit(criteriaString(!isNaN(num), num >= 0));
+  };
+
   const updateRcptAddr = (event) => {
-    let input = event.target.value;
+    const input = event.target.value;
     setRcptAddr(input);
-  }
+  };
 
   const updateAmount = (newAmount) => {
-    if (isNaN(newAmount)) {
+    if (isNaN(newAmount) || newAmount < 0) {
       return;
     }
     setSndrDelta((-newAmount).toString());
     setRcptDelta(newAmount.toString());
     setSndrEnd((sndrStart - newAmount).toString());
     setRcptEnd((rcptStart + newAmount).toString());
-  }
 
-  const validateNumbers = () => {
-    let newCriteria = '';
-    //All values must be valid numbers
-    if (isNaN(parseFloat(sndrDelta)) ||
-      isNaN(parseFloat(sndrEnd)) ||
-      isNaN(parseFloat(rcptDelta)) ||
-      isNaN(parseFloat(rcptEnd))) {
-      console.log('Something is NaN');
-      console.log('sndrDelta: ' + sndrDelta);
-      console.log('sndrEnd: ' + sndrEnd);
-      console.log('rcptDelta: ' + rcptDelta);
-      console.log('rcptEnd: ' + rcptEnd);
-      newCriteria += 'Err: All numbers must be correctly formatted\n';
-    } else {
-      console.log('Everything is not NaN');
-      console.log('sndrDelta: ' + sndrDelta);
-      console.log('sndrEnd: ' + sndrEnd);
-      console.log('rcptDelta: ' + rcptDelta);
-      console.log('rcptEnd: ' + rcptEnd);
-      newCriteria += 'Ok: All numbers must be correctly formatted\n';
-    }
+    setSndrDeltaCrit(criteriaString(true, true));
+    setSndrEndCrit(criteriaString(true, true));
+    setRcptDeltaCrit(criteriaString(true, true));
+    setRcptEndCrit(criteriaString(true, true));
 
-    //All values must have the correct sign
-    if ((sndrDelta >= 0) ||
-      (sndrEnd < 0) ||
-      (rcptDelta <= 0) ||
-      (rcptEnd < 0)) {
-      newCriteria += 'Err: Invalid sign of a number\n';
-    } else {
-      newCriteria += 'Ok: Invalid sign of a number\n';
-    }
-
-    setNumCriteria(newCriteria);
-  }
+    setAmount(newAmount);
+  };
 
   const updateValid = () => {
-    if (numCriteria.includes('Err:') || addrCriteria.includes('Err:')) {
+    if (sndrDeltaCrit.includes('Err: ') ||
+      sndrEndCrit.includes('Err: ') ||
+      rcptAddrCrit.includes('Err: ') ||
+      rcptDeltaCrit.includes('Err: ') ||
+      rcptEndCrit.includes('Err: ')) {
       setValid(false);
     } else {
       setValid(true);
     }
-  }
+  };
 
   return (
     <div className='row'>
@@ -124,18 +148,19 @@ export default function TransferCoins (props) {
             value={sndrStart}
           />
           <Field
-            label='You will send:'
+            label='Delta:'
             value={sndrDelta}
-            // onChange={(event) => {setSndrDelta(event.target.value)}}
-            onChange={(event) => {console.log(event.target.value);setSndrDelta(event.target.value)}}
-            criteria={numCriteria}
+            onChange={updateSndrDelta}
+            criteria={sndrDeltaCrit}
+            alwaysValidate={true}
             enable={true}
           />
           <Field
             label='Ending balance'
             value={sndrEnd}
-            onChange={(event) => {setSndrEnd(event.target.value)}}
-            criteria={numCriteria}
+            onChange={updateSndrEnd}
+            criteria={sndrEndCrit}
+            alwaysValidate={true}
             enable={true}
           />
         </div>
@@ -148,8 +173,8 @@ export default function TransferCoins (props) {
           <Field
             label='Their address:'
             value={rcptAddr}
-            onChange={(event) => {setRcptAddr(event.target.value)}}
-            criteria={addrCriteria}
+            onChange={updateRcptAddr}
+            criteria={rcptAddrCrit}
             enable={true}
           />
           <Static
@@ -161,17 +186,19 @@ export default function TransferCoins (props) {
             value={rcptStart}
           />
           <Field
-            label='They will receive:'
+            label='Delta:'
             value={rcptDelta}
-            onChange={(event) => {setRcptDelta(event.target.value)}}
-            criteria={numCriteria}
+            onChange={updateRcptDelta}
+            criteria={rcptDeltaCrit}
+            alwaysValidate={true}
             enable={true}
           />
           <Field
             label='Ending balance'
             value={rcptEnd}
-            onChange={(event) => {setRcptEnd(event.target.value)}}
-            criteria={numCriteria}
+            onChange={updateRcptEnd}
+            criteria={rcptEndCrit}
+            alwaysValidate={true}
             enable={true}
           />
         </div>
@@ -179,4 +206,3 @@ export default function TransferCoins (props) {
     </div>
   );
 }
-

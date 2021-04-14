@@ -1,9 +1,6 @@
 import React, { useState } from 'react';
 import './css/Siip.css';
-import TextareaAutosize from 'react-autosize-textarea';
-import { TxButton } from './substrate-lib/components';
-import { Button } from 'semantic-ui-react';
-import { SubmitButton, updateDb, Validation, Field, Static } from './SiipCommon';
+import { SubmitButton, updateDb, Field, Static } from './SiipCommon';
 
 export default function GettersAndSetters (props) {
   const [inputDomain, setInputDomain] = useState('');
