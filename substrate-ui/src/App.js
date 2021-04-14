@@ -23,7 +23,7 @@ import TemplateModule from './TemplateModule';
 // import Transfer from './Transfer';
 // import Upgrade from './Upgrade';
 import GettersAndSetters from './GettersAndSetters';
-import Democracy from './Democracy';
+import Democracy from './democracy';
 import { BALANCES_PATH, DEMOCRACY_PATH, INTERACTOR_PATH, METRICS_PATH, SIIP_PATH } from './routes';
 
 function Main () {
