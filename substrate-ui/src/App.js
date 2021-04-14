@@ -1,6 +1,12 @@
 import React, {useState, createRef} from 'react';
 import {Container, Dimmer, Loader, Grid, Sticky, Message} from 'semantic-ui-react';
 import 'semantic-ui-css/semantic.min.css';
+import {
+  BrowserRouter as Router,
+  Switch,
+  Route,
+  Redirect
+} from 'react-router-dom';
 
 import {SubstrateContextProvider, useSubstrate} from './substrate-lib';
 import {DeveloperConsole} from './substrate-lib/components';
@@ -18,6 +24,8 @@ import Chain from "./Chain";
 // import Transfer from './Transfer';
 // import Upgrade from './Upgrade';
 import GettersAndSetters from './GettersAndSetters';
+import Democracy from './Democracy';
+import { BALANCES_PATH, DEMOCRACY_PATH, INTERACTOR_PATH, METRICS_PATH, SIIP_PATH } from './routes';
 
 function Main() {
     const [accountAddress, setAccountAddress] = useState(null);
@@ -51,48 +59,59 @@ function Main() {
 
     const contextRef = createRef();
 
-    return (
-        <div ref={contextRef}>
-            <Sticky context={contextRef}>
-                <AccountSelector setAccountAddress={setAccountAddress}/>
-            </Sticky>
-            <Container>
-                <Grid stackable columns='equal'>
-                    <Grid.Row stretched>
-                        <NodeInfo/>
-                        <Metadata/>
-                        <Metrics/>
-                        {/*<BlockNumber>*/}
-                        {/*<BlockNumber finalized />*/}
-                    </Grid.Row>
-                    <Grid.Row>
-                        <GettersAndSetters accountPair={accountPair}/>
-                    </Grid.Row>
-
-                    <Grid.Row stretched>
-                        <h1>Blockchain</h1>
-                        <Chain/>
-                    </Grid.Row>
-
-                    <Grid.Row stretched>
-                        <Balances/>
-                    </Grid.Row>
-                    {/*<Grid.Row>*/}
-                    {/* <Transfer accountPair={accountPair} />*/}
-                    {/* <Upgrade accountPair={accountPair} />*/}
-                    {/*</Grid.Row>*/}
-                    <Grid.Row>
-                        <Interactor accountPair={accountPair}/>
-                        <Events/>
-                    </Grid.Row>
-                    <Grid.Row>
-                        <TemplateModule accountPair={accountPair}/>
-                    </Grid.Row>
-                </Grid>
-            </Container>
-            <DeveloperConsole/>
-        </div>
-    );
+  return (
+    <Router>
+    <div ref={contextRef}>
+      <Sticky context={contextRef}>
+        <AccountSelector setAccountAddress={setAccountAddress} />
+      </Sticky>
+      <Container>
+        <Grid stackable columns='equal'>
+          <Switch>
+            <Route path={METRICS_PATH}>
+              <Grid.Row stretched>
+                <NodeInfo />
+                <Metadata />
+                <BlockNumber />
+                <BlockNumber finalized />
+              </Grid.Row>
+            </Route>
+            <Route path={DEMOCRACY_PATH}>
+              <Democracy />
+            </Route>
+            <Route path={SIIP_PATH}>
+              <Grid.Row>
+                <GettersAndSetters accountPair={accountPair}/>
+              </Grid.Row>
+            </Route>
+            <Route path={BALANCES_PATH}>
+              <Grid.Row stretched>
+                <Balances />
+              </Grid.Row>
+            </Route>
+            <Route path={INTERACTOR_PATH}>
+              <Grid.Row>
+                <Interactor accountPair={accountPair} />
+                <Events />
+              </Grid.Row>
+            </Route>
+            <Route path="/">
+              <Redirect to={SIIP_PATH}></Redirect>
+            </Route>
+          </Switch>
+           {/* <Grid.Row> */}
+           {/* <Transfer accountPair={accountPair} /> */}
+           {/* <Upgrade accountPair={accountPair} /> */}
+           {/* </Grid.Row> */}
+          <Grid.Row>
+            <TemplateModule accountPair={accountPair} />
+          </Grid.Row>
+        </Grid>
+      </Container>
+      <DeveloperConsole />
+    </div>
+    </Router>
+  );
 }
 
 export default function App() {

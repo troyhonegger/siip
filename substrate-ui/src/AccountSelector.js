@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { CopyToClipboard } from 'react-copy-to-clipboard';
+import { Link, useLocation } from 'react-router-dom';
+import classNames from 'classnames';
 
 import {
   Menu,
@@ -10,6 +12,7 @@ import {
   Image,
   Label
 } from 'semantic-ui-react';
+import { BALANCES_PATH, DEMOCRACY_PATH, INTERACTOR_PATH, METRICS_PATH, SIIP_PATH } from './routes';
 
 import { useSubstrate } from './substrate-lib';
 
@@ -41,6 +44,8 @@ function Main (props) {
     setAccountSelected(address);
   };
 
+  const path = useLocation();
+
   return (
     <Menu
       attached='top'
@@ -52,9 +57,34 @@ function Main (props) {
         paddingBottom: '1em'
       }}
     >
-      <Container>
+      <Container className="ui secondary pointing menu">
         <Menu.Menu>
           <Image src={`${process.env.PUBLIC_URL}/assets/substrate-logo.png`} size='mini' />
+        </Menu.Menu>
+        <Menu.Menu className={classNames('item', { active: path?.pathname?.startsWith(SIIP_PATH) })}>
+          <Link to={SIIP_PATH}>
+            SIIP
+          </Link>
+        </Menu.Menu>
+        <Menu.Menu className={classNames('item', { active: path?.pathname?.startsWith(DEMOCRACY_PATH) })}>
+          <Link to={DEMOCRACY_PATH}>
+            Democracy
+          </Link>
+        </Menu.Menu>
+        <Menu.Menu className={classNames('item', { active: path?.pathname?.startsWith(METRICS_PATH) })}>
+          <Link to={METRICS_PATH}>
+            Metrics
+          </Link>
+        </Menu.Menu>
+        <Menu.Menu className={classNames('item', { active: path?.pathname?.startsWith(BALANCES_PATH) })}>
+          <Link to={BALANCES_PATH}>
+            Balances
+          </Link>
+        </Menu.Menu>
+        <Menu.Menu className={classNames('item', { active: path?.pathname?.startsWith(INTERACTOR_PATH) })}>
+          <Link to={INTERACTOR_PATH}>
+            Interactor
+          </Link>
         </Menu.Menu>
         <Menu.Menu position='right' style={{ alignItems: 'center' }}>
           { !accountSelected
