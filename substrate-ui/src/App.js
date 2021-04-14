@@ -86,7 +86,7 @@ function Main () {
               </Route>
               <Route path={BALANCES_PATH}>
                 <Grid.Row>
-                  <TransferCoins/>
+                  <TransferCoins accountPair={accountPair}/>
                 </Grid.Row>
                 <Grid.Row stretched>
                   <Balances/>
