@@ -25,14 +25,20 @@ use sp_version::NativeVersion;
 #[cfg(any(feature = "std", test))]
 pub use sp_runtime::BuildStorage;
 pub use pallet_balances::Call as BalancesCall;
-pub use sp_runtime::{Permill, Perbill};
+pub use sp_runtime::{
+	traits::{BadOrigin},
+	Permill, Perbill
+};
 pub use frame_support::{
 	construct_runtime, parameter_types, StorageValue,
-	traits::{KeyOwnerProofSystem, Randomness},
+	traits::{KeyOwnerProofSystem, Randomness, EnsureOrigin},
 	weights::{
 		Weight, IdentityFee,
 		constants::{BlockExecutionWeight, RocksDbWeight, WEIGHT_PER_SECOND},
 	},
+};
+pub use frame_system::{
+	EnsureRoot
 };
 use pallet_transaction_payment::CurrencyAdapter;
 
@@ -272,6 +278,96 @@ impl pallet_siip::Config for Runtime {
 	}
 }
 
+const MILLICENTS: Balance = 1_000_000_000;
+const CENTS: Balance = 1_000 * MILLICENTS;    // assume this is worth about a cent.
+const DOLLARS: Balance = 100 * CENTS;
+
+// when () is provided as an EnsureOrigin type, reject all origins
+impl EnsureOrigin<Origin> for () {
+	type Success = AccountId;
+	fn try_origin(o: Origin) -> Result<Self::Success, Origin> {
+		Err(o)
+	}
+
+	fn ensure_origin(o: Origin) -> Result<Self::Success, BadOrigin> {
+		Err(BadOrigin)
+	}
+}
+
+parameter_types! {
+	pub const LaunchPeriod: BlockNumber = 150;
+	pub const VotingPeriod: BlockNumber = 150;
+	pub const FastTrackVotingPeriod: BlockNumber = 150;
+	pub const InstantAllowed: bool = false;
+	pub const MinimumDeposit: Balance = 1 * DOLLARS;
+	pub const EnactmentPeriod: BlockNumber = 5;
+	pub const CooloffPeriod: BlockNumber = 28 * 24 * 60 * MINUTES;
+	// One cent: $10,000 / MB
+	pub const PreimageByteDeposit: Balance = 1 * CENTS;
+	pub const MaxVotes: u32 = 100;
+	pub const MaxProposals: u32 = 100;
+}
+
+use pallet_democracy;
+
+impl pallet_democracy::Config for Runtime {
+	type Proposal = Call;
+	type Event = Event;
+	type Currency = Balances;
+	type EnactmentPeriod = EnactmentPeriod;
+	type LaunchPeriod = LaunchPeriod;
+	type VotingPeriod = VotingPeriod;
+	type MinimumDeposit = MinimumDeposit;
+	/// A straight majority of the council can decide what their next motion is.
+	type ExternalOrigin = ();
+	/// A super-majority can have the next scheduled referendum be a straight majority-carries vote.
+	type ExternalMajorityOrigin = ();
+	/// A unanimous council can have the next scheduled referendum be a straight default-carries
+	/// (NTB) vote.
+	type ExternalDefaultOrigin = ();
+	/// Two thirds of the technical committee can have an ExternalMajority/ExternalDefault vote
+	/// be tabled immediately and with a shorter voting/enactment period.
+	type FastTrackOrigin = ();
+	type InstantOrigin = ();
+	type InstantAllowed = InstantAllowed;
+	type FastTrackVotingPeriod = FastTrackVotingPeriod;
+	// To cancel a proposal which has been passed, 2/3 of the council must agree to it.
+	type CancellationOrigin = ();
+	// To cancel a proposal before it has been passed, the technical committee must be unanimous or
+	// Root must agree.
+	type CancelProposalOrigin = ();
+	type BlacklistOrigin = ();
+	// Any single technical committee member may veto a coming council proposal, however they can
+	// only do it once and it lasts only for the cool-off period.
+	type VetoOrigin = ();
+	type CooloffPeriod = CooloffPeriod;
+	type PreimageByteDeposit = PreimageByteDeposit;
+	type OperationalPreimageOrigin = ();
+	type Slash = ();
+	type Scheduler = Scheduler;
+	type PalletsOrigin = OriginCaller;
+	type MaxVotes = MaxVotes;
+	type WeightInfo = pallet_democracy::weights::SubstrateWeight<Runtime>;
+	type MaxProposals = MaxProposals;
+}
+
+parameter_types! {
+	pub MaximumSchedulerWeight: Weight = Perbill::from_percent(80) *
+		BlockWeights::get().max_block;
+	pub const MaxScheduledPerBlock: u32 = 50;
+}
+
+impl pallet_scheduler::Config for Runtime {
+	type Event = Event;
+	type Origin = Origin;
+	type PalletsOrigin = OriginCaller;
+	type Call = Call;
+	type MaximumWeight = MaximumSchedulerWeight;
+	type ScheduleOrigin = ();
+	type MaxScheduledPerBlock = MaxScheduledPerBlock;
+	type WeightInfo = pallet_scheduler::weights::SubstrateWeight<Runtime>;
+}
+
 // Create the runtime by composing the FRAME pallets that were previously configured.
 construct_runtime!(
 	pub enum Runtime where
@@ -284,6 +380,8 @@ construct_runtime!(
 		Balances: pallet_balances::{Module, Call, Storage, Config<T>, Event<T>},
 		TransactionPayment: pallet_transaction_payment::{Module, Storage},
 		Sudo: pallet_sudo::{Module, Call, Config<T>, Storage, Event<T>},
+		Scheduler: pallet_scheduler::{Module, Call, Storage, Event<T>},
+		Democracy: pallet_democracy::{Module, Call, Storage, Config, Event<T>},
 		// Include the custom logic from the SIIP pallet in the runtime.
 		SiipModule: pallet_siip::{Module, Call, Storage, Event<T>},
 	}
