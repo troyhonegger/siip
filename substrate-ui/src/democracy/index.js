@@ -1,10 +1,11 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect } from 'react';
 import { useSubstrate } from '../substrate-lib';
 
 import PreimageModal from './PreimageModal';
 import ProposalModal from './ProposalModal';
 import './Democracy.css';
 import { byteArrToHexString } from '../utils';
+import { useCall } from './useCall';
 
 const ProposalRow = ({ imageHash, proposer }) => {
   return (
@@ -23,20 +24,10 @@ const ProposalRow = ({ imageHash, proposer }) => {
 
 const Democracy = ({ accountPair }) => {
   const { api } = useSubstrate();
-  const [proposals, setProposals] = useState([]);
-  const [referendums, setReferendums] = useState([]);
-  useEffect(() => {
-    api.derive.democracy.proposals().then(p => {
-      console.log('proposals are:', p);
-      setProposals(p);
-    });
-  }, [api, setProposals]);
-  useEffect(() => {
-    api.derive.democracy.referendums().then(r => {
-      console.log('referendums are:', r);
-      setReferendums(r);
-    });
-  }, [api, setReferendums]);
+  window.api = api;
+  const proposals = useCall(api.derive.democracy.proposals);
+  const referendums = useCall(api.derive.democracy.referendums);
+  useEffect(() => console.log(referendums), [referendums]);
   return (
     <div className="w-full democracy-container">
       <h2 className="header referenda-header">Active Referenda</h2>
@@ -46,7 +37,7 @@ const Democracy = ({ accountPair }) => {
           <ProposalModal accountPair={accountPair}/>
       </div>
 
-      {proposals.map((proposal, i) => {
+      {proposals?.map((proposal, i) => {
         return <ProposalRow key={i} imageHash={proposal.imageHash} proposer={proposal.proposer}/>;
       })}
 
