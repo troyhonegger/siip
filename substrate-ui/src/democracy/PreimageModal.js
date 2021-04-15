@@ -4,7 +4,6 @@ import { useDropzone } from 'react-dropzone';
 
 import { useSubstrate } from '../substrate-lib';
 import { TxButton } from '../substrate-lib/components';
-import { byteArrToHexString } from '../utils';
 import classNames from 'classnames';
 
 const NewPreimageModal = ({ accountPair }) => {
@@ -43,7 +42,7 @@ const NewPreimageModal = ({ accountPair }) => {
 
         {proposal && (
           <>
-          <h3>Preimage hash: </h3> <span>{byteArrToHexString(proposal.hash)}</span>
+          <h3>Preimage hash: </h3> <span>{proposal.hash.toHuman()}</span>
           </>
         )}
         <h3>Upload new runtime:</h3>
