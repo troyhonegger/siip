@@ -15,8 +15,15 @@
   border: 1px solid #d6d6d6;
   border-radius: 4px;
   display: flex;
+  flex-flow: wrap;
   justify-content: space-between;
   align-items: center;
+}
+
+.proposal-left-half, .referendum-left-half {
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
 }
 
 .referendum-card {
@@ -25,8 +32,20 @@
   padding: 0.3rem;
   border: 1px solid #d6d6d6;
   border-radius: 4px;
+}
+
+.referendum-body {
   display: flex;
   justify-content: space-between;
+  flex-flow: wrap;
+}
+
+.referendum-card-title {
+  font-size: 1.4rem;
+  border-bottom: 1px dashed #d4d3d3;
+  align-items: center;
+  padding-bottom: 0.3rem;
+  margin-bottom: 0.3rem;
 }
 
 .referendum-right-half {
@@ -37,10 +56,18 @@
 .referendum-label, .proposal-label {
   font-weight: 600;
   font-size: 1.3rem;
+  margin-right: 0.2rem;
 }
 
 .proposal-detail {
   margin: 0.3rem 0;
+  display: flex;
+  align-items: baseline;
+}
+
+.referendum-detail {
+  display: flex;
+  align-items: baseline;
 }
 
 .file-drop {
@@ -55,4 +82,13 @@
 
 .file-drop:focus, .file-drop:active {
   outline: 0;
+}
+
+.referendum-votes {
+  display: flex;
+  align-items: center;
+}
+
+.vote-summary-icon {
+  margin-left: 1rem;
 }

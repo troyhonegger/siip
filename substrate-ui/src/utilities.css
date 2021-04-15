@@ -9,3 +9,9 @@
 .mt-2 {
   margin-top: 0.5rem;
 }
+
+.ellipsis {
+  text-overflow: ellipsis;
+  min-width: 0;
+  overflow: hidden;
+}

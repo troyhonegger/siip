@@ -6,20 +6,23 @@ import ProposalModal from './ProposalModal';
 import './Democracy.css';
 import { useCall } from './useCall';
 import classNames from 'classnames';
-import { Button } from 'semantic-ui-react';
+import { Button, Icon } from 'semantic-ui-react';
 
 const ProposalRow = ({ proposal }) => {
   return (
     <div className="proposal-card">
-      <div>
+      <div className="proposal-left-half">
         <div className="proposal-detail">
-          <span className="proposal-label">Image Hash: </span> {proposal?.imageHash?.toHuman()}
+          <span className="proposal-label">Image Hash: </span>
+          <span className="ellipsis"> {proposal?.imageHash?.toHuman()}</span>
         </div>
         <div className="proposal-detail">
-          <span className="proposal-label"> Proposer: </span> {proposal?.proposer?.toHuman()}
+          <span className="proposal-label"> Proposer: </span>
+          <span className="ellipsis"> {proposal?.proposer?.toHuman()}</span>
         </div>
         <div className="proposal-detail">
-          <span className="proposal-label"> Locked Balance: </span> {proposal?.balance?.toHuman()}
+          <span className="proposal-label"> Locked Balance: </span>
+          <span className="ellipsis"> {proposal?.balance?.toHuman()}</span>
         </div>
       </div>
       <button className="ui button blue">second</button>
@@ -29,22 +32,37 @@ const ProposalRow = ({ proposal }) => {
 
 const ReferendumRow = ({ referendum }) => {
   return (
+    <>
     <div className={classNames('referendum-card', { 'is-passing': referendum.isPassing })}>
-      <div className="referendum-left-half">
-        <div>
-          <span className="referendum-label">Preimage Hash:</span> {referendum?.imageHash?.toHuman()}
-        </div>
-        <div>
-          <span className="referendum-label">Ayes:</span> {referendum.voteCountAye}
-        </div>
-        <div>
-          <span className="referendum-label">Nays:</span> {referendum.voteCountNay}
-        </div>
+      <div className="referendum-card-title">
+        Referendum {referendum.index.toHuman()}
       </div>
-      <div className="referendum-right-half">
-        <Button color="blue">Vote</Button>
+      <div className="referendum-body">
+        <div className="referendum-left-half">
+          <div className="referendum-detail">
+            <span className="referendum-label">Preimage Hash:</span>
+            <span className="ellipsis"> {referendum?.imageHash?.toHuman()}</span>
+          </div>
+          <div className="referendum-votes">
+            <div>
+              <div>
+                <span className="referendum-label">Ayes:</span> {referendum.voteCountAye}
+              </div>
+              <div>
+                <span className="referendum-label">Nays:</span> {referendum.voteCountNay}
+              </div>
+            </div>
+            <div className="vote-summary-icon">
+              <Icon className={`large ${referendum.isPassing ? 'check green' : 'ban red'}`}/>
+            </div>
+          </div>
+        </div>
+        <div className="referendum-right-half">
+          <Button color="blue">Vote</Button>
+        </div>
       </div>
     </div>
+    </>
   );
 };
 
