@@ -19,6 +19,8 @@ build
 .idea/
 *.swp
 
+__pycache__
+
 # Setting for non zero-installs (https://yarnpkg.com/getting-started/qa#which-files-should-be-gitignored)
 **/.yarn/*
 !.yarn/releases
