@@ -11,7 +11,11 @@ const NewProposalModal = ({ accountPair }) => {
   const [preimageHash, setPreimageHash] = useState('');
   const [balance, setBalance] = useState('' + api.consts.democracy.minimumDeposit);
   const [preimageHashBytes, setPreimageHashBytes] = useState(null);
-
+  const setClose = () => {
+    setOpen(false);
+    setBalance('' + api.consts.democracy.minimumDeposit);
+    setPreimageHash('');
+  };
   return (
     <Modal open={isOpen} onOpen={() => setOpen(true)}
       trigger={<Button className="green">New Proposal</Button>}
@@ -38,7 +42,7 @@ const NewProposalModal = ({ accountPair }) => {
         </div>
       </Modal.Content>
       <Modal.Actions>
-        <Button className="red" onClick={() => setOpen(false)}>Cancel</Button>
+        <Button className="red" onClick={setClose}>Cancel</Button>
         <TxButton
           label='Submit Proposal'
           type='SIGNED-TX'

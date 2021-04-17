@@ -6,7 +6,8 @@ import ProposalModal from './ProposalModal';
 import './Democracy.css';
 import { useCall } from './useCall';
 import classNames from 'classnames';
-import { Button, Icon } from 'semantic-ui-react';
+import { Icon } from 'semantic-ui-react';
+import VoteModal from './VoteModal';
 
 const ProposalRow = ({ proposal }) => {
   return (
@@ -30,7 +31,7 @@ const ProposalRow = ({ proposal }) => {
   );
 };
 
-const ReferendumRow = ({ referendum }) => {
+const ReferendumRow = ({ accountPair, referendum }) => {
   return (
     <>
     <div className={classNames('referendum-card', { 'is-passing': referendum.isPassing })}>
@@ -46,10 +47,10 @@ const ReferendumRow = ({ referendum }) => {
           <div className="referendum-votes">
             <div>
               <div>
-                <span className="referendum-label">Ayes:</span> {referendum.voteCountAye}
+                <span className="referendum-label">Ayes:</span> {referendum.votedAye.toHuman()}
               </div>
               <div>
-                <span className="referendum-label">Nays:</span> {referendum.voteCountNay}
+                <span className="referendum-label">Nays:</span> {referendum.votedNay.toHuman()}
               </div>
             </div>
             <div className="vote-summary-icon">
@@ -58,7 +59,7 @@ const ReferendumRow = ({ referendum }) => {
           </div>
         </div>
         <div className="referendum-right-half">
-          <Button color="blue">Vote</Button>
+          <VoteModal accountPair={accountPair} referendum={referendum}/>
         </div>
       </div>
     </div>
@@ -75,7 +76,7 @@ const Democracy = ({ accountPair }) => {
     <div className="w-full democracy-container">
       <h2 className="header referenda-header">Active Referendums</h2>
       {referendums?.map((referendum) =>
-        <ReferendumRow referendum={referendum} key={referendum.index.toString()}/>
+        <ReferendumRow accountPair={accountPair} referendum={referendum} key={referendum.index.toString()}/>
       )}
       <div className="ui divider w-full"></div>
       <div className="w-full split-title">
