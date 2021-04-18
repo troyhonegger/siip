@@ -3,6 +3,7 @@ import { Button, Input, Modal } from 'semantic-ui-react';
 
 import { useSubstrate } from '../substrate-lib';
 import { TxButton } from '../substrate-lib/components';
+import { STATUS } from '../substrate-lib/components/TxButton';
 import { hexStringToByteArr } from '../utils';
 
 const NewProposalModal = ({ accountPair }) => {
@@ -11,10 +12,18 @@ const NewProposalModal = ({ accountPair }) => {
   const [preimageHash, setPreimageHash] = useState('');
   const [balance, setBalance] = useState('' + api.consts.democracy.minimumDeposit);
   const [preimageHashBytes, setPreimageHashBytes] = useState(null);
+  const [txStatus, setTxStatus] = useState(null);
   const setClose = () => {
     setOpen(false);
     setBalance('' + api.consts.democracy.minimumDeposit);
     setPreimageHash('');
+    setTxStatus(null);
+  };
+  const setStatus = status => {
+    setTxStatus(status);
+    if (status === STATUS.IN_BLOCK || status === STATUS.READY) {
+      setClose();
+    }
   };
   return (
     <Modal open={isOpen} onOpen={() => setOpen(true)}
@@ -47,7 +56,8 @@ const NewProposalModal = ({ accountPair }) => {
           label='Submit Proposal'
           type='SIGNED-TX'
           accountPair={accountPair}
-          setStatus={(e) => console.log(e)}
+          setStatus={setStatus}
+          disabled={txStatus === STATUS.SENDING}
           attrs={{
             palletRpc: 'democracy',
             callable: 'propose',

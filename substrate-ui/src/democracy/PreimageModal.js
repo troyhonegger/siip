@@ -4,17 +4,23 @@ import { useDropzone } from 'react-dropzone';
 
 import { useSubstrate } from '../substrate-lib';
 import { TxButton } from '../substrate-lib/components';
+import { STATUS } from '../substrate-lib/components/TxButton';
 import classNames from 'classnames';
 
 const NewPreimageModal = ({ accountPair }) => {
   const [isOpen, setOpen] = useState(false);
   const [preimage, setPreimage] = useState(null);
+  const [txStatus, setTxStatus] = useState(null);
   const setClose = () => {
     setOpen(false);
     setPreimage(null);
+    setTxStatus(null);
   };
   const setStatus = status => {
-    console.log('STATUS is: ' + status);
+    setTxStatus(status);
+    if (status === STATUS.IN_BLOCK || status === STATUS.READY) {
+      setClose();
+    }
   };
 
   const { api } = useSubstrate();
@@ -59,6 +65,7 @@ const NewPreimageModal = ({ accountPair }) => {
           type='SIGNED-TX'
           accountPair={accountPair}
           setStatus={setStatus}
+          disabled={txStatus === STATUS.SENDING}
           attrs={{
             palletRpc: 'democracy',
             callable: 'notePreimage',
