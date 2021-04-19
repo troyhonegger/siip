@@ -2,12 +2,11 @@
 
 import sys
 
-if len(sys.argv) != 2:
-    print("You must specify which domain's SIIP certificate to query for.")
-    print("Usage: plow.py DOMAIN")
-    sys.exit()
-
-domain = sys.argv[1]
+if __name__ == '__main__':
+    if len(sys.argv) != 2:
+        print("You must specify which domain's SIIP certificate to query for.")
+        print("Usage: plow.py DOMAIN")
+        sys.exit()
 
 # We moved these after the argument check so it fails faster :)
 import substrateinterface
@@ -36,8 +35,13 @@ substrate = SubstrateInterface(
     }
 )
 
-siip = substrate.query('SiipModule', 'CertificateMap', params=[domain])
-print(siip)
+def plow(domain):
+    return substrate.query('SiipModule', 'CertificateMap', params=[domain])
 
-if siip is None:
-    sys.exit(1)
+if __name__ == '__main__':
+    domain = sys.argv[1]
+    siip = plow(domain)
+    print(siip)
+
+    if siip is None:
+        sys.exit(1)
