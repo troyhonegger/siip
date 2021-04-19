@@ -11,9 +11,9 @@ def resolve(domain):
     cert_fields = cert_fields.value
 
     return SiipCertificate(
-        cert_fields.ip,
-        cert_fields.domain,
-        cert_fields.public_key
+        cert_fields['ip_addr'],
+        cert_fields['domain'],
+        cert_fields['key']
     )
 
 # TODO: resolve the domain name using standard DNS
