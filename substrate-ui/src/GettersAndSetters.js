@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import './css/Siip.css';
 import { SubmitButton, updateDb, Field, Static } from './SiipCommon';
+import { Grid } from 'semantic-ui-react';
 
 export default function GettersAndSetters (props) {
   const [inputDomain, setInputDomain] = useState('');
@@ -223,12 +224,90 @@ export default function GettersAndSetters (props) {
     );
   }
 
+  const [revIp, setRevIp] = useState('');
+  const [revCerts, setRevCerts] = useState('');
+
+  function reverseLookupCard () {
+    return (
+      <div className='card'>
+        <h3>
+          Reverse Lookup
+        </h3>
+        <form>
+          <Field
+            label='Ipv4 Address:'
+            value={revIp}
+            placeholder='192.168.0.1'
+            onChange={reverseLookup}
+            enable={true}
+          />
+          <br />
+          <br />
+          <Grid stackable columns='equal'>
+          {revCerts}
+          </Grid>
+        </form>
+      </div>
+    );
+  }
+
+  const reverseLookup = (event) => {
+    const ip = event.target.value;
+    setRevIp(ip);
+
+    // Searches for all ip addresses
+    const palletRpc = 'siipModule';
+    const callable = 'reverseMap';
+
+    const queryResHandler = result => {
+      if (result.isNone) {
+        console.log('Waiting...');
+      } else {
+        // Fields will be empty/0 if a certificate has not been stored
+        const json = JSON.parse(result);
+
+        const certs = [];
+        let i = 0;
+        json.forEach(cert => {
+          // The version_number is only 0 if the certificate does not exist
+          if (cert.version_number !== 0) {
+            const DomainField = <Static label='Domain Name:' value={cert.domain_name}/>;
+            const NameField = <Static label='Owner&apos;s Name:' value={cert.owner_name}/>;
+            const IpField = <Static label='IPv4 Address:' value={cert.ip_addr}/>;
+            const InfoField = <Static label='Info:' value={cert.public_key_info}/>;
+            const PublicKeyField = <Static label='Public Key:' value={cert.public_key}/>;
+
+            certs.push(
+              <div className="card" key={i++}>
+                  {DomainField}
+                  <br />
+                  <br />
+                  {NameField}
+                  {IpField}
+                  {InfoField}
+                  {PublicKeyField}
+              </div>
+            );
+          }
+        });
+
+        if (revCerts !== <Grid.Row>{certs}</Grid.Row>) {
+          setRevCerts(<Grid.Row>{certs}</Grid.Row>);
+        }
+      }
+    };
+
+    // eslint-disable-next-line
+    api.query[palletRpc][callable](ip, queryResHandler);
+  };
+
   return (
     <div className="container">
       {staticCard('Lookup an SIIP Certificate', false, false, '', false)}
       {staticCard('Register an SIIP Certificate', true, !domainExists, 'Register', !domainExists && allFieldsValid)}
       {staticCard('Modify an SIIP Certificate', true, domainExists, 'Modify', domainExists && allFieldsValid)}
       {staticCard('Delete an SIIP Certificate', false, domainExists, 'Delete', domainExists && domainValidity)}
+      {reverseLookupCard()}
     </div>
   );
 }

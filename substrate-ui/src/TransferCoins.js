@@ -1,9 +1,8 @@
-import React, {useEffect, useState} from 'react';
+import React, { useState } from 'react';
 import './css/Siip.css';
 import { Field, Static } from './SiipCommon';
 import { TxButton } from './substrate-lib/components';
 import { Form } from 'semantic-ui-react';
-import {useSubstrate} from "./substrate-lib";
 
 const unit = 1_000_000_000_000;
 
@@ -42,7 +41,7 @@ export default function TransferCoins (props) {
   const [rcptEndCrit, setRcptEndCrit] = useState(criteriaString(true, true));
 
   const [amount, setAmount] = useState(0);
-  const [valid, setValid] = useState(false);
+  // const [valid, setValid] = useState(false);
 
   const [status, setStatus] = useState('');
 
@@ -131,7 +130,7 @@ export default function TransferCoins (props) {
     } else {
       return true;
     }
-  }
+  };
 
   const updateStarting = (from, to) => {
     const ok = 'Ok: Must be a valid address\n';
@@ -142,32 +141,35 @@ export default function TransferCoins (props) {
     }
 
     // Updates sender starting
+    // eslint-disable-next-line
     api.query.system.account(from, balance => {
-      let starting = balance.data.free / unit;
+      const starting = balance.data.free / unit;
 
-      if (sndrStart != starting) {
+      if (sndrStart !== starting) {
         setSndrStart(starting);
         setSndrEnd(starting - amount / unit);
       }
     });
 
     // Updates recipient starting
+    // eslint-disable-next-line
     api.query.system.account(to, balance => {
-      let starting = balance.data.free / unit;
+      const starting = balance.data.free / unit;
 
-      if (rcptStart != starting) {
+      if (rcptStart !== starting) {
         setRcptStart(starting);
         setRcptEnd(starting + amount / unit);
       }
       if (rcptAddrCrit !== ok) {
         setRcptAddrCrit(ok);
       }
+      // eslint-disable-next-line
     }).catch((error) => {
       if (rcptAddrCrit !== err) {
         setRcptAddrCrit(err);
       }
     });
-  }
+  };
 
   const updateName = (from, to) => {
     // const ok = 'Ok: Must be a valid address\n';
@@ -192,12 +194,12 @@ export default function TransferCoins (props) {
     if (rcptName !== 'TODO') {
       setRcptName('TODO');
     }
-  }
+  };
 
   // Updates the sender address
   if (props.accountPair != null) {
     const addr = props.accountPair.address;
-    if (addr != sndrAddr) {
+    if (addr !== sndrAddr) {
       // Update sender address
       setSndrAddr(addr);
     }
@@ -218,7 +220,7 @@ export default function TransferCoins (props) {
         </div>
       </div>
     );
-  }
+  };
 
   return (
     <div className='card'>
