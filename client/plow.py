@@ -19,7 +19,15 @@ def plow(domain, node_urls=["http://127.0.0.1:9933"]):
     print(node_urls)
     # For each node_url, call plow_single and collect the returned certificates
     certificates = list(map(lambda url: plow_single(domain, url), node_urls))
-    print(certificates)
+
+    print(certificates[0].value)
+
+    for cert in certificates:
+        if cert == None or cert.value != certificates[0].value:
+            print("Certificate Mismatch!")
+            return None
+    
+    return certificates[0]
 
 def plow_single(domain, node_url):
     # TODO: validate node_url is formatted correctly?
