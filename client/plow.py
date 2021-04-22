@@ -9,13 +9,17 @@ if __name__ == '__main__':
         sys.exit()
 
 # We moved these after the argument check so it fails faster :)
+import os.path
 import substrateinterface
 from substrateinterface import SubstrateInterface, Keypair
 from substrateinterface.exceptions import SubstrateRequestException
 
 def plow(domain, node_urls=["http://127.0.0.1:9933"]):
+    # XXX
     print(node_urls)
-    # TODO: for each, plow_single each url, compare results
+    # For each node_url, call plow_single and collect the returned certificates
+    #certificates = list(map(lambda url: plow_single(domain, url), node_urls))
+    #print(certificates)
 
 def plow_single(domain, node_url):
     # TODO: validate node_url is formatted correctly?
@@ -48,8 +52,14 @@ if __name__ == '__main__':
 
     # If IPs were specified on the command line, use those
     if len(sys.argv) > 2:
-        siip = plow(domain, sys.argv[2:])
-    # TODO else if file /etc/siip exists, use those ips
+        node_urls = sys.argv[2:]
+        siip = plow(domain, node_urls)
+    # If /etc/siip file exists, use those
+    elif os.path.exists('/etc/siip'):
+        with open('/etc/siip') as file:
+            node_urls = file.readlines()
+            node_urls = list(map(lambda str: str.rstrip(), node_urls))
+        siip = plow(domain, node_urls)
     # Otherwise use the built-in domains
     else:
         siip = plow(domain)
