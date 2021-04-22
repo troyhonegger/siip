@@ -1,5 +1,5 @@
 import sys, os
-sys.path.append(os.path.join(os.path.pardir, 'client'))
+sys.path.append(os.path.join(os.path.dirname(__file__), os.path.pardir, 'client'))
 from plow import plow
 
 from siip_certificate import SiipCertificate
