@@ -12,12 +12,16 @@ function SubmitButton (props) {
   const ipAddrField = { name: 'ip_addr', type: 'Bytes', optional: false };
   const infoField = { name: 'info', type: 'Bytes', optional: false };
   const keyField = { name: 'key', type: 'Bytes', optional: false };
+  const emailField = { name: 'email', type: 'Bytes', optional: false };
+  const transactionAmtField = { name: 'transaction_amt', type: 'Bytes', optional: false };
 
   const name = { type: 'Bytes', value: props.name };
   const domain = { type: 'Bytes', value: props.domain };
   const ipAddr = { type: 'Bytes', value: props.ipAddr };
   const info = { type: 'Bytes', value: props.info };
   const publicKey = { type: 'Bytes', value: props.publicKey };
+  const email = { type: 'Bytes', value: props.email };
+  const transactionAmt = { type: 'Bytes', value: props.transactionAmt };
 
   const interxType = 'EXTRINSIC';
   const palletRpc = 'siipModule';
@@ -29,13 +33,13 @@ function SubmitButton (props) {
   if (props.method === 'Register') {
     color = 'green';
     callable = 'registerCertificate';
-    paramFields = [nameField, domainField, ipAddrField, infoField, keyField];
-    inputParams = [name, domain, ipAddr, info, publicKey];
+    paramFields = [nameField, domainField, ipAddrField, infoField, keyField, emailField, transactionAmt];
+    inputParams = [name, domain, ipAddr, info, publicKey, email, transactionAmt];
   } else if (props.method === 'Modify') {
     color = 'yellow';
     callable = 'modifyCertificate';
-    paramFields = [nameField, domainField, ipAddrField, infoField, keyField];
-    inputParams = [name, domain, ipAddr, info, publicKey];
+    paramFields = [nameField, domainField, ipAddrField, infoField, keyField, emailField, transactionAmt];
+    inputParams = [name, domain, ipAddr, info, publicKey, email, transactionAmt];
   } else if (props.method === 'Delete') {
     color = 'red';
     callable = 'removeCertificate';
@@ -81,7 +85,7 @@ function SubmitButton (props) {
   }
 }
 
-async function updateDb (domain, setDbName, setDbIpAddr, setDbInfo, setDbPublicKey, setDomainExists) {
+async function updateDb (domain, setDbName, setDbIpAddr, setDbInfo, setDbPublicKey, setDbEmail, setDomainExists, setDbTransactionAmt) {
   const palletRpc = 'siipModule';
   const callable = 'certificateMap';
 
@@ -89,12 +93,18 @@ async function updateDb (domain, setDbName, setDbIpAddr, setDbInfo, setDbPublicK
     if (result.isNone) {
       console.log('Waiting...');
     } else {
+      console.log('json:');
+      console.log(json);
+
+
       // Fields will be empty/0 if a certificate has not been stored
       const json = JSON.parse(result);
       setDbName(json.owner_name);
       setDbIpAddr(json.ip_addr);
       setDbInfo(json.public_key_info);
       setDbPublicKey(json.public_key);
+      setDbEmail(json.email);
+      setDbTransactionAmt(json.transactionAmt);
 
       // The version_number is only 0 if the certificate does not exist
       if (json.version_number === 0) {
@@ -115,7 +125,7 @@ export default function GettersAndSetters (props) {
   const updateInputDomain = (event) => {
     const domain = event.target.value;
     setInputDomain(domain);
-    updateDb(domain, setDbName, setDbIpAddr, setDbInfo, setDbPublicKey, setDomainExists).then();
+    updateDb(domain, setDbName, setDbIpAddr, setDbInfo, setDbPublicKey, setDbEmail, setDbTransactionAmt, setDomainExists).then();
     validateField('validate_domain', domain).then(data => {
       setDomainValidity(data.result);
     });
@@ -178,10 +188,32 @@ export default function GettersAndSetters (props) {
     });
   };
 
+  const [inputEmail, setInputEmail] = useState('');
+  const [emailValidity, setEmailValidity] = useState('');
+  const updateInputEmail = (event) => {
+    const email = event.target.value;
+    setInputEmail(email);
+    validateField('validate_email', email).then(data => {
+      setEmailValidity(data.result);
+    });
+  };
+
+  const [inputTransactionAmt, setInputTransactionAmt] = useState('');
+  const [transactionAmtValidity, setTransactionAmtValidity] = useState('');
+  const updateInputTransactionAmt = (event) => {
+    const transactionAmt = event.target.value;
+    setInputTransactionAmt(transactionAmt);
+    validateField('validate_transactionAmt', transactionAmt).then(data => {
+      setTransactionAmtValidity(data.result);
+    });
+  };
+
   const [dbName, setDbName] = useState('');
   const [dbIpAddr, setDbIpAddr] = useState('');
   const [dbInfo, setDbInfo] = useState('');
   const [dbPublicKey, setDbPublicKey] = useState('');
+  const [dbEmail, setDbEmail] = useState('');
+  const [dbTransactionAmt, setDbTransactionAmt] = useState('');
   const [domainExists, setDomainExists] = useState(false);
 
   // Must initialize the Validity fields (else they'll be empty until the first character is pressed
@@ -205,6 +237,14 @@ export default function GettersAndSetters (props) {
     setPublicKeyValidity(data.result);
     updateValidity();
   });
+  validateField('validate_email', inputEmail).then(data => {
+    setEmailValidity(data.result);
+    updateValidity();
+  });
+  validateField('validate_trasactionAmt', inputTransactionAmt).then(data => {
+    setTransactionAmtValidity(data.result);
+    updateValidity();
+  });
 
   const [allFieldsValid, setAllFieldsValid] = useState(false);
   const updateValidity = () => {
@@ -212,7 +252,9 @@ export default function GettersAndSetters (props) {
       nameValidity.includes('Err:') ||
       ipAddrValidity.includes('Err:') ||
       infoValidity.includes('Err:') ||
-      publicKeyValidity.includes('Err:')) {
+      publicKeyValidity.includes('Err:') ||
+      emailValidity.includes('Err:') ||
+      transactionAmtValidity.includes('Err:')) {
       setAllFieldsValid(false);
     } else {
       setAllFieldsValid(true);
@@ -233,6 +275,8 @@ export default function GettersAndSetters (props) {
           <Static label='IPv4 Address:' value={dbIpAddr} enable={false}/>
           <Static label='Info:' value={dbInfo} enable={false}/>
           <Static label='Public Key:' value={dbPublicKey} enable={false}/>
+          <Static label='Email:' value={dbEmail} enable={false}/>
+          <Static label='Transaction Amount:' value={dbTransactionAmt} enable={false}/>
         </form>
       </div>
       <div className="card">
@@ -247,6 +291,8 @@ export default function GettersAndSetters (props) {
           <IpAddr value={inputIpAddr} onChange={updateInputIpAddr} criteria={ipAddrValidity} placeholder='192.168.0.1' enable={!domainExists}/>
           <Info value={inputInfo} onChange={updateInputInfo} criteria={infoValidity} placeholder='{ "country": "US",...' enable={!domainExists}/>
           <PublicKey value={inputPublicKey} onChange={updateInputPublicKey} criteria={publicKeyValidity} placeholder='04:EB:9A:AF:31:11...' enable={!domainExists}/>
+          <Email value={inputEmail} onChange={updateInputEmail} criteria={emailValidity} placeholder='jsmith@purdue.edu' enable={!domainExists}/>
+          <TransactionAmt value={inputTransactionAmt} onChange={updateInputTransactionAmt} criteria={transactionAmtValidity} placeholder='1' enable={!domainExists}/>
         </form>
         <SubmitButton
           {...props}
@@ -255,6 +301,8 @@ export default function GettersAndSetters (props) {
           ipAddr={inputIpAddr}
           info={inputInfo}
           publicKey={inputPublicKey}
+          email={inputEmail}
+          transactionAmt={inputTransactionAmt}
           method='Register'
           enable={!domainExists && allFieldsValid}
         />
@@ -271,6 +319,8 @@ export default function GettersAndSetters (props) {
           <IpAddr value={inputIpAddr} onChange={updateInputIpAddr} criteria={ipAddrValidity} placeholder='192.168.0.1' enable={domainExists}/>
           <Info value={inputInfo} onChange={updateInputInfo} criteria={infoValidity} placeholder='{ "country": "US",...' enable={domainExists}/>
           <PublicKey value={inputPublicKey} onChange={updateInputPublicKey} criteria={publicKeyValidity} placeholder='04:EB:9A:AF:31:11...' enable={domainExists}/>
+          <Email value={inputEmail} onChange={updateInputEmail} criteria={emailValidity} placeholder='jsmith@purdue.edu' enable={domainExists}/>
+          <TransactionAmt value={inputTransactionAmt} onChange={updateInputTransactionAmt} criteria={transactionAmtValidity} placeholder='1' enable={domainExists}/>
         </form>
         <SubmitButton
           {...props}
@@ -279,8 +329,10 @@ export default function GettersAndSetters (props) {
           ipAddr={inputIpAddr}
           info={inputInfo}
           publicKey={inputPublicKey}
+          email={inputEmail}
+          transactionAmt={inputTransactionAmt}
           method='Modify'
-          enable={domainExists && domainValidity && nameValidity && ipAddrValidity && infoValidity && publicKeyValidity}
+          enable={domainExists && domainValidity && nameValidity && ipAddrValidity && infoValidity && publicKeyValidity && emailValidity && transactionAmtValidity}
         />
       </div>
       <div className="card">
@@ -295,6 +347,8 @@ export default function GettersAndSetters (props) {
           <Static label='IPv4 Address:' value={dbIpAddr} enable={false}/>
           <Static label='Info:' value={dbInfo} enable={false}/>
           <Static label='Public Key:' value={dbPublicKey} enable={false}/>
+          <Static label='Email:' value={dbEmail} enable={false}/>
+          <Static label='Transaction Amount:' value={dbTransactionAmt} enable={false}/>
         </form>
         <SubmitButton
           {...props}
@@ -303,8 +357,10 @@ export default function GettersAndSetters (props) {
           ipAddr={inputIpAddr}
           info={inputInfo}
           publicKey={inputPublicKey}
+          email={inputEmail}
+          transactionAmt={inputTransactionAmt}
           method='Delete'
-          enable={domainExists && domainValidity && nameValidity && ipAddrValidity && infoValidity && publicKeyValidity}
+          enable={domainExists && domainValidity && nameValidity && ipAddrValidity && infoValidity && publicKeyValidity && emailValidity && transactionAmtValidity}
         />
       </div>
     </div>
@@ -490,6 +546,64 @@ function PublicKey (props) {
         <Validation criteria={props.criteria} enable={isFocused}/>
       </div>
     </div>
+  );
+}
+
+function Email (props) {
+  const [isFocused, setFocused] = useState(false);
+
+  return (
+      <div>
+        <label>Owner's Email:</label>
+        <div>
+          <TextareaAutosize
+              style={{ width: width }}
+              className="input_field"
+              placeholder={props.placeholder}
+              value={props.value}
+              onChange={props.onChange}
+              disabled={!props.enable}
+              onFocus={(e) => {
+                console.log('Focused');
+                setFocused(true);
+              }}
+              onBlur={(e) => {
+                console.log('Not focused');
+                setFocused(false);
+              }}
+          />
+          <Validation criteria={props.criteria} enable={isFocused}/>
+        </div>
+      </div>
+  );
+}
+
+function TransactionAmt (props) {
+  const [isFocused, setFocused] = useState(false);
+
+  return (
+      <div>
+        <label>Transaction Amount:</label>
+        <div>
+          <TextareaAutosize
+              style={{ width: width }}
+              className="input_field"
+              placeholder={props.placeholder}
+              value={props.value}
+              onChange={props.onChange}
+              disabled={!props.enable}
+              onFocus={(e) => {
+                console.log('Focused');
+                setFocused(true);
+              }}
+              onBlur={(e) => {
+                console.log('Not focused');
+                setFocused(false);
+              }}
+          />
+          <Validation criteria={props.criteria} enable={isFocused}/>
+        </div>
+      </div>
   );
 }
 

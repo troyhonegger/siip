@@ -35,6 +35,7 @@ pub struct Certificate<AccountIdT> {
 	key: Vec<u8>,
 	ip_addr: Vec<u8>,
 	domain: Vec<u8>,
+	email: Vec<u8>
 }
 
 pub fn check_name(name: &[u8]) -> Vec<u8> {
@@ -272,6 +273,36 @@ pub fn check_key(key: &[u8]) -> Vec<u8> {
 	criteria
 }
 
+pub fn check_email(email: &[u8]) -> Vec<u8> {
+	let mut criteria: Vec<u8> = Vec::new();
+
+	//Must be a valid UTF-8 String
+	let email = from_utf8(email);
+	match email {
+		Ok(_val) => criteria.extend_from_slice("Ok: Must be a valid string\n".as_bytes()),
+		Err(_err) => {
+			criteria.extend_from_slice("Err: Must be a valid string\n".as_bytes());
+			return criteria;
+		},
+	}
+	let email = email.unwrap();
+
+	//Must be at least 1 character long
+	if email.len() >= 3 {
+		criteria.extend_from_slice("Ok: Must be a valid length\n".as_bytes());
+	} else {
+		criteria.extend_from_slice("Err: Must be at least 1 character long\n".as_bytes());
+	}
+
+	//Must contain an @ symbol
+	if !email.contains("@") {
+    		criteria.extend_from_slice("Ok: Must contain a prefix, @, and postfix\n".as_bytes());
+    	} else {
+    		criteria.extend_from_slice("Ok: Must contain a prefix, @, and postfix\n".as_bytes());
+    	}
+
+	criteria
+}
 
 // The pallet's runtime storage items.
 // https://substrate.dev/docs/en/knowledgebase/runtime/storage
@@ -311,7 +342,7 @@ decl_error! {
 		NonexistentDomain,
 		DifferentOwner,
 		NoModifications,
-
+		InvalidEmail
 	}
 }
 
@@ -333,7 +364,8 @@ decl_module! {
 			domain: Vec<u8>,
 			ip_addr: Vec<u8>,
 			info: Vec<u8>,
-			key: Vec<u8>
+			key: Vec<u8>,
+			email: Vec<u8>
 		) -> dispatch::DispatchResult{
 
 			let sender = ensure_signed(origin)?;
@@ -344,6 +376,7 @@ decl_module! {
 			ensure!(!from_utf8(&check_ip(&ip_addr)).unwrap().contains("Err:"), Error::<T>::InvalidIP);
 			ensure!(!from_utf8(&check_info(&info)).unwrap().contains("Err:"), Error::<T>::InvalidInfo);
 			ensure!(!from_utf8(&check_key(&key)).unwrap().contains("Err:"), Error::<T>::InvalidKey);
+			ensure!(!from_utf8(&check_email(&email)).unwrap().contains("Err:"), Error::<T>::InvalidEmail);
 
 			//Ensures that the domain is available
 			ensure!(!CertificateMap::<T>::contains_key(&domain), Error::<T>::DomainAlreadyTaken);
@@ -356,6 +389,7 @@ decl_module! {
 				key: key.clone(),
 				ip_addr: ip_addr.clone(),
 				domain: domain.clone(),
+				email: email.clone()
 			};
 
 			CertificateMap::<T>::insert(&domain, cert.clone());
@@ -371,7 +405,8 @@ decl_module! {
 			domain: Vec<u8>,
 			ip_addr: Vec<u8>,
 			info: Vec<u8>,
-			key: Vec<u8>
+			key: Vec<u8>,
+			email: Vec<u8>
 		) -> dispatch::DispatchResult{
 
 			let sender = ensure_signed(origin)?;
@@ -383,6 +418,7 @@ decl_module! {
 			ensure!(!from_utf8(&check_ip(&ip_addr)).unwrap().contains("Err:"), Error::<T>::InvalidIP);
 			ensure!(!from_utf8(&check_info(&info)).unwrap().contains("Err:"), Error::<T>::InvalidInfo);
 			ensure!(!from_utf8(&check_key(&key)).unwrap().contains("Err:"), Error::<T>::InvalidKey);
+			ensure!(!from_utf8(&check_email(&email)).unwrap().contains("Err:"), Error::<T>::InvalidEmail);
 
 			//Ensures that the domain already exists
 			ensure!(CertificateMap::<T>::contains_key(&domain), Error::<T>::NonexistentDomain);
@@ -395,6 +431,7 @@ decl_module! {
 				key: key.clone(),
 				ip_addr: ip_addr.clone(),
 				domain: domain.clone(),
+				email: email.clone()
 			};
 
 			//Ensures that the owner of the domain is the sender

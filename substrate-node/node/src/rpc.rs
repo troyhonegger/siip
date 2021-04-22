@@ -16,7 +16,7 @@ use sp_transaction_pool::TransactionPool;
 use jsonrpc_derive::rpc;
 use sc_rpc_api::system::error::Result as SystemResult;
 use core::str::from_utf8;
-use siip_node_runtime::pallet_siip::{check_name, check_domain, check_ip, check_info, check_key};
+use siip_node_runtime::pallet_siip::{check_name, check_domain, check_ip, check_info, check_key, check_email};
 
 #[rpc]
 /// RPCs related to the Siip Pallet
@@ -45,6 +45,12 @@ pub trait SiipRpcTrait {
 	/// Validates the public key provided.
 	/// Returns multiple lines. Each line will contain Ok: message, or Err: message
 	fn validate_key(&self, key: String) -> SystemResult<String>;
+
+	#[rpc(name = "validate_email", returns = "String")]
+    	/// Validates the email provided.
+    	/// Returns multiple lines. Each line will contain Ok: message, or Err: message
+    	fn validate_email(&self, email: String) -> SystemResult<String>;
+
 }
 
 /// A completely useless struct
@@ -84,6 +90,10 @@ impl<C> SiipRpcTrait for SiipRpcStruct<C> where C: Send + Sync + 'static {
 		let criteria = check_key(&key.into_bytes());
 		Ok(from_utf8(&criteria).unwrap().into())
 	}
+	fn validate_email(&self, email: String) -> SystemResult<String> {
+    		let criteria = check_email(&email.into_bytes());
+    		Ok(from_utf8(&criteria).unwrap().into())
+    	}
 }
 
 /// Full client dependencies.

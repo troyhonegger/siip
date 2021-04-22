@@ -72,8 +72,12 @@ function Main() {
               <Grid.Row stretched>
                 <NodeInfo />
                 <Metadata />
-                <BlockNumber />
+                <Metrics />
                 <BlockNumber finalized />
+                <Grid.Row stretched>
+                    <h1>Blockchain</h1>
+                    <Chain/>
+                </Grid.Row>
               </Grid.Row>
             </Route>
             <Route path={DEMOCRACY_PATH}>

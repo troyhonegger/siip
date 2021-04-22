@@ -14,6 +14,7 @@ const DOMAIN: &str = "adrianteigen.com";
 const IP_ADDR: &str = "13.49.70.106";
 const INFO: &str ="{ \"Algorithm\": \"RSA\",   \"Key Size\": \"32\",   \"Exponent\": \"65537\" }";
 const KEY: &str = "B4:02:EE:13";
+const EMAIL: &str = "Ateigen@purdue.edu"
 
 #[test]
 fn register_certificate() {
@@ -25,7 +26,8 @@ fn register_certificate() {
 			DOMAIN.into(),
 			IP_ADDR.into(),
 			INFO.into(),
-			KEY.into()
+			KEY.into(),
+			EMAIL.into()
 		));
 
 		//Ensures that it was saved correctly
@@ -38,6 +40,7 @@ fn register_certificate() {
 			info: INFO.into(),
 			ip_addr: IP_ADDR.into(),
 			domain: DOMAIN.into(),
+			email: EMAIL.into()
 		};
 		assert_eq!(expected, response);
 	});
@@ -53,7 +56,8 @@ fn already_taken() {
 			DOMAIN.into(),
 			IP_ADDR.into(),
 			INFO.into(),
-			KEY.into()
+			KEY.into(),
+			EMAIL.into()
 		));
 
 		//Ensure that the second one returns an error
@@ -63,7 +67,8 @@ fn already_taken() {
 			DOMAIN.into(),
 			IP_ADDR.into(),
 			INFO.into(),
-			KEY.into()
+			KEY.into(),
+			EMAIL.into()
 		), Error::<Test>::DomainAlreadyTaken);
 	});
 }
@@ -81,7 +86,8 @@ fn invalid_domain() {
 			new_domain.into(),
 			IP_ADDR.into(),
 			INFO.into(),
-			KEY.into()
+			KEY.into(),
+			EMAIL.into()
 		), Error::<Test>::InvalidDomain);
 
 		//Domain contains an invalid symbol
@@ -92,7 +98,8 @@ fn invalid_domain() {
 			new_domain.into(),
 			IP_ADDR.into(),
 			INFO.into(),
-			KEY.into()
+			KEY.into(),
+			EMAIL.into()
 		), Error::<Test>::InvalidDomain);
 	});
 }
@@ -107,7 +114,8 @@ fn invalid_signature() {
 			DOMAIN.into(),
 			IP_ADDR.into(),
 			INFO.into(),
-			KEY.into()
+			KEY.into(),
+			EMAIL.into()
 		).is_err());
 	});
 }
@@ -123,7 +131,8 @@ fn uppercase_domain() {
 			new_domain.into(),
 			IP_ADDR.into(),
 			INFO.into(),
-			KEY.into()
+			KEY.into(),
+			EMAIL.into()
 		), Error::<Test>::InvalidDomain);
 	});
 }
@@ -137,7 +146,8 @@ fn modify_certificate() {
 			DOMAIN.into(),
 			IP_ADDR.into(),
 			INFO.into(),
-			KEY.into()
+			KEY.into(),
+			EMAIL.into()
 		));
 
 		let other_public_key: String = "01:23:45:67:89:AB:CD:EF".into();
@@ -148,6 +158,7 @@ fn modify_certificate() {
 			IP_ADDR.into(),
 			INFO.into(),
 			other_public_key.clone(),
+			EMAIL.into()
 		));
 
 		let response = SiipModule::get_certificate(Vec::<u8>::from(DOMAIN));
@@ -157,6 +168,7 @@ fn modify_certificate() {
 			name: NAME.into(),
 			info: INFO.into(),
 			key: other_public_key.clone(),
+			EMAIL.into(),
 			ip_addr: IP_ADDR.into(),
 			domain: DOMAIN.into(),
 		};
@@ -173,7 +185,8 @@ fn modify_nonexistant() {
 			DOMAIN.into(),
 			IP_ADDR.into(),
 			INFO.into(),
-			KEY.into()
+			KEY.into(),
+			EMAIL.into
 		));
 
 		assert_noop!(SiipModule::modify_certificate(
@@ -182,7 +195,8 @@ fn modify_nonexistant() {
 			"adifferentdomain.com".into(),
 			IP_ADDR.into(),
 			INFO.into(),
-			KEY.into()
+			KEY.into(),
+			EMAIL.into()
 		), Error::<Test>::NonexistentDomain);
 	})
 }
@@ -196,7 +210,8 @@ fn modify_uppercase_domain() {
 			DOMAIN.into(),
 			IP_ADDR.into(),
 			INFO.into(),
-			KEY.into()
+			KEY.into(),
+			EMAIL.into()
 		));
 
 		assert_noop!(SiipModule::modify_certificate(
@@ -205,7 +220,8 @@ fn modify_uppercase_domain() {
 			"AdrianTeigen.com".into(),
 			IP_ADDR.into(),
 			INFO.into(),
-			KEY.into()
+			KEY.into(),
+			EMAIL.into()
 		), Error::<Test>::InvalidDomain);
 	})
 }
@@ -219,7 +235,8 @@ fn modify_invalid_signature() {
 			DOMAIN.into(),
 			IP_ADDR.into(),
 			INFO.into(),
-			KEY.into()
+			KEY.into(),
+			EMAIL.into()
 		));
 
 		//Transaction is not signed
@@ -229,7 +246,8 @@ fn modify_invalid_signature() {
 			DOMAIN.into(),
 			IP_ADDR.into(),
 			INFO.into(),
-			"A new public key that I don't feel like typing.".into()
+			"A new public key that I don't feel like typing.".into(),
+			EMAIL.into()
 		).is_err());
 	})
 }
@@ -243,7 +261,8 @@ fn delete_certificate() {
 			DOMAIN.into(),
 			IP_ADDR.into(),
 			INFO.into(),
-			KEY.into()
+			KEY.into(),
+			EMAIL.into()
 		));
 
 		assert_ok!(SiipModule::remove_certificate(Origin::signed(1), DOMAIN.into()));
@@ -269,7 +288,8 @@ fn delete_invalid_signature() {
 			DOMAIN.into(),
 			IP_ADDR.into(),
 			INFO.into(),
-			KEY.into()
+			KEY.into(),
+			EMAIL.into()
 		));
 
 		assert!(SiipModule::remove_certificate(Origin::none(), DOMAIN.into()).is_err());
@@ -285,7 +305,8 @@ fn invalid_json() {
 			DOMAIN.into(),
 			IP_ADDR.into(),
 			"This }{{ is not valid json formatting.".into(),
-			KEY.into()
+			KEY.into(),
+			EMAIL.into()
 		), Error::<Test>::InvalidInfo);
 	})
 }
@@ -301,7 +322,8 @@ fn invalid_ip() {
 				DOMAIN.into(),
 				new_ip.into(),
 				INFO.into(),
-				KEY.into()
+				KEY.into(),
+				EMAIL.into()
 			), Error::<Test>::InvalidIP);
 
 		let new_ip: String = "256.256.256.256".into();
@@ -311,7 +333,8 @@ fn invalid_ip() {
 				DOMAIN.into(),
 				new_ip.into(),
 				INFO.into(),
-				KEY.into()
+				KEY.into(),
+				EMAIL.into()
 			), Error::<Test>::InvalidIP);
 
 		let new_ip: String = "-1.-1.-1.-1".into();
@@ -321,7 +344,8 @@ fn invalid_ip() {
 				DOMAIN.into(),
 				new_ip.into(),
 				INFO.into(),
-				KEY.into()
+				KEY.into(),
+				EMAIL.into()
 			), Error::<Test>::InvalidIP);
 	})
 }
@@ -336,7 +360,8 @@ fn odd_length_key() {
 			DOMAIN.into(),
 			IP_ADDR.into(),
 			INFO.into(),
-			new_key.clone().into()
+			new_key.clone().into(),
+			EMAIL.into()
 		));
 
 		let cert = SiipModule::get_certificate(Vec::<u8>::from(DOMAIN));
@@ -355,7 +380,8 @@ fn invalid_key() {
 				DOMAIN.into(),
 				IP_ADDR.into(),
 				INFO.into(),
-				new_key.into()
+				new_key.into(),
+				EMAIL.into()
 			), Error::<Test>::InvalidKey);
 
 		let new_key: String = "01/02/56".into();
@@ -365,7 +391,8 @@ fn invalid_key() {
 				DOMAIN.into(),
 				IP_ADDR.into(),
 				INFO.into(),
-				new_key.into()
+				new_key.into(),
+				EMAIL.into()
 			), Error::<Test>::InvalidKey);
 
 		let new_key: String = ":::::".into();
@@ -375,7 +402,8 @@ fn invalid_key() {
 				DOMAIN.into(),
 				IP_ADDR.into(),
 				INFO.into(),
-				new_key.into()
+				new_key.into(),
+				EMAIL.into()
 			), Error::<Test>::InvalidKey);
 
 	})
