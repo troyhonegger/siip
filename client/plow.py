@@ -15,16 +15,12 @@ from substrateinterface import SubstrateInterface, Keypair
 from substrateinterface.exceptions import SubstrateRequestException
 
 def plow(domain, node_urls=["http://127.0.0.1:9933"]):
-    # XXX
-    print(node_urls)
     # For each node_url, call plow_single and collect the returned certificates
     certificates = list(map(lambda url: plow_single(domain, url), node_urls))
 
-    print(certificates[0].value)
-
+    # Compare returned certificates: if any mismatch, discard the result
     for cert in certificates:
         if cert == None or cert.value != certificates[0].value:
-            print("Certificate Mismatch!")
             return None
     
     return certificates[0]
