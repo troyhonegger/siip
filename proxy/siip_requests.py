@@ -25,7 +25,6 @@ class SiipSocketWrapper:
         self.protocol = url.protocol
         self.domain = url.host
         self.port = url.port
-        self.url = url.uri
         self.ssl_context = ssl_context
 
     def __enter__(self):
@@ -78,7 +77,7 @@ def request(method, url, headers, content = None, version = b'HTTP/1.1', ssl_con
         elif content is not None:
             siip_socket.sendall(str(content).encode())
 
-        return httpparse.HttpResponse.parse(siip_socket)
+        return httpparse.HttpResponse.parse(httpparse.BufferedSocket(siip_socket))
 
 if __name__ == '__main__':
     print(get(b'https://www.google.com', {b'Host': b'www.google.com'}))
