@@ -6,6 +6,7 @@ from siip_certificate import SiipCertificate
 
 def resolve(domain):
     cert_fields = plow(domain)
+    print(cert_fields)
     if cert_fields is None:
         return fallback_resolve(domain)
     cert_fields = cert_fields.value
@@ -18,4 +19,8 @@ def resolve(domain):
 
 # TODO: resolve the domain name using standard DNS
 def fallback_resolve(domain):
-    return None
+    return SiipCertificate(
+        "13.249.90.15",
+        domain,
+        "12:34",
+    )
