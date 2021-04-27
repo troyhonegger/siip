@@ -2,9 +2,14 @@ import base64
 import cryptography
 import OpenSSL
 import ssl
+import json
 
 class SiipCertError(Exception):
     pass
+
+def decodeCertificate(encoded):
+    fields = json.loads(encoded)
+    return SiipCertificate(fields['ip'], fields['domain'], fields['public_key'])
 
 class SiipCertificate:
     def __init__(self, ip, domain, public_key):
@@ -38,3 +43,6 @@ class SiipCertificate:
 
     def __repr__(self):
         return f'SiipCertificate(ip={self.ip}, domain={self.domain}, public_key={self.pk_str()})'
+
+    def encode(self):
+        return json.dumps({ 'ip': self.ip, 'domain': self.domain, 'public_key': self.public_key.hex() })
