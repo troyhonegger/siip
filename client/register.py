@@ -51,7 +51,6 @@ def register(domain, name, ip_addr, info, key):
     extrinsic = substrate.create_signed_extrinsic(call=call, keypair=keypair)
     return substrate.submit_extrinsic(extrinsic)
 
-
 if __name__ == '__main__':
     domain = sys.argv[1]
     name = sys.argv[2]
