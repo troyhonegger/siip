@@ -1,6 +1,7 @@
 import sys, os
 sys.path.append(os.path.join(os.path.dirname(__file__), os.path.pardir, 'client'))
 from plow import plow
+import socket
 
 from siip_certificate import SiipCertificate
 
@@ -20,7 +21,7 @@ def resolve(domain):
 # TODO: resolve the domain name using standard DNS
 def fallback_resolve(domain):
     return SiipCertificate(
-        "13.249.90.15",
+        socket.gethostbyname(domain),
         domain,
         "12:34",
     )
