@@ -21,7 +21,7 @@ def resolve(domain):
 
     cert_fields = plow(domain)
     if cert_fields is None:
-        return fallback_resolve(domain)
+        return None
     cert_fields = cert_fields.value
 
     cert = SiipCertificate(
