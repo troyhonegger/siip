@@ -23,9 +23,10 @@ class SiipCertificate:
 
     def verify(self, der_cert):
         pem_cert = ssl.DER_cert_to_PEM_cert(der_cert)
-        pk = OpenSSL.crypto.load_certificate(OpenSSL.crypto.FILETYPE_PEM, pem_cert).get_pubkey().to_cryptography_key()
-        pk_str = pk.public_bytes(cryptography.hazmat.primitives._serialization.Encoding.PEM, cryptography.hazmat.primitives._serialization.PublicFormat.SubjectPublicKeyInfo)
-        # pk_str will look like
+        pk = OpenSSL.crypto.load_certificate(OpenSSL.crypto.FILETYPE_PEM, pem_cert).get_pubkey()
+        pk_str = OpenSSL.crypto.dump_publickey(OpenSSL.crypto.FILETYPE_PEM, pk)
+
+       # pk_str will look like
         # b'-----BEGIN PUBLIC KEY-----\n
         #   MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEWa0bWGpCinC/A7QIh/nF8dTlyL/r\nrmv4mYE8PJu3M8rsmZPzjSburX/I9wRL9rQGqotM9M0nJkjv3pkAVyptuA==\n
         #   -----END PUBLIC KEY-----\n'
