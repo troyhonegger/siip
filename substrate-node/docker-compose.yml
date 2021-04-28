@@ -1,17 +1,88 @@
-version: "3.2"
+version: "3.8"
+
+# TODO command-line args do NOT (currently) include --no-mdns
+  # This is because Libp2p peer discovery appears to be a delicate art.
+    # There is a bug somewhere, and I suspect it's in libp2p, but it could be in docker as well
+  # With MDNS, discovery is immediate - we don't even need the --bootnodes argument
+  # Without MDNS, it is much less reliable. Alice (the boot node) will accept Bob's connection request, but often waits a loooong time (1-3 minutes)
+    # before responding. By this time, Bob has long since timed out and tried again, and the process repeats until Alice responds in time.
+    # Sometimes this happens in 1-5 minutes; other times, I suspect it could go on forever. I've noticed that the more entropy in the network,
+    # the sooner the gridlock tends to end (sometimes, by pinging 172.20.1.1:30333 via curl, I was able to break the cycle and force a connection).
+    # I'm not entirely sure why this is.
+
+# TODO as this is a development environment, there are lots of security holes in this:
+  # 1. Libp2p networking is done using hard-coded node keys. This allows, among other things, the nodes' peer ID's to be known ahead of time
+  # 2. Nodes are using the well-known keys for alice, bob, etc. (Currently, this is actually expected by the mining agents; see service.rs)
+
+# TODO debug support will become important - look at LLDB for remote debugging.
+  # (Note that this requires a debug server on the target container, and thus possibly a task manager, so this may be nontrivial)
 
 services:
-  dev:
-    container_name: node-template
-    image: paritytech/ci-linux:974ba3ac-20201006
-    working_dir: /var/www/node-template
+  alice:
+    image: siip-node
     ports:
-      - "9944:9944"
-    environment:
-      - CARGO_HOME=/var/www/node-template/.cargo
-    volumes:
-      - .:/var/www/node-template
-      - type: bind
-        source: ./.local
-        target: /root/.local
-    command: bash -c "cargo build --release && ./target/release/node-template --dev --ws-external"
+      - "127.0.0.1:9944:9944"
+      - "127.0.0.1:9933:9933"
+      - "127.0.0.1:30333:30333"
+    tmpfs: /var/siip
+    networks:
+      siip_network:
+        ipv4_address: 172.20.1.2
+    command: 
+      - "--alice"
+      - "--validator" # technically implied by --alice; included for completeness
+      - "--node-key"
+      - "0000000000000000000000000000000000000000000000000000000000000001"
+
+  bob:
+    image: siip-node
+    ports:
+      - "127.0.0.1:9945:9944"
+      - "127.0.0.1:9934:9933"
+      - "127.0.0.1:30334:30333"
+    tmpfs: /var/siip
+    networks:
+      siip_network:
+        ipv4_address: 172.20.1.3
+    command:
+      - "--bob"
+      - "--validator" # technically implied by --bob; included for completeness
+      - "--rpc-cors"
+      - "all" # CORS validation doesn't work for RPC server because Substrate expects a Host header of localhost:9944 insteasd of localhost:9945
+      - "--node-key"
+      - "0000000000000000000000000000000000000000000000000000000000000002"
+      - "--bootnodes"
+      - "/ip4/172.20.1.2/tcp/30333/p2p/12D3KooWEyoppNCUx8Yx66oV9fJnriXwCcXwDDUA2kj6vnc6iDEp" # alice
+    profiles:
+      - basic-network
+      - complex-network
+    depends_on:
+      - alice
+
+  observer:
+    image: siip-node
+    ports:
+      - "127.0.0.1:9946:9944"
+      - "127.0.0.1:9935:9933"
+      - "127.0.0.1:30335:30333"
+    tmpfs: /var/siip
+    networks:
+      siip_network:
+        ipv4_address: 172.20.1.4
+    command:
+      - "--rpc-cors"
+      - "all" # CORS validation doesn't work for RPC server because Substrate expects a Host header of localhost:9944 insteasd of localhost:9946
+      - "--bootnodes"
+      - "/ip4/172.20.1.3/tcp/30333/p2p/12D3KooWHdiAxVd8uMQR1hGWXccidmfCwLqcMpGwR6QcTP6QRMuD" # bob
+    profiles:
+      - complex-network
+    depends_on:
+      - alice
+      - bob
+
+networks:
+  siip_network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.20.1.0/24

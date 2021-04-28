@@ -29,7 +29,7 @@ fn register_certificate() {
 		));
 
 		//Ensures that it was saved correctly
-		let response = SiipModule::get_certificate(Vec::<u8>::from(DOMAIN));
+		let response = SiipModule::domain_to_certificate(Vec::<u8>::from(DOMAIN));
 		let expected = Certificate {
 			version_number: CERTIFICATE_VERSION,
 			owner_id: ensure_signed(Origin::signed(1)).unwrap(),
@@ -150,7 +150,7 @@ fn modify_certificate() {
 			other_public_key.clone(),
 		));
 
-		let response = SiipModule::get_certificate(Vec::<u8>::from(DOMAIN));
+		let response = SiipModule::domain_to_certificate(Vec::<u8>::from(DOMAIN));
 		let expected = Certificate {
 			version_number: CERTIFICATE_VERSION,
 			owner_id: ensure_signed(Origin::signed(1)).unwrap(),
@@ -248,7 +248,7 @@ fn delete_certificate() {
 
 		assert_ok!(SiipModule::remove_certificate(Origin::signed(1), DOMAIN.into()));
 
-		let empty_cert = SiipModule::get_certificate(Vec::<u8>::from(DOMAIN));
+		let empty_cert = SiipModule::domain_to_certificate(Vec::<u8>::from(DOMAIN));
 		assert!(empty_cert.version_number == EMPTY_CERTIFICATE);
 	})
 }
@@ -339,7 +339,7 @@ fn odd_length_key() {
 			new_key.clone().into()
 		));
 
-		let cert = SiipModule::get_certificate(Vec::<u8>::from(DOMAIN));
+		let cert = SiipModule::domain_to_certificate(Vec::<u8>::from(DOMAIN));
 		let key_vec: Vec::<u8> = new_key.into();
 		assert_eq!(cert.key, key_vec);
 	})
@@ -378,5 +378,146 @@ fn invalid_key() {
 				new_key.into()
 			), Error::<Test>::InvalidKey);
 
+	})
+}
+
+#[test]
+fn reverse_lookup() {
+	new_test_ext().execute_with(|| {
+		assert_ok!(SiipModule::register_certificate(
+			Origin::signed(1),
+			NAME.into(),
+			DOMAIN.into(),
+			IP_ADDR.into(),
+			INFO.into(),
+			KEY.into()
+		));
+		let new_domain = "website.com";
+		assert_ok!(SiipModule::register_certificate(
+			Origin::signed(1),
+			NAME.into(),
+			new_domain.into(),
+			IP_ADDR.into(),
+			INFO.into(),
+			KEY.into(),
+		));
+
+		let cert_1 = Certificate {
+			version_number: CERTIFICATE_VERSION,
+			owner_id: ensure_signed(Origin::signed(1)).unwrap(),
+			name: NAME.into(),
+			info: INFO.into(),
+			key: KEY.into(),
+			ip_addr: IP_ADDR.into(),
+			domain: DOMAIN.into(),
+		};
+		let cert_2 = Certificate {
+			version_number: CERTIFICATE_VERSION,
+			owner_id: ensure_signed(Origin::signed(1)).unwrap(),
+			name: NAME.into(),
+			info: INFO.into(),
+			key: KEY.into(),
+			ip_addr: IP_ADDR.into(),
+			domain: new_domain.into(),
+		};
+
+		let expected = vec!(cert_1, cert_2);
+		assert_eq!(SiipModule::ip_to_certificates(Vec::<u8>::from(IP_ADDR)), expected);
+	})
+}
+
+#[test]
+fn reverse_lookup_modify() {
+	new_test_ext().execute_with(|| {
+		assert_ok!(SiipModule::register_certificate(
+			Origin::signed(1),
+			NAME.into(),
+			DOMAIN.into(),
+			IP_ADDR.into(),
+			INFO.into(),
+			KEY.into()
+		));
+		let new_domain = "website.com";
+		assert_ok!(SiipModule::register_certificate(
+			Origin::signed(1),
+			NAME.into(),
+			new_domain.into(),
+			IP_ADDR.into(),
+			INFO.into(),
+			KEY.into(),
+		));
+
+		let new_name = "Not Adrian";
+		assert_ok!(SiipModule::modify_certificate(
+			Origin::signed(1),
+			new_name.into(),
+			new_domain.into(),
+			IP_ADDR.into(),
+			INFO.into(),
+			KEY.into(),
+		));
+
+		let cert_1 = Certificate {
+			version_number: CERTIFICATE_VERSION,
+			owner_id: ensure_signed(Origin::signed(1)).unwrap(),
+			name: NAME.into(),
+			info: INFO.into(),
+			key: KEY.into(),
+			ip_addr: IP_ADDR.into(),
+			domain: DOMAIN.into(),
+		};
+		let cert_2 = Certificate {
+			version_number: CERTIFICATE_VERSION,
+			owner_id: ensure_signed(Origin::signed(1)).unwrap(),
+			name: new_name.into(),
+			info: INFO.into(),
+			key: KEY.into(),
+			ip_addr: IP_ADDR.into(),
+			domain: new_domain.into(),
+		};
+
+		let expected = vec!(cert_1, cert_2);
+		assert_eq!(SiipModule::ip_to_certificates(Vec::<u8>::from(IP_ADDR)), expected);
+	})
+}
+
+#[test]
+fn reverse_lookup_remove() {
+	new_test_ext().execute_with(|| {
+		assert_ok!(SiipModule::register_certificate(
+			Origin::signed(1),
+			NAME.into(),
+			DOMAIN.into(),
+			IP_ADDR.into(),
+			INFO.into(),
+			KEY.into()
+		));
+		let new_domain = "website.com";
+		assert_ok!(SiipModule::register_certificate(
+			Origin::signed(1),
+			NAME.into(),
+			new_domain.into(),
+			IP_ADDR.into(),
+			INFO.into(),
+			KEY.into(),
+		));
+
+		assert_ok!(SiipModule::remove_certificate(
+			Origin::signed(1),
+			new_domain.into(),
+		));
+
+		let cert_1 = Certificate {
+			version_number: CERTIFICATE_VERSION,
+			owner_id: ensure_signed(Origin::signed(1)).unwrap(),
+			name: NAME.into(),
+			info: INFO.into(),
+			key: KEY.into(),
+			ip_addr: IP_ADDR.into(),
+			domain: DOMAIN.into(),
+		};
+
+		let expected = vec!(cert_1);
+		assert_eq!(SiipModule::ip_to_certificates(Vec::<u8>::from(IP_ADDR)), expected);
 	})
 }

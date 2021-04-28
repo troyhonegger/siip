@@ -1,0 +1,7 @@
+# literally the only file we DON'T want to ignore is target/debug/siip-node
+*
+!target
+target/*
+!target/debug
+target/debug/*
+!target/debug/siip-node
