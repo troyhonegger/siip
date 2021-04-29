@@ -1,5 +1,6 @@
 import sys, os
 import redis
+import socket
 sys.path.append(os.path.join(os.path.dirname(__file__), os.path.pardir, 'client'))
 from plow import plow
 from siip_certificate import SiipCertificate, decodeCertificate
@@ -35,6 +36,9 @@ def resolve(domain):
         pass
     return cert
 
-# TODO: resolve the domain name using standard DNS
+# resolve the domain name using standard DNS
 def fallback_resolve(domain):
-    return None
+    try:
+        return socket.gethostbyname(domain)
+    except OSError:
+        return None
