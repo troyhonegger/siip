@@ -20,13 +20,7 @@ STATE_RCVHDRS = 1
 STATE_RCVBODY = 2
 STATE_DONE = 3
 
-#TODO siip_requests needs to use fallback resolution (if AUTOADD_NEW_DOMAINS is configured)
-
-# TODO: Notes on extraordinarily long delay times:
-    # requests will pile up, then come through 4-6 at a time
-    # this seems to indicate a proxy bottleneck, but I can connect to any number of other websites (Google etc) in the meantime with no problems
-    # Wireshark says Firefox is using some Keep-alive stuff and also multiple concurrent requests. Apparently sometimes it'll start a connection
-    # and then later decide it doesn't need it as well; which is odd
+#TODO siip_requests needs to use fallback resolution (if configured)
 
 SSL_PROXY_CONTEXT = ssl._create_unverified_context()
 SSL_PROXY_LEGACY_CONTEXT = ssl.create_default_context()
@@ -120,18 +114,55 @@ class ProxyHandler(socketserver.BaseRequestHandler):
     def passive_proxy(self, client, server, domain):
         # TODO it might be nice to have an option to turn on more verbose logging that's not just all at the end
         # good for if some connections are hanging
+
+        # SSL doesn't play particularly nice with select(), but the StackOverflow post
+        # https://stackoverflow.com/questions/3187565/select-and-ssl-in-python
+        # had some helpful hints to get things working. For optimal robustness the author recommended nonblocking IO
+        client.setblocking(0)
+        server.setblocking(0)
+
         client_line_rcvd = False
         server_line_rcvd = False
         line_client = b''
         line_server = b''
-        while True:
-            ready, _, _ = select.select([client, server], [], []) #TODO handle error
-            if client in ready:
-                b = client.recv(4096)
-                if len(b) == 0:
-                    client.close()
-                    server.close()
-                    break
+
+        client_to_server = b''
+        server_to_client = b''
+        client_closed = False
+        server_closed = False
+
+        while len(client_to_server) != 0 or len(server_to_client) != 0 or (not client_closed and not server_closed):
+            read = []
+            if not client_closed:
+                read.append(client)
+            if not server_closed:
+                read.append(server)
+
+            write = []
+            if len(client_to_server) != 0:
+                write.append(server)
+            if len(server_to_client) != 0:
+                write.append(client)
+
+            read, write, error = select.select(read, write, [client, server])
+            if client in read:
+                try:
+                    b = client.recv(4096)
+                    # SSL sockets have a "pending" buffer that select() doesn't know about. That buffer has to be
+                    # emptied before select() is called again; otherwise select() might block indefinitely
+                    pending = client.pending()
+                    while pending != 0:
+                        b += client.recv(pending)
+                        pending = client.pending()
+                except ssl.SSLError as e:
+                    if e.errno != ssl.SSL_ERROR_WANT_READ:
+                        raise
+                    b = None
+
+                if b is None:
+                    pass # indicates SSL_ERROR_WANT_READ
+                elif len(b) == 0:
+                    client_closed = True
                 else:
                     if self.server.log and not client_line_rcvd:
                         line_client += b
@@ -139,13 +170,26 @@ class ProxyHandler(socketserver.BaseRequestHandler):
                         if idx > -1:
                             client_line_rcvd = True
                             line_client = line_client[:idx]
-                    server.sendall(b)
-            if server in ready:
-                b = server.recv(4096)
-                if len(b) == 0:
-                    client.close()
-                    server.close()
-                    break
+                    client_to_server += b
+
+            if server in read:
+                try:
+                    b = server.recv(4096)
+                    # SSL sockets have a "pending" buffer that select() doesn't know about. That buffer has to be
+                    # emptied before select() is called again; otherwise select() might block indefinitely
+                    pending = server.pending()
+                    while pending != 0:
+                        b += server.recv(pending)
+                        pending = server.pending()
+                except ssl.SSLError as e:
+                    if e.errno != ssl.SSL_ERROR_WANT_READ:
+                        raise
+                    b = None
+
+                if b is None:
+                    pass # indicates SSL_ERROR_WANT_READ
+                elif len(b) == 0:
+                    server_closed = True
                 else:
                     if self.server.log and not server_line_rcvd:
                         line_server += b
@@ -153,7 +197,15 @@ class ProxyHandler(socketserver.BaseRequestHandler):
                         if idx > -1:
                             server_line_rcvd = True
                             line_server = line_server[:idx]
-                    client.sendall(b)
+                    server_to_client += b
+
+            if server in write:
+                n = server.send(client_to_server)
+                client_to_server = client_to_server[n:]
+            if client in write:
+                n = client.send(server_to_client)
+                server_to_client = server_to_client[n:]
+
         if self.server.log:
             line_client = line_client.decode()
             if len(line_client) > 32:
@@ -187,19 +239,26 @@ class ProxyHandler(socketserver.BaseRequestHandler):
                 if len(req_summary) > 32:
                     req_summary = req_summary[:31] + '…'
                 print('%-32s: %-32s => %s'%(host, req_summary, f'{response.statuscode} {response.status.decode()} {response.version.decode()} [{len(response.body)} bytes]'))
-        except siip_certificate.SiipCertError:
-            # TODO make this the same message as send_500_badsiipcert. Also make sure a message gets logged in this case
+        except siip_certificate.SiipCertError as ex:
+            if self.server.log:
+                print(f'Domain {host} has an untrusted SIIP certificate. Refusing connection, and returning 500')
             response = httpparse.HttpResponse(500, b'Internal Server Error', b'HTTP/1.1')
             host = html.escape(forwarded_headers[b'Host'].decode())
-            response.body = f"""<!DOCTYPE html>
-                <html>
-                    <head><title>Invalid certificate: {host}</title></head>
-                    <body>
-                        <h1>Certificate error!!</h1>
-                        <p>The host {host} presented an invalid SIIP certificate. This indicates that either the page's certificate is out of date, or
-                        someone is trying to intercept your network traffic. If the problem persists, please contact the owners of the website.</p>
-                    </body>
-                </html>""".encode()
+            response.body = f"""<!DOCTYPE html><html>
+                <head><title>Bad TLS Certificate: {host}</title></head>
+                <body>
+                    <h1>Error 500: Untrusted SIIP certificate</h1>
+                    <p>
+                        Refusing to connect to domain {host} as it contains an untrusted SIIP certificate.
+                        Either the website's certificate is out of date, or someone is attempting a man-in-the-middle attack.
+                    </p>
+                    <p>
+                        If the problem persists, please contact the website owner.
+                    </p>
+                    <p>
+                        {ex}
+                    </p>
+                </body></html>""".encode()
 
         if b'Transfer-Encoding' in response.headers:
             del response.headers[b'Transfer-Encoding']
@@ -214,8 +273,7 @@ class ProxyHandler(socketserver.BaseRequestHandler):
         self.http_request = httpparse.HttpRequest.parse_header(self.request)
 
         if self.http_request is None:
-            # TODO look into this: I noticed it happening with badssl.com. It was accompanied by obscenely long page load times
-            print("WARNING: client opened socket but didn't never sent anything")
+            print("WARNING: client opened socket but never sent anything")
             return
         elif self.http_request.method == b'CONNECT':
             self.handle_tunnel()
@@ -257,7 +315,7 @@ class ProxyHandler(socketserver.BaseRequestHandler):
 
     def send_500_badtlscert(self, domain, ex):
         domain = html.escape(domain)
-        response500 = httpparse.HttpRequest(500, b'Internal Server Error', b'HTTP/1.1', {b'Content-Encoding': b'text/html'})
+        response500 = httpparse.HttpResponse(500, b'Internal Server Error', b'HTTP/1.1', {b'Content-Encoding': b'text/html'})
         response500.body = f"""<!DOCTYPE html><html>
             <head><title>Bad TLS Certificate: {domain}</title></head>
             <body>
@@ -273,12 +331,12 @@ class ProxyHandler(socketserver.BaseRequestHandler):
                 <p>
                     {ex}
                 </p>
-            </body></html>"""
+            </body></html>""".encode()
         self.send_response(response500)
 
     def send_500_badsiipcert(self, domain, ex):
         domain = html.escape(domain)
-        response500 = httpparse.HttpRequest(500, b'Internal Server Error', b'HTTP/1.1', {b'Content-Encoding': b'text/html'})
+        response500 = httpparse.HttpResponse(500, b'Internal Server Error', b'HTTP/1.1', {b'Content-Encoding': b'text/html'})
         response500.body = f"""<!DOCTYPE html><html>
             <head><title>Bad TLS Certificate: {domain}</title></head>
             <body>
@@ -293,7 +351,7 @@ class ProxyHandler(socketserver.BaseRequestHandler):
                 <p>
                     {ex}
                 </p>
-            </body></html>"""
+            </body></html>""".encode()
         self.send_response(response500)
 
 class ProxyServer(socketserver.ThreadingMixIn, socketserver.TCPServer):
