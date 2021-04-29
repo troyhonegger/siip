@@ -7,6 +7,7 @@ import {
   Route,
   Redirect
 } from 'react-router-dom';
+import './utilities.css';
 
 import { SubstrateContextProvider, useSubstrate } from './substrate-lib';
 import { DeveloperConsole } from './substrate-lib/components';
@@ -24,7 +25,7 @@ import TransferCoins from './TransferCoins';
 // import Metrics from "./Metrics";
 // import Chain from "./Chain";
 import GettersAndSetters from './GettersAndSetters';
-import Democracy from './Democracy';
+import Democracy from './democracy';
 import { BALANCES_PATH, DEMOCRACY_PATH, INTERACTOR_PATH, METRICS_PATH, SIIP_PATH } from './routes';
 
 function Main () {
@@ -77,7 +78,7 @@ function Main () {
                 </Grid.Row>
               </Route>
               <Route path={DEMOCRACY_PATH}>
-                <Democracy/>
+                <Democracy accountPair={accountPair} />
               </Route>
               <Route path={SIIP_PATH}>
                 <Grid.Row>
