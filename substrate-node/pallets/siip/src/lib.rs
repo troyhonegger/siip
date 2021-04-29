@@ -282,7 +282,8 @@ decl_storage! {
 	trait Store for Module<T: Config> as SiipModule {
 		// Learn more about declaring storage items:
 		// https://substrate.dev/docs/en/knowledgebase/runtime/storage#declaring-storage-items
-		pub CertificateMap get(fn get_certificate): map hasher(blake2_128_concat) Vec<u8> => Certificate<T::AccountId>;
+		pub CertificateMap get(fn domain_to_certificate): map hasher(blake2_128_concat) Vec<u8> => Certificate<T::AccountId>;
+		pub ReverseMap get(fn ip_to_certificates): map hasher(blake2_128_concat) Vec<u8> => Vec<Certificate<T::AccountId>>;
 	}
 }
 
@@ -311,7 +312,6 @@ decl_error! {
 		NonexistentDomain,
 		DifferentOwner,
 		NoModifications,
-
 	}
 }
 
@@ -360,6 +360,11 @@ decl_module! {
 
 			CertificateMap::<T>::insert(&domain, cert.clone());
 
+			//Adds it to the reverse lookup table
+			let mut certs = ReverseMap::<T>::take(&ip_addr.clone());
+			certs.push(cert.clone());
+			ReverseMap::<T>::insert(&ip_addr, certs);
+
 			Self::deposit_event(RawEvent::CertificateRegistered(cert, sender));
 			Ok(())
 		}
@@ -407,6 +412,12 @@ decl_module! {
 			CertificateMap::<T>::take(&domain);
 			CertificateMap::<T>::insert(&domain, cert.clone());
 
+			//Modifies the reverse lookup map
+			let mut certs = ReverseMap::<T>::take(&ip_addr.clone());
+			certs.retain(|x| *x.domain != domain[..]);
+			certs.push(cert.clone());
+			ReverseMap::<T>::insert(&ip_addr, certs);
+
 			Self::deposit_event(RawEvent::CertificateModified(cert, old_cert, sender));
 			Ok(())
 		}
@@ -430,6 +441,11 @@ decl_module! {
 			ensure!(sender == old_cert.owner_id, Error::<T>::DifferentOwner);
 
 			CertificateMap::<T>::take(&domain);
+
+			//Deletes the certificate from the reverse lookup map
+			let mut certs = ReverseMap::<T>::take(&old_cert.ip_addr);
+			certs.retain(|x| *x.domain != domain[..]);
+			ReverseMap::<T>::insert(&old_cert.ip_addr, certs);
 
 			Self::deposit_event(RawEvent::CertificateRemoved(old_cert, sender));
 			Ok(())
