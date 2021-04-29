@@ -8,8 +8,10 @@ import { useCall } from './useCall';
 import classNames from 'classnames';
 import { Icon } from 'semantic-ui-react';
 import VoteModal from './VoteModal';
+import { TxButton } from '../substrate-lib/components';
 
-const ProposalRow = ({ proposal }) => {
+const ProposalRow = ({ accountPair, proposal }) => {
+  window.proposal = proposal;
   return (
     <div className="proposal-card">
       <div className="proposal-left-half">
@@ -25,8 +27,26 @@ const ProposalRow = ({ proposal }) => {
           <span className="proposal-label"> Locked Balance: </span>
           <span className="ellipsis"> {proposal?.balance?.toHuman()}</span>
         </div>
+        <div className="proposal-detail">
+          <span className="proposal-label"> Seconds: </span>
+          <span className="ellipsis"> {proposal?.seconds?.length}</span>
+        </div>
       </div>
-      <button className="ui button blue">second</button>
+      <TxButton
+        label='Second'
+        type='SIGNED-TX'
+        accountPair={accountPair}
+        setStatus={() => {}}
+        disabled={false}
+        attrs={{
+          palletRpc: 'democracy',
+          callable: 'second',
+          inputParams: [proposal?.index, '100'], // don't bother to second a proposal with more than 100 seconds
+          paramFields: [{ name: 'proposal', type: 'Compact<PropIndex>' }, { name: 'secondsUpperBound', type: 'Compact<u32>' }],
+          interxType: 'EXTRINSIC',
+          disabled: false
+        }}
+      />
     </div>
   );
 };
@@ -85,7 +105,7 @@ const Democracy = ({ accountPair }) => {
       </div>
 
       {proposals?.map((proposal) => {
-        return <ProposalRow key={proposal.index.toString()} proposal={proposal}/>;
+        return <ProposalRow accountPair={accountPair} key={proposal.index.toString()} proposal={proposal}/>;
       })}
 
       <div className="ui divider w-full"></div>

@@ -78,7 +78,7 @@ function Main () {
                 </Grid.Row>
               </Route>
               <Route path={DEMOCRACY_PATH}>
-                <Democracy/>
+                <Democracy accountPair={accountPair} />
               </Route>
               <Route path={SIIP_PATH}>
                 <Grid.Row>
