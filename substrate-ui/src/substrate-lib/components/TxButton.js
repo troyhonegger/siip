@@ -161,7 +161,6 @@ function TxButton ({
       if (typeof inputParam === 'object' && inputParam !== null && typeof inputParam.value === 'string') {
         return inputParam.value.trim();
       } else if (typeof inputParam === 'string') {
-        console.log(inputParam);
         return inputParam.trim();
       }
       return inputParam;
