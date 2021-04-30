@@ -76,7 +76,8 @@ function TxButton ({
       ? api.tx.sudo.sudo(api.tx[palletRpc][callable](...transformed))
       : api.tx.sudo.sudo(api.tx[palletRpc][callable]());
 
-    const unsub = txExecute.signAndSend(fromAcct, txResHandler)
+    console.log(fromAcct);
+    const unsub = txExecute.signAndSend(fromAcct,{tip: 1}, txResHandler)
       .catch(txErrHandler);
     setUnsub(() => unsub);
   };
@@ -85,8 +86,8 @@ function TxButton ({
     const fromAcct = await getFromAcct();
     const txExecute =
         api.tx.sudo.sudoUncheckedWeight(api.tx[palletRpc][callable](...inputParams), 0);
-
-    const unsub = txExecute.signAndSend(fromAcct, txResHandler)
+    console.log(fromAcct);
+    const unsub = txExecute.signAndSend(fromAcct,{tip: 1}, txResHandler)
       .catch(txErrHandler);
     setUnsub(() => unsub);
   };
@@ -99,8 +100,8 @@ function TxButton ({
     const txExecute = transformed
       ? api.tx[palletRpc][callable](...transformed)
       : api.tx[palletRpc][callable]();
-
-    const unsub = await txExecute.signAndSend(fromAcct, tip, txResHandler)
+    console.log(inputParams[4]);
+    const unsub = await txExecute.signAndSend(fromAcct, {tip:1}, txResHandler)
       .catch(txErrHandler);
     setUnsub(() => unsub);
   };

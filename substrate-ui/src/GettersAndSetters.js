@@ -110,10 +110,6 @@ export default function GettersAndSetters (props) {
     setPublicKeyValidity(data.result);
     updateValidity();
   });
-  validateField('validate_tip', inputTip).then(data => {
-    setTipValidity(data.result);
-    updateValidity();
-  });
 
   const [allFieldsValid, setAllFieldsValid] = useState(false);
   const updateValidity = () => {
@@ -121,8 +117,7 @@ export default function GettersAndSetters (props) {
       nameValidity.includes('Err:') ||
       ipAddrValidity.includes('Err:') ||
       infoValidity.includes('Err:') ||
-      publicKeyValidity.includes('Err:') ||
-      tipValidity.includes('Err:')) {
+      publicKeyValidity.includes('Err:')) {
       setAllFieldsValid(false);
     } else {
       setAllFieldsValid(true);
