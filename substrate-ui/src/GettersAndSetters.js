@@ -201,7 +201,7 @@ export default function GettersAndSetters (props) {
             label='Tip:'
             value={inputTip}
             criteria={tipValidity}
-            placeholder='1'
+            placeholder='1 (trillionth of coin)'
             onChange={updateInputTip}
             enable={enable}
         />
