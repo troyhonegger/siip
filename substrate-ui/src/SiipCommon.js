@@ -14,12 +14,14 @@ export function SubmitButton (props) {
   const ipAddrField = { name: 'ip_addr', type: 'Bytes', optional: false };
   const infoField = { name: 'info', type: 'Bytes', optional: false };
   const keyField = { name: 'key', type: 'Bytes', optional: false };
+  const emailField = { name: 'email', type: 'Bytes', optional: false };
 
   const name = { type: 'Bytes', value: props.name };
   const domain = { type: 'Bytes', value: props.domain };
   const ipAddr = { type: 'Bytes', value: props.ipAddr };
   const info = { type: 'Bytes', value: props.info };
-  const publicKey = { type: 'Bytes', value: props.publicKey };
+  const publicKey = { type: 'Bytes', value: props.publicKey }
+  const email = { name: 'email', type: 'Bytes', optional: false };
 
   const interxType = 'EXTRINSIC';
   const palletRpc = 'siipModule';
@@ -31,13 +33,13 @@ export function SubmitButton (props) {
   if (props.method === 'Register') {
     color = 'green';
     callable = 'registerCertificate';
-    paramFields = [nameField, domainField, ipAddrField, infoField, keyField];
-    inputParams = [name, domain, ipAddr, info, publicKey];
+    paramFields = [nameField, domainField, ipAddrField, infoField, keyField, emailField];
+    inputParams = [name, domain, ipAddr, info, publicKey, email];
   } else if (props.method === 'Modify') {
     color = 'yellow';
     callable = 'modifyCertificate';
-    paramFields = [nameField, domainField, ipAddrField, infoField, keyField];
-    inputParams = [name, domain, ipAddr, info, publicKey];
+    paramFields = [nameField, domainField, ipAddrField, infoField, keyField, emailField];
+    inputParams = [name, domain, ipAddr, info, publicKey, email];
   } else if (props.method === 'Delete') {
     color = 'red';
     callable = 'removeCertificate';
@@ -83,7 +85,7 @@ export function SubmitButton (props) {
   }
 }
 
-export async function updateDb (domain, setDbName, setDbIpAddr, setDbInfo, setDbPublicKey, setDomainExists) {
+export async function updateDb (domain, setDbName, setDbIpAddr, setDbInfo, setDbPublicKey, setDbEmail, setDomainExists) {
   const palletRpc = 'siipModule';
   const callable = 'certificateMap';
 
@@ -97,6 +99,7 @@ export async function updateDb (domain, setDbName, setDbIpAddr, setDbInfo, setDb
       setDbIpAddr(json.ip_addr);
       setDbInfo(json.public_key_info);
       setDbPublicKey(json.public_key);
+      setDbEmail(json.email);
 
       // The version_number is only 0 if the certificate does not exist
       if (json.version_number === 0) {

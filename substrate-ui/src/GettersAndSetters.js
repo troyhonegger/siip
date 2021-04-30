@@ -77,7 +77,7 @@ export default function GettersAndSetters (props) {
   const updateInputEmail = (event) => {
     const email = event.target.value;
     setInputEmail(email);
-    validateField('validate_email', name).then(data => {
+    validateField('validate_email', email).then(data => {
       setEmailValidity(data.result);
     });
   };
@@ -122,7 +122,7 @@ export default function GettersAndSetters (props) {
       ipAddrValidity.includes('Err:') ||
       infoValidity.includes('Err:') ||
       publicKeyValidity.includes('Err:') ||
-      emailValidity.include('Err:')) {
+      emailValidity.includes('Err:')) {
       setAllFieldsValid(false);
     } else {
       setAllFieldsValid(true);

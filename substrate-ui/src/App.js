@@ -22,8 +22,8 @@ import TemplateModule from './TemplateModule';
 // import Transfer from './Transfer';
 // import Upgrade from './Upgrade';
 import TransferCoins from './TransferCoins';
-// import Metrics from "./Metrics";
-// import Chain from "./Chain";
+import Metrics from "./Metrics";
+import Chain from "./Chain";
 import GettersAndSetters from './GettersAndSetters';
 import Democracy from './democracy';
 import { BALANCES_PATH, DEMOCRACY_PATH, INTERACTOR_PATH, METRICS_PATH, SIIP_PATH } from './routes';
@@ -73,8 +73,12 @@ function Main () {
                 <Grid.Row stretched>
                   <NodeInfo/>
                   <Metadata/>
-                  <BlockNumber/>
+                  <Metrics/>}
                   <BlockNumber finalized/>
+                  <Grid.Row stretched>
+                    <h1>Blockchain</h1>
+                    <Chain/>
+                  </Grid.Row>
                 </Grid.Row>
               </Route>
               <Route path={DEMOCRACY_PATH}>

@@ -4887,7 +4887,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"classnames@npm:^2.3.1":
+"classnames@npm:^2.2.3, classnames@npm:^2.3.1":
   version: 2.3.1
   resolution: "classnames@npm:2.3.1"
   checksum: 57d536edede609f81425d24b062d8d720a466565faf1e38d32c881e883920baa71519ac70c7b565e9cd39201fb1c1ff9bdf8aabf8e26544bac481e7924867c83
@@ -13249,6 +13249,18 @@ fsevents@^1.2.7:
   languageName: node
   linkType: hard
 
+"react-dropdown@npm:^1.9.2":
+  version: 1.9.2
+  resolution: "react-dropdown@npm:1.9.2"
+  dependencies:
+    classnames: ^2.2.3
+  peerDependencies:
+    react: ^0.14.7 || ^15.0.0-0 || ^16.0.0 || ^17.0.0
+    react-dom: ^0.14.7 || ^15.0.0-0 || ^16.0.0 || ^17.0.0
+  checksum: c7ec5e30408a9224507d06bda489ca5f65c84df766ce859d79ccb3d5268b29771a3c8f126300362ef819961fcde223282a173dd3c26b368e296ef29015bb9373
+  languageName: node
+  linkType: hard
+
 "react-dropzone@npm:^11.3.2":
   version: 11.3.2
   resolution: "react-dropzone@npm:11.3.2"
@@ -15277,6 +15289,7 @@ resolve@^2.0.0-next.3:
     react-autosize-textarea: ^7.1.0
     react-copy-to-clipboard: ^5.0.3
     react-dom: ^16.14.0
+    react-dropdown: ^1.9.2
     react-dropzone: ^11.3.2
     react-modal: ^3.12.1
     react-popper: ^2.2.5
