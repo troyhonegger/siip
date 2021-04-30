@@ -14,7 +14,6 @@ export function SubmitButton (props) {
   const ipAddrField = { name: 'ip_addr', type: 'Bytes', optional: false };
   const infoField = { name: 'info', type: 'Bytes', optional: false };
   const keyField = { name: 'key', type: 'Bytes', optional: false };
-  const tipField = { name: 'tip', type: 'Bytes', optional: false };
 
   const name = { type: 'Bytes', value: props.name };
   const domain = { type: 'Bytes', value: props.domain };
@@ -33,13 +32,13 @@ export function SubmitButton (props) {
   if (props.method === 'Register') {
     color = 'green';
     callable = 'registerCertificate';
-    paramFields = [nameField, domainField, ipAddrField, infoField, keyField, tipField];
-    inputParams = [name, domain, ipAddr, info, publicKey, tip];
+    paramFields = [nameField, domainField, ipAddrField, infoField, keyField];
+    inputParams = [name, domain, ipAddr, info, publicKey];
   } else if (props.method === 'Modify') {
     color = 'yellow';
     callable = 'modifyCertificate';
-    paramFields = [nameField, domainField, ipAddrField, infoField, keyField, tipField];
-    inputParams = [name, domain, ipAddr, info, publicKey, tip];
+    paramFields = [nameField, domainField, ipAddrField, infoField, keyField];
+    inputParams = [name, domain, ipAddr, info, publicKey];
   } else if (props.method === 'Delete') {
     color = 'red';
     callable = 'removeCertificate';
@@ -61,6 +60,7 @@ export function SubmitButton (props) {
             accountPair={accountPair}
             setStatus={setStatus}
             attrs={{ interxType, palletRpc, callable, inputParams, paramFields }}
+            tip={tip}
           />
         </div>
         <p>

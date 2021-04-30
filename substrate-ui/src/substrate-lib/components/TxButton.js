@@ -14,7 +14,8 @@ function TxButton ({
   style = null,
   type = 'QUERY',
   attrs = null,
-  disabled = false
+  disabled = false,
+  tip = null
 }) {
   // Hooks
   const { api } = useSubstrate();
@@ -99,7 +100,7 @@ function TxButton ({
       ? api.tx[palletRpc][callable](...transformed)
       : api.tx[palletRpc][callable]();
 
-    const unsub = await txExecute.signAndSend(fromAcct, {tip:inputParams[5]}, txResHandler)
+    const unsub = await txExecute.signAndSend(fromAcct, { tip }, txResHandler)
       .catch(txErrHandler);
     setUnsub(() => unsub);
   };
