@@ -14,7 +14,7 @@ function TxButton ({
   style = null,
   type = 'QUERY',
   attrs = null,
-  disabled = false
+  disabled = false,
 }) {
   // Hooks
   const { api } = useSubstrate();
@@ -270,3 +270,9 @@ function TxGroupButton (props) {
 }
 
 export { TxButton, TxGroupButton };
+
+export const STATUS = {
+  SENDING: 'Sending...',
+  IN_BLOCK: 'Current transaction status: InBlock',
+  READY: 'Current transaction status: Ready'
+};

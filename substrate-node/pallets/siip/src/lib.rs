@@ -35,7 +35,6 @@ pub struct Certificate<AccountIdT> {
 	key: Vec<u8>,
 	ip_addr: Vec<u8>,
 	domain: Vec<u8>,
-	email: Vec<u8>
 }
 
 pub fn check_name(name: &[u8]) -> Vec<u8> {
@@ -275,7 +274,6 @@ pub fn check_key(key: &[u8]) -> Vec<u8> {
 
 pub fn check_email(email: &[u8]) -> Vec<u8> {
 	let mut criteria: Vec<u8> = Vec::new();
-
 	//Must be a valid UTF-8 String
 	let email = from_utf8(email);
 	match email {
@@ -287,19 +285,48 @@ pub fn check_email(email: &[u8]) -> Vec<u8> {
 	}
 	let email = email.unwrap();
 
-	//Must be at least 1 character long
-	if email.len() >= 3 {
-		criteria.extend_from_slice("Ok: Must be a valid length\n".as_bytes());
+	//Must be in the form Prefix-@-Domain
+	let amp_index = email.find('@');
+	if (!amp_index.is_none()) && (amp_index > Some(0)) && (amp_index < Some(email.len() - 1)) {
+		criteria.extend_from_slice("Ok: Must be in the form Prefix-@-Domain\n".as_bytes());
 	} else {
-		criteria.extend_from_slice("Err: Must be at least 1 character long\n".as_bytes());
+		criteria.extend_from_slice("Err: Must be in the form Prefix-@-Domain\n".as_bytes());
 	}
 
-	//Must contain an @ symbol
-	if !email.contains("@") {
-    		criteria.extend_from_slice("Ok: Must contain a prefix, @, and postfix\n".as_bytes());
-    	} else {
-    		criteria.extend_from_slice("Ok: Must contain a prefix, @, and postfix\n".as_bytes());
-    	}
+	let strs: Vec<&str> = email.clone().split('@').collect();
+
+    let mut valid_domain = false;
+    let mut valid_prefix = false;
+    if strs.len() == 2 {
+    	let prefix_len = Some(strs[0].len());
+    	let cond_prefix_len = (prefix_len > Some(0)) && (prefix_len < Some(64));
+    	let cond_char_types = strs[0].chars().all(|c| !c.is_uppercase() && ( c.is_alphanumeric() || c == '-' || c == '_' || c =='.' ) );
+    	valid_prefix = cond_prefix_len && cond_char_types;
+
+    	let domain_strs: Vec<&str> = strs[1].clone().split('.').collect();
+    	if domain_strs.len() == 2 {
+			let user_len = Some(domain_strs[0].len());
+			let top_len = Some(domain_strs[1].len());
+			let cond_char_types = strs[1].chars().all(|c| !c.is_uppercase() && ( c.is_alphanumeric() || c == '-' || c == '_' || c =='.' ) );
+			let cond_user_len = (user_len > Some(0)) && (user_len < Some(64));
+			let cond_top_len = (top_len > Some(1)) && (top_len < Some(7));
+			valid_domain = cond_char_types && cond_top_len && cond_user_len;
+		}
+    }
+
+	//Prefix must be valid
+	if valid_prefix {
+			criteria.extend_from_slice("Ok: Prefix must be valid\n".as_bytes());
+	} else {
+			criteria.extend_from_slice("Err: Prefix must be valid\n".as_bytes());
+	}
+
+    //Domain must be valid
+    if valid_domain {
+    	criteria.extend_from_slice("Ok: Domain must be valid\n".as_bytes());
+    } else {
+        	criteria.extend_from_slice("Err: Domain must be valid\n".as_bytes());
+   	}
 
 	criteria
 }
@@ -313,7 +340,8 @@ decl_storage! {
 	trait Store for Module<T: Config> as SiipModule {
 		// Learn more about declaring storage items:
 		// https://substrate.dev/docs/en/knowledgebase/runtime/storage#declaring-storage-items
-		pub CertificateMap get(fn get_certificate): map hasher(blake2_128_concat) Vec<u8> => Certificate<T::AccountId>;
+		pub CertificateMap get(fn domain_to_certificate): map hasher(blake2_128_concat) Vec<u8> => Certificate<T::AccountId>;
+		pub ReverseMap get(fn ip_to_certificates): map hasher(blake2_128_concat) Vec<u8> => Vec<Certificate<T::AccountId>>;
 	}
 }
 
@@ -394,6 +422,11 @@ decl_module! {
 
 			CertificateMap::<T>::insert(&domain, cert.clone());
 
+			//Adds it to the reverse lookup table
+			let mut certs = ReverseMap::<T>::take(&ip_addr.clone());
+			certs.push(cert.clone());
+			ReverseMap::<T>::insert(&ip_addr, certs);
+
 			Self::deposit_event(RawEvent::CertificateRegistered(cert, sender));
 			Ok(())
 		}
@@ -444,6 +477,12 @@ decl_module! {
 			CertificateMap::<T>::take(&domain);
 			CertificateMap::<T>::insert(&domain, cert.clone());
 
+			//Modifies the reverse lookup map
+			let mut certs = ReverseMap::<T>::take(&ip_addr.clone());
+			certs.retain(|x| *x.domain != domain[..]);
+			certs.push(cert.clone());
+			ReverseMap::<T>::insert(&ip_addr, certs);
+
 			Self::deposit_event(RawEvent::CertificateModified(cert, old_cert, sender));
 			Ok(())
 		}
@@ -467,6 +506,11 @@ decl_module! {
 			ensure!(sender == old_cert.owner_id, Error::<T>::DifferentOwner);
 
 			CertificateMap::<T>::take(&domain);
+
+			//Deletes the certificate from the reverse lookup map
+			let mut certs = ReverseMap::<T>::take(&old_cert.ip_addr);
+			certs.retain(|x| *x.domain != domain[..]);
+			ReverseMap::<T>::insert(&old_cert.ip_addr, certs);
 
 			Self::deposit_event(RawEvent::CertificateRemoved(old_cert, sender));
 			Ok(())
