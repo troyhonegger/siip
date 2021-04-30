@@ -46,9 +46,9 @@ const NewPreimageModal = ({ accountPair }) => {
       </Modal.Header>
       <Modal.Content>
 
-        {proposal && (
+        {proposal?.method && (
           <>
-          <h3>Preimage hash: </h3> <span>{proposal.hash.toHuman()}</span>
+          <h3>Preimage hash: </h3> <span>{window?.utilCrypto.blake2AsHex(proposal.method.toHex())}</span>
           </>
         )}
         <h3>Upload new runtime:</h3>
