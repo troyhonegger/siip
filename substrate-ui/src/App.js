@@ -26,6 +26,7 @@ import TransferCoins from './TransferCoins';
 // import Chain from "./Chain";
 import GettersAndSetters from './GettersAndSetters';
 import Democracy from './democracy';
+import TransferCert from './TransferCert';
 import { BALANCES_PATH, DEMOCRACY_PATH, INTERACTOR_PATH, METRICS_PATH, SIIP_PATH } from './routes';
 
 function Main () {
@@ -83,6 +84,7 @@ function Main () {
               <Route path={SIIP_PATH}>
                 <Grid.Row>
                   <GettersAndSetters accountPair={accountPair}/>
+                  <TransferCert accountPair={accountPair}/>
                 </Grid.Row>
               </Route>
               <Route path={BALANCES_PATH}>

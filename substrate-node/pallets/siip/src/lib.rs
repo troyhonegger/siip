@@ -306,8 +306,10 @@ decl_event!(
 		CertificateModified(Certificate<AccountId>, Certificate<AccountId>, AccountId),
 		/// A certificate in the blockchain was removed. Returns (deleted): [certificate, person]
 		CertificateRemoved(Certificate<AccountId>, AccountId),
-		/// Someone offered a domain to someone else. Returns: [person, person, domain]
+		/// Someone offered a domain to someone else. Returns: [sender, receiver, domain]
 		CertOffered(AccountId, AccountId, Vec<u8>),
+		/// Someone accepted a domain offered to them. Returns: [sender, receiver, domain]
+		CertAccepted(AccountId, AccountId, Vec<u8>),
 	}
 );
 
@@ -323,7 +325,7 @@ decl_error! {
 		NonexistentDomain,
 		DifferentOwner,
 		NoModifications,
-		DifferentOwner,
+		NotOffered,
 	}
 }
 
@@ -478,8 +480,8 @@ decl_module! {
 			ensure!(CertificateMap::<T>::contains_key(&domain), Error::<T>::NonexistentDomain);
 
 			//Ensures that the owner of the domain is the sender
-			let old_cert = CertificateMap::<T>::get(&domain);
-			ensure!(sender == old_cert.owner_id, Error::<T>::DifferentOwner);
+			let cert = CertificateMap::<T>::get(&domain);
+			ensure!(sender == cert.owner_id, Error::<T>::DifferentOwner);
 
 			//Offers the domain
 			let mut certs = TransferFromMap::<T>::take(&sender);
@@ -504,7 +506,7 @@ decl_module! {
 		}
 
 		#[weight = 1_000_000]
-		pub fn transfer_receive(
+		pub fn transfer_accept(
 			origin,
 			name: Vec<u8>,
 			domain: Vec<u8>,
@@ -527,21 +529,36 @@ decl_module! {
 			//Ensures that the domain already exists
 			ensure!(CertificateMap::<T>::contains_key(&domain), Error::<T>::NonexistentDomain);
 
-			let mut certs = TransferFromMap::<T>::take(&sender);
+			let mut transfers = TransferToMap::<T>::take(&sender);
 
 			//Ensures that the domain has been offered
-			ensure!(certs.iter().any(|&x| x.domain == domain), Error::<T>::NotOffered);
+			ensure!(transfers.iter().any(|x| x.domain == domain), Error::<T>::NotOffered);
 
-			let from = certs.clone().retain(|x| *x.domain == domain[..]).first();
-
+			let mut from = sender.clone();
+			for transfer in transfers.iter() {
+				if transfer.domain == domain {
+					from = transfer.from.clone();
+				}
+			}
+			ensure!(from != sender, Error::<T>::NotOffered);
 
 			//Accepts the domain
-			certs.retain(|x| *x.domain != domain[..]);
-			TransferFromMap::<T>::insert(&sender, certs);
+			transfers.retain(|x| *x.domain != domain[..]);
+			TransferFromMap::<T>::insert(&sender, transfers);
 
-			let mut certs = TransferFromMap::<T>::take(&from);
-			certs.retain(|x| *x.domain != domain[..]);
-			TransferFromMap::<T>::insert(&from, certs);
+			let mut transfers = TransferFromMap::<T>::take(&from);
+			transfers.retain(|x| *x.domain != domain[..]);
+			TransferFromMap::<T>::insert(&from, transfers);
+
+			let cert = Certificate {
+				version_number: CERTIFICATE_VERSION,
+				owner_id: sender.clone(),
+				name: name.clone(),
+				info: info.clone(),
+				key: key.clone(),
+				ip_addr: ip_addr.clone(),
+				domain: domain.clone(),
+			};
 
 			//CertMap
 			let old_cert = CertificateMap::<T>::take(&domain);
@@ -551,11 +568,11 @@ decl_module! {
 			let mut certs = ReverseMap::<T>::take(&old_cert.ip_addr);
 			certs.retain(|x| *x.domain != domain[..]);
 			ReverseMap::<T>::insert(&old_cert.ip_addr, certs);
-			let mut certs = ReverseMap::<T>::take(&ip_addr.clone());
-			certs.push(cert.clone());
+			let mut certs = ReverseMap::<T>::take(&ip_addr);
+			certs.push(cert);
 			ReverseMap::<T>::insert(&ip_addr, certs);
 
-			Self::deposit_event(RawEvent::CertReceived(from, sender, domain));
+			Self::deposit_event(RawEvent::CertAccepted(from, sender, domain));
 			Ok(())
 		}
 

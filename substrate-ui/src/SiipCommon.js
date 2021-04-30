@@ -14,12 +14,14 @@ export function SubmitButton (props) {
   const ipAddrField = { name: 'ip_addr', type: 'Bytes', optional: false };
   const infoField = { name: 'info', type: 'Bytes', optional: false };
   const keyField = { name: 'key', type: 'Bytes', optional: false };
+  const rcptAddrField = { name: 'to', type: 'Bytes', optional: false };
 
   const name = { type: 'Bytes', value: props.name };
   const domain = { type: 'Bytes', value: props.domain };
   const ipAddr = { type: 'Bytes', value: props.ipAddr };
   const info = { type: 'Bytes', value: props.info };
   const publicKey = { type: 'Bytes', value: props.publicKey };
+  const rcptAddr = { type: 'Bytes', value: props.rcptAddr };
 
   const interxType = 'EXTRINSIC';
   const palletRpc = 'siipModule';
@@ -43,6 +45,11 @@ export function SubmitButton (props) {
     callable = 'removeCertificate';
     paramFields = [domainField];
     inputParams = [domain];
+  } else if (props.method === 'TransferOffer') {
+    color = 'green';
+    callable = 'transferOffer';
+    paramFields = [rcptAddrField, domainField];
+    inputParams = [rcptAddr, domain];
   }
 
   const [status, setStatus] = useState('');
