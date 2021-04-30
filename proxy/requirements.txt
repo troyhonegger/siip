@@ -1,0 +1,4 @@
+cryptography==3.4.7
+pyOpenSSL==20.0.1
+redis==3.5.3
+substrate-interface==0.11.20       
