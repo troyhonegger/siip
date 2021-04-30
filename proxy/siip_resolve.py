@@ -9,6 +9,7 @@ import socket
 import ssl
 import base64
 import OpenSSL
+import substrateinterface.exceptions
 
 REDIS_HOST = "localhost"
 REDIS_PORT = 6379
@@ -58,12 +59,10 @@ def register_certificate(domain, ip, der_cert):
     pubkey = pubkey.replace('-----BEGIN PUBLIC KEY-----', '')
     pubkey = pubkey.replace('-----END PUBLIC KEY-----', '')
     pubkey = pubkey.replace('\n', '')
-    # Decode from Base64 to Hex
-    pubkey = base64.b64decode(pubkey).hex()
+    # Decode from Base64 to Hex (note that the blockchain requires upper-case A-F)
+    pubkey = base64.b64decode(pubkey).hex().upper()
     # Insert : every 2 characters
     pubkey = ':'.join(pubkey[i:i+2] for i in range(0, len(pubkey), 2))
 
     # Save the domain to the blockchain
-    # TODO: why won't it accept the public key?
-    #register(domain, 'Proxy', ip, '{}', pubkey)
-    register(domain, 'Proxy', ip, '{}', '12')
+    register(domain, 'Proxy', ip, '{}', pubkey)

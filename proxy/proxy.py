@@ -8,6 +8,7 @@ import select
 import socket
 import socketserver
 import ssl
+import substrateinterface.exceptions
 import uuid
 
 import httpparse
@@ -21,6 +22,8 @@ STATE_RCVBODY = 2
 STATE_DONE = 3
 
 #TODO siip_requests needs to use fallback resolution (if configured)
+#TODO Firefox uses persistent connections, which means the log of requests/responses needs to be updated
+    # Currently it just shows the first line after everything has been sent/received. That's probably not super helpful - we should log each HTTP request
 
 SSL_PROXY_CONTEXT = ssl._create_unverified_context()
 SSL_PROXY_LEGACY_CONTEXT = ssl.create_default_context()
@@ -50,8 +53,6 @@ class ProxyHandler(socketserver.BaseRequestHandler):
             if ip is None:
                 self.send_404_domain_notfound(domain)
                 return
-            elif self.server.auto_scrape:
-                pass #TODO add new domain to blockchain
         elif certificate is None and not self.server.legacy_fallback:
             if self.server.log:
                 print(f'Could not resolve domain {domain}. Returning 404 as legacy fallback is disabled')
@@ -83,6 +84,14 @@ class ProxyHandler(socketserver.BaseRequestHandler):
                             print(f'Domain {domain} has an untrusted SIIP certificate. Refusing connection, and returning 500')
                         self.send_500_badsiipcert(domain, ex)
                         return
+                elif self.server.auto_scrape:
+                    if self.server.log:
+                        print(f'Adding domain {domain} to the blockchain')
+                    try:
+                        siip_resolve.register_certificate(domain, ip, server_ssl_cert)
+                    except substrateinterface.exceptions.SubstrateRequestException as ex:
+                        if self.server.log:
+                            print(f'WARNING: could not register {domain} yet. Error details: {ex}')
 
                 self.request.sendall(b'HTTP/1.1 200 Connection established\r\n\r\n')
                 # dynamically generate a certificate for the given website, using its domain but our own custom credentials.
