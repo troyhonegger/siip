@@ -24,12 +24,13 @@ def resolve(domain):
 
 def fallback_resolve(domain):
     # Get Domain's IP
-    # TODO: handle failure
-    ip = socket.gethostbyname(domain)
+    try:
+        return socket.gethostbyname(domain)
+    except OSError:
+        return None
 
-    # Fetch x509 certificate using OpenSSL
-    # TODO: if this fails, how do we handle it?
-    cert_pem = ssl.get_server_certificate((domain, 443))
+def register_certificate(domain, ip, der_cert):
+    cert_pem = ssl.DER_cert_to_PEM_cert(der_cert)
     cert_x509 = OpenSSL.crypto.load_certificate(OpenSSL.crypto.FILETYPE_PEM, cert_pem)
     pubkey = OpenSSL.crypto.dump_publickey(OpenSSL.crypto.FILETYPE_PEM, cert_x509.get_pubkey())
     # Parse text of public key
@@ -46,9 +47,3 @@ def fallback_resolve(domain):
     # TODO: why won't it accept the public key?
     #register(domain, 'Proxy', ip, '{}', pubkey)
     register(domain, 'Proxy', ip, '{}', '12')
-
-    return SiipCertificate(
-        ip,
-        domain,
-        pubkey,
-    )
