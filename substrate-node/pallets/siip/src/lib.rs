@@ -34,6 +34,7 @@ pub struct Certificate<AccountIdT> {
 	info: Vec<u8>,
 	key: Vec<u8>,
 	ip_addr: Vec<u8>,
+	email: Vec<u8>,
 	domain: Vec<u8>,
 }
 

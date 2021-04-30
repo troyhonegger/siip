@@ -40,7 +40,6 @@ fn register_certificate() {
 			info: INFO.into(),
 			ip_addr: IP_ADDR.into(),
 			domain: DOMAIN.into(),
-			email: EMAIL.into()
 		};
 		assert_eq!(expected, response);
 	});
