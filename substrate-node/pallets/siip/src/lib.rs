@@ -334,7 +334,6 @@ decl_module! {
 			ip_addr: Vec<u8>,
 			info: Vec<u8>,
 			key: Vec<u8>,
-			tip: Vec<u8>
 		) -> dispatch::DispatchResult{
 
 			let sender = ensure_signed(origin)?;
@@ -378,7 +377,6 @@ decl_module! {
 			ip_addr: Vec<u8>,
 			info: Vec<u8>,
 			key: Vec<u8>,
-			tip: Vec<u8>
 		) -> dispatch::DispatchResult{
 
 			let sender = ensure_signed(origin)?;
