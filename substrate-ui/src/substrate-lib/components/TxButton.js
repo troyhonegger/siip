@@ -100,7 +100,7 @@ function TxButton ({
       ? api.tx[palletRpc][callable](...transformed)
       : api.tx[palletRpc][callable]();
 
-    const unsub = await txExecute.signAndSend(fromAcct, txResHandler)
+    const unsub = await txExecute.signAndSend(fromAcct, tip, txResHandler)
       .catch(txErrHandler);
     setUnsub(() => unsub);
   };
@@ -162,6 +162,7 @@ function TxButton ({
       if (typeof inputParam === 'object' && inputParam !== null && typeof inputParam.value === 'string') {
         return inputParam.value.trim();
       } else if (typeof inputParam === 'string') {
+        println!("---{}", inputParam);
         return inputParam.trim();
       }
       return inputParam;
