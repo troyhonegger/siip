@@ -14,7 +14,8 @@ function TxButton ({
   style = null,
   type = 'QUERY',
   attrs = null,
-  disabled = false
+  disabled = false,
+  tip = null
 }) {
   // Hooks
   const { api } = useSubstrate();
@@ -85,7 +86,6 @@ function TxButton ({
     const fromAcct = await getFromAcct();
     const txExecute =
         api.tx.sudo.sudoUncheckedWeight(api.tx[palletRpc][callable](...inputParams), 0);
-
     const unsub = txExecute.signAndSend(fromAcct, txResHandler)
       .catch(txErrHandler);
     setUnsub(() => unsub);
@@ -100,7 +100,7 @@ function TxButton ({
       ? api.tx[palletRpc][callable](...transformed)
       : api.tx[palletRpc][callable]();
 
-    const unsub = await txExecute.signAndSend(fromAcct, txResHandler)
+    const unsub = await txExecute.signAndSend(fromAcct, { tip: tip?.value }, txResHandler)
       .catch(txErrHandler);
     setUnsub(() => unsub);
   };
@@ -239,7 +239,8 @@ TxButton.propTypes = {
     callable: PropTypes.string,
     inputParams: PropTypes.array,
     paramFields: PropTypes.array
-  }).isRequired
+  }).isRequired,
+  tip: PropTypes.object
 };
 
 function TxGroupButton (props) {

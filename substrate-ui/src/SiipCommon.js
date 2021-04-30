@@ -20,6 +20,7 @@ export function SubmitButton (props) {
   const ipAddr = { type: 'Bytes', value: props.ipAddr };
   const info = { type: 'Bytes', value: props.info };
   const publicKey = { type: 'Bytes', value: props.publicKey };
+  const tip = { type: 'Bytes', value: props.tip };
 
   const interxType = 'EXTRINSIC';
   const palletRpc = 'siipModule';
@@ -59,6 +60,7 @@ export function SubmitButton (props) {
             accountPair={accountPair}
             setStatus={setStatus}
             attrs={{ interxType, palletRpc, callable, inputParams, paramFields }}
+            tip={tip}
           />
         </div>
         <p>
@@ -83,7 +85,7 @@ export function SubmitButton (props) {
   }
 }
 
-export async function updateDb (domain, setDbName, setDbIpAddr, setDbInfo, setDbPublicKey, setDomainExists) {
+export async function updateDb (domain, setDbName, setDbIpAddr, setDbInfo, setDbPublicKey, setDbTip, setDomainExists) {
   const palletRpc = 'siipModule';
   const callable = 'certificateMap';
 
@@ -97,6 +99,7 @@ export async function updateDb (domain, setDbName, setDbIpAddr, setDbInfo, setDb
       setDbIpAddr(json.ip_addr);
       setDbInfo(json.public_key_info);
       setDbPublicKey(json.public_key);
+      setDbTip(json.tip);
 
       // The version_number is only 0 if the certificate does not exist
       if (json.version_number === 0) {

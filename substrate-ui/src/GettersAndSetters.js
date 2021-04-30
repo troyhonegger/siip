@@ -9,7 +9,7 @@ export default function GettersAndSetters (props) {
   const updateInputDomain = (event) => {
     const domain = event.target.value;
     setInputDomain(domain);
-    updateDb(domain, setDbName, setDbIpAddr, setDbInfo, setDbPublicKey, setDomainExists).then();
+    updateDb(domain, setDbName, setDbIpAddr, setDbInfo, setDbPublicKey, setDbTip, setDomainExists).then();
     validateField('validate_domain', domain).then(data => {
       setDomainValidity(data.result);
     });
@@ -72,10 +72,21 @@ export default function GettersAndSetters (props) {
     });
   };
 
+  const [inputTip, setInputTip] = useState('');
+  const [tipValidity, setTipValidity] = useState('');
+  const updateInputTip = (event) => {
+    const tip = event.target.value;
+    setInputTip(tip);
+    validateField('validate_tip', tip).then(data => {
+      setTipValidity(data.result);
+    });
+  };
+
   const [dbName, setDbName] = useState('');
   const [dbIpAddr, setDbIpAddr] = useState('');
   const [dbInfo, setDbInfo] = useState('');
   const [dbPublicKey, setDbPublicKey] = useState('');
+  const [dbTip, setDbTip] = useState('');
   const [domainExists, setDomainExists] = useState(false);
 
   // Must initialize the Validity fields (else they'll be empty until the first character is pressed
@@ -117,6 +128,7 @@ export default function GettersAndSetters (props) {
   const staticIpAddr = <Static label='IPv4 Address:' value={dbIpAddr}/>;
   const staticInfo = <Static label='Info:' value={dbInfo}/>;
   const staticPublicKey = <Static label='Public Key:' value={dbPublicKey}/>;
+  const staticTip = <Static label='Tip:' value={dbTip}/>;
 
   function dynDomain (enable) {
     return (
@@ -183,6 +195,19 @@ export default function GettersAndSetters (props) {
     );
   }
 
+  function dynTip (enable) {
+    return (
+        <Field
+            label='Tip:'
+            value={inputTip}
+            criteria={tipValidity}
+            placeholder='1 (trillionth of coin)'
+            onChange={updateInputTip}
+            enable={enable}
+        />
+    );
+  }
+
   function submit (method, enable) {
     if (method === '') {
       return (
@@ -198,6 +223,7 @@ export default function GettersAndSetters (props) {
         ipAddr={inputIpAddr}
         info={inputInfo}
         publicKey={inputPublicKey}
+        tip={inputTip}
         method={method}
         enable={enable}
       />
@@ -218,6 +244,7 @@ export default function GettersAndSetters (props) {
           {dynamic ? dynIpAddr(enableField) : staticIpAddr}
           {dynamic ? dynInfo(enableField) : staticInfo}
           {dynamic ? dynPublicKey(enableField) : staticPublicKey}
+          {dynamic ? dynTip(enableField) : staticTip}
         </form>
         {submit(method, enableButton)}
       </div>
