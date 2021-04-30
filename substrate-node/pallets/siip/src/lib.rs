@@ -37,6 +37,13 @@ pub struct Certificate<AccountIdT> {
 	domain: Vec<u8>,
 }
 
+#[derive(Encode, Decode, Default, Clone, PartialEq, Eq, Debug)]
+pub struct Transfer<AccountIdT> {
+	from: AccountIdT,
+	to: AccountIdT,
+	domain: Vec<u8>,
+}
+
 pub fn check_name(name: &[u8]) -> Vec<u8> {
 	let mut criteria: Vec<u8> = Vec::new();
 
@@ -284,6 +291,8 @@ decl_storage! {
 		// https://substrate.dev/docs/en/knowledgebase/runtime/storage#declaring-storage-items
 		pub CertificateMap get(fn domain_to_certificate): map hasher(blake2_128_concat) Vec<u8> => Certificate<T::AccountId>;
 		pub ReverseMap get(fn ip_to_certificates): map hasher(blake2_128_concat) Vec<u8> => Vec<Certificate<T::AccountId>>;
+		pub TransferFromMap get(fn transfer_from): map hasher(blake2_128_concat) T::AccountId => Vec<Transfer<T::AccountId>>;
+		pub TransferToMap get(fn transfer_to): map hasher(blake2_128_concat) T::AccountId => Vec<Transfer<T::AccountId>>;
 	}
 }
 
@@ -297,6 +306,8 @@ decl_event!(
 		CertificateModified(Certificate<AccountId>, Certificate<AccountId>, AccountId),
 		/// A certificate in the blockchain was removed. Returns (deleted): [certificate, person]
 		CertificateRemoved(Certificate<AccountId>, AccountId),
+		/// Someone offered a domain to someone else. Returns: [person, person, domain]
+		CertOffered(AccountId, AccountId, Vec<u8>),
 	}
 );
 
@@ -312,6 +323,7 @@ decl_error! {
 		NonexistentDomain,
 		DifferentOwner,
 		NoModifications,
+		DifferentOwner,
 	}
 }
 
@@ -376,7 +388,7 @@ decl_module! {
 			domain: Vec<u8>,
 			ip_addr: Vec<u8>,
 			info: Vec<u8>,
-			key: Vec<u8>
+			key: Vec<u8>,
 		) -> dispatch::DispatchResult{
 
 			let sender = ensure_signed(origin)?;
@@ -448,6 +460,102 @@ decl_module! {
 			ReverseMap::<T>::insert(&old_cert.ip_addr, certs);
 
 			Self::deposit_event(RawEvent::CertificateRemoved(old_cert, sender));
+			Ok(())
+		}
+
+		#[weight = 1_000_000]
+		pub fn transfer_offer(
+			origin,
+			to: <T as frame_system::Config>::AccountId,
+			domain: Vec<u8>,
+		) -> dispatch::DispatchResult{
+			let sender = ensure_signed(origin)?;
+
+			//Input validation
+			ensure!(!from_utf8(&check_domain(&domain)).unwrap().contains("Err:"), Error::<T>::InvalidDomain);
+
+			//Ensures that the domain already exists
+			ensure!(CertificateMap::<T>::contains_key(&domain), Error::<T>::NonexistentDomain);
+
+			//Ensures that the owner of the domain is the sender
+			let old_cert = CertificateMap::<T>::get(&domain);
+			ensure!(sender == old_cert.owner_id, Error::<T>::DifferentOwner);
+
+			//Offers the domain
+			let mut certs = TransferFromMap::<T>::take(&sender);
+			certs.retain(|x| *x.domain != domain[..]);
+			certs.push(Transfer {
+				from: sender.clone(),
+				to: to.clone(),
+				domain: domain.clone(),
+			});
+			TransferFromMap::<T>::insert(&sender, certs);
+			let mut certs = TransferFromMap::<T>::take(&to);
+			certs.retain(|x| *x.domain != domain[..]);
+			certs.push(Transfer {
+				from: sender.clone(),
+				to: to.clone(),
+				domain: domain.clone(),
+			});
+			TransferFromMap::<T>::insert(&to, certs);
+
+			Self::deposit_event(RawEvent::CertOffered(sender, to, domain));
+			Ok(())
+		}
+
+		#[weight = 1_000_000]
+		pub fn transfer_receive(
+			origin,
+			name: Vec<u8>,
+			domain: Vec<u8>,
+			ip_addr: Vec<u8>,
+			info: Vec<u8>,
+			key: Vec<u8>,
+		) -> dispatch::DispatchResult{
+			let sender = ensure_signed(origin)?;
+
+			//Input validation
+			ensure!(!from_utf8(&check_domain(&domain)).unwrap().contains("Err:"), Error::<T>::InvalidDomain);
+
+			//Input validation
+			ensure!(!from_utf8(&check_name(&name)).unwrap().contains("Err:"), Error::<T>::InvalidOwner);
+			ensure!(!from_utf8(&check_domain(&domain)).unwrap().contains("Err:"), Error::<T>::InvalidDomain);
+			ensure!(!from_utf8(&check_ip(&ip_addr)).unwrap().contains("Err:"), Error::<T>::InvalidIP);
+			ensure!(!from_utf8(&check_info(&info)).unwrap().contains("Err:"), Error::<T>::InvalidInfo);
+			ensure!(!from_utf8(&check_key(&key)).unwrap().contains("Err:"), Error::<T>::InvalidKey);
+
+			//Ensures that the domain already exists
+			ensure!(CertificateMap::<T>::contains_key(&domain), Error::<T>::NonexistentDomain);
+
+			let mut certs = TransferFromMap::<T>::take(&sender);
+
+			//Ensures that the domain has been offered
+			ensure!(certs.iter().any(|&x| x.domain == domain), Error::<T>::NotOffered);
+
+			let from = certs.clone().retain(|x| *x.domain == domain[..]).first();
+
+
+			//Accepts the domain
+			certs.retain(|x| *x.domain != domain[..]);
+			TransferFromMap::<T>::insert(&sender, certs);
+
+			let mut certs = TransferFromMap::<T>::take(&from);
+			certs.retain(|x| *x.domain != domain[..]);
+			TransferFromMap::<T>::insert(&from, certs);
+
+			//CertMap
+			let old_cert = CertificateMap::<T>::take(&domain);
+			CertificateMap::<T>::insert(&domain, cert.clone());
+
+			//ReverseMap
+			let mut certs = ReverseMap::<T>::take(&old_cert.ip_addr);
+			certs.retain(|x| *x.domain != domain[..]);
+			ReverseMap::<T>::insert(&old_cert.ip_addr, certs);
+			let mut certs = ReverseMap::<T>::take(&ip_addr.clone());
+			certs.push(cert.clone());
+			ReverseMap::<T>::insert(&ip_addr, certs);
+
+			Self::deposit_event(RawEvent::CertReceived(from, sender, domain));
 			Ok(())
 		}
 
